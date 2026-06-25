@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0f3d5e"/>
+  <circle cx="256" cy="256" r="190" fill="#1f6f9d" opacity="0.35" stroke="#ffffff" stroke-width="18"/>
+  <path d="M256 70 L286 220 L442 256 L286 292 L256 442 L226 292 L70 256 L226 220 Z" fill="#ffffff"/>
+  <path d="M256 112 L274 230 L390 256 L274 282 L256 400 L238 282 L122 256 L238 230 Z" fill="#38bdf8"/>
+  <text x="256" y="488" text-anchor="middle" font-family="Arial, sans-serif" font-size="56" font-weight="700" fill="#ffffff">PZL</text>
+</svg>
