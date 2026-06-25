@@ -866,7 +866,7 @@ body.pzl-screen-locked #lockMapBtn {
 }
 .metarWindLabel.warn{border-color:rgba(255,0,0,.75)!important;color:#ffdddd!important;}
 .metarLabelArrow{display:inline-block;font-size:19px;font-weight:900;margin-right:5px;vertical-align:middle;transform-origin:center center;text-shadow:0 1px 4px #000;}
-.metarLabelArrow.ok{color:#ffdf00;}
+.metarLabelArrow.ok{color:#00e676;}
 .metarLabelArrow.warn{color:#ff2222;}
 .metarWindLine{display:flex;align-items:center;justify-content:center;gap:3px;margin-top:1px;}
 .metarXwLine{font-weight:900;color:#7CFF7C;}
@@ -875,7 +875,7 @@ body.pzl-screen-locked #lockMapBtn {
 
 
 <style id="fix37d39-metar-toggle-center-arrows-css">
-.metarWindIcon{display:flex!important;width:46px;height:46px;align-items:center;justify-content:center;font-size:31px;font-weight:900;color:#ffdf00;-webkit-text-stroke:1px rgba(0,0,0,.75);text-shadow:0 2px 5px #000,0 0 3px #000;transform-origin:center center}
+.metarWindIcon{display:flex!important;width:46px;height:46px;align-items:center;justify-content:center;font-size:31px;font-weight:900;color:#00e676;-webkit-text-stroke:1px rgba(0,0,0,.75);text-shadow:0 2px 5px #000,0 0 3px #000;transform-origin:center center}
 .metarWindIcon.warn{color:#ff2222!important}
 .metarWindLabel{background:rgba(10,20,30,.50)!important;border:1px solid rgba(255,255,255,.32)!important;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);min-width:116px}
 .metarWindLabel.warn{border-color:rgba(255,0,0,.75)!important;color:#ffdddd!important}
@@ -905,7 +905,7 @@ body.pzl-screen-locked #lockMapBtn {
   position:absolute;
   left:0; top:6px;
   width:54px; height:6px;
-  background:#ffdf00;
+  background:#00e676;
   border:1px solid rgba(0,0,0,.85);
   border-right:none;
   border-radius:4px 0 0 4px;
@@ -917,7 +917,7 @@ body.pzl-screen-locked #lockMapBtn {
   width:0; height:0;
   border-top:9px solid transparent;
   border-bottom:9px solid transparent;
-  border-left:22px solid #ffdf00;
+  border-left:22px solid #00e676;
   filter:drop-shadow(0 0 1px #000);
 }
 .metarWindIcon.warn::before{background:#ff2222!important}
@@ -937,6 +937,60 @@ body.pzl-screen-locked #lockMapBtn {
 </style>
 
 </head>
+
+<style id="fix37d46-metar-final-css">
+/* FIX37D46: smaller METAR boxes, no yellow arrows, label offset away from airport/arrow center */
+.metarWindIcon{
+  display:block!important;
+  position:relative!important;
+  width:74px!important;
+  height:18px!important;
+  transform-origin:9px 9px!important;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.9))!important;
+}
+.metarWindIcon::before{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;top:6px!important;
+  width:54px!important;height:6px!important;
+  background:#00e676!important;
+  border:1px solid rgba(0,0,0,.85)!important;
+  border-right:none!important;
+  border-radius:4px 0 0 4px!important;
+}
+.metarWindIcon::after{
+  content:""!important;
+  position:absolute!important;
+  left:50px!important;top:0!important;
+  width:0!important;height:0!important;
+  border-top:9px solid transparent!important;
+  border-bottom:9px solid transparent!important;
+  border-left:22px solid #00e676!important;
+  filter:drop-shadow(0 0 1px #000)!important;
+}
+.metarWindIcon.warn::before{background:#ff2222!important}
+.metarWindIcon.warn::after{border-left-color:#ff2222!important}
+.metarWindLabel{
+  background:rgba(10,20,30,.50)!important;
+  border:1px solid rgba(255,255,255,.28)!important;
+  border-radius:8px!important;
+  padding:3px 7px!important;
+  font-size:9.5px!important;
+  line-height:1.06!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+  text-align:center!important;
+  min-width:92px!important;
+  max-width:124px!important;
+  box-shadow:0 2px 6px rgba(0,0,0,.35)!important;
+  backdrop-filter:blur(2px)!important;
+  -webkit-backdrop-filter:blur(2px)!important;
+}
+.metarWindLabel.warn{border-color:rgba(255,0,0,.75)!important;color:#ffdddd!important}
+.metarWindLine{display:block!important;margin-top:0!important}
+.metarXwLine{display:block!important;font-weight:900!important;color:#7CFF7C!important}
+.metarWindLabel.warn .metarXwLine{color:#ff7777!important}
+</style>
 <body><button id="metarWindBtn" class="metar-off" onclick="pzlRefreshCheckwxMetars()" style="position:absolute;z-index:1000;top:52px;left:6px">METAR</button>
 <div id="app">
   <div id="mapWrap">
@@ -2047,7 +2101,7 @@ function setFireMarker() {
       const effective = Math.max(windSpeed, gust);
       const angle = normAngleDiff(windFrom, rwy);
       const cross = Math.abs(effective * Math.sin(deg2rad(angle)));
-      return {effective, cross, out: cross > pzlMaxCrosswindKts || effective > pzlMaxWindKts};
+      return {effective, cross, out: cross >= pzlMaxCrosswindKts || effective >= pzlMaxWindKts};
     }
 
     function drawRunwayAndWind() {
@@ -2065,7 +2119,7 @@ function setFireMarker() {
       const start = endpointFromBearing(b.lat,b.lon,windFrom,2.2);
       const end = endpointFromBearing(b.lat,b.lon,windTo,1.0);
       const st = windLimitStatus();
-      const color = st.out ? "red" : "yellow";
+      const color = st.out ? "red" : "green";
       windLine = drawArrow(start, end, color, `Άνεμος από ${windFrom}° | κάθετος ${st.cross.toFixed(1)} kts | σύνολο ${st.effective.toFixed(1)} kts`);
     }
 
@@ -2076,7 +2130,7 @@ function setFireMarker() {
       const windTo = (windFrom + 180) % 360;
       const start = endpointFromBearing(firePoint.lat,firePoint.lon,windFrom,1.8);
       const end = endpointFromBearing(firePoint.lat,firePoint.lon,windTo,0.8);
-      fireWindLine = drawArrow(start, end, "yellow", "Άνεμος φωτιάς από " + windFrom + "°");
+      fireWindLine = drawArrow(start, end, "green", "Άνεμος φωτιάς από " + windFrom + "°");
     }
 
     baseSelect.addEventListener("change", () => { selectedBaseName = baseSelect.value;
@@ -3185,7 +3239,7 @@ const base = bases[selectedBaseName];
       const angle = normAngleDiff(windFrom, rwy);
       const cross = Math.abs(effective * Math.sin(deg2rad(angle)));
       const head = effective * Math.cos(deg2rad(angle));
-      const status = (cross <= pzlMaxCrosswindKts && effective <= pzlMaxWindKts) ? "ΕΝΤΟΣ ΟΡΙΩΝ" : "ΕΚΤΟΣ ΟΡΙΩΝ";
+      const status = (cross < pzlMaxCrosswindKts && effective < pzlMaxWindKts) ? "ΕΝΤΟΣ ΟΡΙΩΝ" : "ΕΚΤΟΣ ΟΡΙΩΝ";
 
       document.getElementById("windResult").innerHTML =
         `Γωνία ανέμου ως προς διάδρομο: ${angle.toFixed(0)}°\n` +
@@ -3241,8 +3295,8 @@ const base = bases[selectedBaseName];
       ensureGpsPlaneInnerSymbol();
       const el = document.querySelector(".gps-plane-symbol");
       if (el && deg !== null && !isNaN(deg)) {
-        // Το emoji ✈️ κοιτάει περίπου βορειοανατολικά, οπότε το διορθώνουμε λίγο.
-        el.style.transform = `rotate(${deg - 45}deg)`;
+        // PZL top-view PNG: μύτη = 0°/North. Περιστροφή ίδια με HUD heading.
+        el.style.transform = `rotate(${deg}deg)`;
       }
     }
 
@@ -3750,7 +3804,7 @@ const base = bases[selectedBaseName];
       ensureGpsPlaneInnerSymbol();
       const aircraftEl = document.querySelector(".gps-plane-symbol");
       if (aircraftEl && headingDeg !== null && !isNaN(headingDeg)) {
-        aircraftEl.style.transform = `rotate(${headingDeg - 45}deg)`;
+        aircraftEl.style.transform = `rotate(${headingDeg}deg)`;
       }
 
       const gpsResult = document.getElementById("gpsResult");
@@ -4479,13 +4533,22 @@ try {
     return null;
   }
 
+  // FIX37D51: rotate the PZL marker only once.
+  // The PNG nose is already aligned to 0°/North, so the map marker must use the same heading as the HUD.
+  // Previous selector also rotated the child <img>, causing double rotation.
+  var PZL_MARKER_HEADING_OFFSET_DEG = 0;
   function rotateMarker(){
     var hdg = getHeadingDeg();
     if (hdg === null) return;
-    var els = document.querySelectorAll(".gps-aircraft-marker .gps-plane-symbol, .gps-aircraft-marker img, .pzl-moving-marker-img");
+    var markerDeg = normDeg(hdg + PZL_MARKER_HEADING_OFFSET_DEG);
+    var els = document.querySelectorAll(".gps-aircraft-marker .gps-plane-symbol, .pzl-moving-marker-img");
     els.forEach(function(el){
       el.style.transformOrigin = "50% 50%";
-      el.style.transform = "rotate(" + hdg + "deg)";
+      el.style.transform = "rotate(" + markerDeg + "deg)";
+    });
+    // Keep the inner PNG unrotated so parent + child do not add up.
+    document.querySelectorAll(".gps-aircraft-marker .gps-plane-symbol img").forEach(function(img){
+      img.style.transform = "none";
     });
   }
 
@@ -4816,6 +4879,7 @@ try {
 
 
 <script id="fix37d35-checkwx-metar-js">
+/* FIX37D46: single green/red METAR wind arrows; gust included; labels smaller and offset from arrow. */
 (function(){
   const CHECKWX_KEY = "a8122bb537b640e5ae6de8cc11a07267";
   const XW_LIMIT = 13, WIND_LIMIT = 29.5;
@@ -4896,11 +4960,12 @@ try {
     const pos=ll(n); if(!pos||!window.L||!window.map)return false;
     const rw=rwy(n), c=comp(m.windDir,m.windSpeed,rw), gc=m.windGust?comp(m.windDir,m.windGust,rw):{xw:null,hw:null};
     let maxVar=null; if(m.varFrom!=null&&m.varTo!=null){maxVar=0; [m.varFrom,m.varTo].forEach(d=>[m.windSpeed,m.windGust].filter(v=>v!=null&&!isNaN(v)).forEach(s=>{const cc=comp(d,s,rw); if(cc.xw!=null)maxVar=Math.max(maxVar,cc.xw)}))}
-    const warn=(m.windSpeed!=null&&m.windSpeed>WIND_LIMIT)||(c.xw!=null&&c.xw>XW_LIMIT)||(gc.xw!=null&&gc.xw>XW_LIMIT)||(maxVar!=null&&maxVar>XW_LIMIT);const arrowDeg=m.windDir==null?0:((Number(m.windDir)-90+360)%360);
-    const windIcon=L.divIcon({className:"",html:`<div class="metarWindIcon ${warn?'warn':''}" style="transform:rotate(${arrowDeg}deg)"></div>`,iconSize:[46,46],iconAnchor:[23,23]});
+    const effWind=Math.max(Number(m.windSpeed)||0, Number(m.windGust)||0);
+    const warn=(effWind>=WIND_LIMIT)||(c.xw!=null&&c.xw>=XW_LIMIT)||(gc.xw!=null&&gc.xw>=XW_LIMIT)||(maxVar!=null&&maxVar>=XW_LIMIT);const arrowDeg=m.windDir==null?0:((Number(m.windDir)+90+360)%360);
+    const windIcon=L.divIcon({className:"",html:`<div class="metarWindIcon ${warn?'warn':'ok'}" style="transform:rotate(${arrowDeg}deg)"></div>`,iconSize:[78,22],iconAnchor:[9,11]});
     layers.push(L.marker([pos.lat,pos.lon],{icon:windIcon}).addTo(map));
     
-    const li=L.divIcon({className:"",html:`<div class="metarWindLabel ${warn?'warn':''}">${label(n,m,c.xw,gc.xw,warn)}</div>`,iconSize:[145,48],iconAnchor:[72,-8]});
+    const li=L.divIcon({className:"",html:`<div class="metarWindLabel ${warn?'warn':''}">${label(n,m,c.xw,gc.xw,warn)}</div>`,iconSize:[124,38],iconAnchor:[62,-44]});
     layers.push(L.marker([pos.lat,pos.lon],{icon:li}).addTo(map));
     if((m.varFrom!=null&&m.varTo!=null)||m.windDir==null) sector(pos,m,warn);
     return warn;
@@ -4974,6 +5039,42 @@ try {
   }
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", install); else install();
   setTimeout(install,600);
+})();
+</script>
+
+
+
+<!-- FIX37D50: HUD D33-style outer cardinals only. Hide/remove old fixed inner N/E/S/W. -->
+<style id="fix37d50-hud-no-inner-cardinals">
+#hsiHud .hsiNorth,
+#hsiHud .hsiE,
+#hsiHud .hsiS,
+#hsiHud .hsiW{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+#hsiHud .hsiRoseLabel.cardinal{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  color:#fff !important;
+  font-weight:900 !important;
+  text-shadow:0 3px 7px rgba(0,0,0,.98),0 0 4px #000 !important;
+}
+</style>
+<script id="fix37d50-remove-inner-cardinals">
+(function(){
+  function removeInnerCardinals(){
+    try{
+      document.querySelectorAll('#hsiHud .hsiNorth,#hsiHud .hsiE,#hsiHud .hsiS,#hsiHud .hsiW').forEach(function(el){ el.remove(); });
+    }catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', removeInnerCardinals);
+  else removeInnerCardinals();
+  setTimeout(removeInnerCardinals, 500);
+  setTimeout(removeInnerCardinals, 1500);
 })();
 </script>
 

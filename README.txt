@@ -24,3 +24,6 @@ FIX37D_TF_FALLBACK_MANUAL
 FIX37D46: METAR boxes smaller/offset; all wind arrows green/red only; gust logic retained.
 
 FIX37D50: HUD cardinals cleanup - removed fixed inner N/E/S/W, kept rotating outer N/E/S/W.
+
+
+FIX37D51: Διόρθωση περιστροφής PZL marker στον χάρτη ώστε η μύτη να ταυτίζεται με το HUD heading. Αφαιρέθηκε το διπλό rotation parent+img.

@@ -3295,8 +3295,8 @@ const base = bases[selectedBaseName];
       ensureGpsPlaneInnerSymbol();
       const el = document.querySelector(".gps-plane-symbol");
       if (el && deg !== null && !isNaN(deg)) {
-        // Το emoji ✈️ κοιτάει περίπου βορειοανατολικά, οπότε το διορθώνουμε λίγο.
-        el.style.transform = `rotate(${deg - 45}deg)`;
+        // PZL top-view PNG: μύτη = 0°/North. Περιστροφή ίδια με HUD heading.
+        el.style.transform = `rotate(${deg}deg)`;
       }
     }
 
@@ -3804,7 +3804,7 @@ const base = bases[selectedBaseName];
       ensureGpsPlaneInnerSymbol();
       const aircraftEl = document.querySelector(".gps-plane-symbol");
       if (aircraftEl && headingDeg !== null && !isNaN(headingDeg)) {
-        aircraftEl.style.transform = `rotate(${headingDeg - 45}deg)`;
+        aircraftEl.style.transform = `rotate(${headingDeg}deg)`;
       }
 
       const gpsResult = document.getElementById("gpsResult");
@@ -4533,13 +4533,22 @@ try {
     return null;
   }
 
+  // FIX37D51: rotate the PZL marker only once.
+  // The PNG nose is already aligned to 0°/North, so the map marker must use the same heading as the HUD.
+  // Previous selector also rotated the child <img>, causing double rotation.
+  var PZL_MARKER_HEADING_OFFSET_DEG = 0;
   function rotateMarker(){
     var hdg = getHeadingDeg();
     if (hdg === null) return;
-    var els = document.querySelectorAll(".gps-aircraft-marker .gps-plane-symbol, .gps-aircraft-marker img, .pzl-moving-marker-img");
+    var markerDeg = normDeg(hdg + PZL_MARKER_HEADING_OFFSET_DEG);
+    var els = document.querySelectorAll(".gps-aircraft-marker .gps-plane-symbol, .pzl-moving-marker-img");
     els.forEach(function(el){
       el.style.transformOrigin = "50% 50%";
-      el.style.transform = "rotate(" + hdg + "deg)";
+      el.style.transform = "rotate(" + markerDeg + "deg)";
+    });
+    // Keep the inner PNG unrotated so parent + child do not add up.
+    document.querySelectorAll(".gps-aircraft-marker .gps-plane-symbol img").forEach(function(img){
+      img.style.transform = "none";
     });
   }
 
