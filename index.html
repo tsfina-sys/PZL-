@@ -3079,6 +3079,32 @@ function setFireMarker() {
         const cutoffInfo = await getCutoffTime();
         if (calcId !== lastCalcId) return;
 
+        // FIX37D61: Align TF/Cutoff date with the active command/scenario date.
+        // This prevents stale/previous-day TF cache or UTC date shifts from giving
+        // "Μέγιστες ρίψεις: 0 / ΑΝΕΠΑΡΚΗΣ ΧΡΟΝΟΣ" during morning Manual Practice
+        // or Airborne Full Tank scenarios while the displayed first drop is valid.
+        try {
+          if (calcCommandTime && cutoffInfo && cutoffInfo.cutoff) {
+            const y = calcCommandTime.getFullYear(), m = calcCommandTime.getMonth(), d = calcCommandTime.getDate();
+            const alignDate = (dt) => {
+              if (!dt) return dt;
+              const x = new Date(dt.getTime());
+              x.setFullYear(y, m, d);
+              return x;
+            };
+            cutoffInfo.sunset = alignDate(cutoffInfo.sunset);
+            cutoffInfo.twilight = alignDate(cutoffInfo.twilight);
+            cutoffInfo.cutoff = alignDate(cutoffInfo.cutoff);
+            // If the scenario is a morning test and an old/UTC-shifted cutoff still falls before it,
+            // move TF/Cutoff to the next evening. Do not mask real evening-after-cutoff cases.
+            if (cutoffInfo.cutoff.getTime() <= calcCommandTime.getTime() && calcCommandTime.getHours() < 12) {
+              cutoffInfo.sunset.setDate(cutoffInfo.sunset.getDate() + 1);
+              cutoffInfo.twilight.setDate(cutoffInfo.twilight.getDate() + 1);
+              cutoffInfo.cutoff.setDate(cutoffInfo.cutoff.getDate() + 1);
+            }
+          }
+        } catch(e) {}
+
         const returnLegD = (returnRouteD !== null) ? returnRouteD : ((refillCycleD !== null) ? refillCycleD : D);
         const approachLegD = (approachRouteD !== null) ? approachRouteD : ((newFireWithWaterMode && normalD !== null) ? normalD : D);
         const finalReturnLegD = (finalReturnRouteD !== null) ? finalReturnRouteD : returnLegD;
@@ -5265,9 +5291,9 @@ try {
 
 
 <script>
-/* FIX37D54: x2 guard for destructive buttons - 2 taps within 0.5 sec */
+/* FIX37D54/D61: x2 guard - 2 taps within 0.8 sec */
 (function(){
-  const WINDOW_MS = 500;
+  const WINDOW_MS = 800;
   const labels = {
     clearViaBtn: "CLR x2",
     clearReturnWpBtn: "CLR RTB x2",
@@ -5283,7 +5309,7 @@ try {
       const btn = document.getElementById(id);
       if(!btn || btn.dataset.pzlX2Guard === "1") return;
       btn.dataset.pzlX2Guard = "1";
-      btn.title = (btn.title ? btn.title + " - " : "") + "Θέλει 2 πατήματα μέσα σε 0,5 δευτ.";
+      btn.title = (btn.title ? btn.title + " - " : "") + "Θέλει 2 πατήματα μέσα σε 0,8 δευτ.";
       btn.addEventListener("click", function(ev){
         // FIX37D59: Manual Practice works like old ENTER when a manual time is already typed.
         // Δηλαδή μετά την εισαγωγή ώρας, ένα απλό πάτημα επιβεβαιώνει/ενεργοποιεί.
@@ -5387,7 +5413,7 @@ try {
   const last=Object.create(null);
   function markAirborne(){
     const b=document.getElementById('newFireWithWaterBtn');
-    if(b){ b.innerHTML='Airborne Full Tank <span class="x2-mark">x2</span>'; b.title='Θέλει 2 πατήματα μέσα σε 0,5 δευτ.'; }
+    if(b){ b.innerHTML='Airborne Full Tank <span class="x2-mark">x2</span>'; b.title='Θέλει 2 πατήματα μέσα σε 0,8 δευτ.'; }
   }
   function forceGpsSplit(){
     const gps=document.getElementById('gpsBtn'), start=document.getElementById('useGpsAsStartBtn'), bar=document.getElementById('topMapGpsBar');
@@ -5434,7 +5460,7 @@ try {
       });
     }
   }
-  function init(){ markAirborne(); forceGpsSplit(); ids.forEach(installX2); installManual(); }
+  function init(){ markAirborne(); forceGpsSplit(); /* D61: duplicate D60 x2/manual capture disabled; D54 guard is the single source of truth */ }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
   setTimeout(init,500); setTimeout(init,1500);
 })();
