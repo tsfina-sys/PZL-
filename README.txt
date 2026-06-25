@@ -1,3 +1,10 @@
+PZL_FIX37D47_HUD_D33_CARDINALS_METAR
+
+- Base: FIX37D46 SMALL METAR NO YELLOW.
+- HUD cleanup: hides old internal N/E/S/W static letters.
+- Keeps rotating rose cardinal labels outside the circle, D33-style.
+- Keeps METAR green/red + gust logic from D46.
+
 PZL_FIX35_COMPACT_BUTTONS
 
 Βάση: FIX34.

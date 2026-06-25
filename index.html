@@ -936,6 +936,28 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
+
+<style id="fix37d47-hud-d33-cardinals-clean">
+/* FIX37D47: Restore clean D33-style HUD cardinals.
+   Keep only rotating rose labels (N/E/S/W outside circle) and hide old static internal letters. */
+#hsiHud .hsiDial > .hsiNorth,
+#hsiHud .hsiDial > .hsiE,
+#hsiHud .hsiDial > .hsiS,
+#hsiHud .hsiDial > .hsiW{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+}
+#hsiHud .hsiRoseLabel.cardinal{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  color:#fff !important;
+  font-weight:900 !important;
+  text-shadow:0 3px 7px rgba(0,0,0,.98),0 0 4px #000 !important;
+}
+#hsiHud .hsiRoseLabel.north{ color:#fff !important; }
+</style>
 </head>
 
 <style id="fix37d46-metar-final-css">
