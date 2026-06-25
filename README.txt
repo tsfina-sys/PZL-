@@ -1,3 +1,7 @@
+FIX37D53_FIRE_CIRCLES_BUTTON_VISIBLE
+
+Κουμπί ◎◎◎ ορατό δίπλα στο HUD σε κινητό. Εμφανίζει/κρύβει τους 3 κύκλους φωτιάς.
+
 PZL_FIX35_COMPACT_BUTTONS
 
 Βάση: FIX34.

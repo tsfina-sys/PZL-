@@ -284,7 +284,7 @@
   #map{ inset:34px 0 0 0 !important; height:calc(100% - 34px) !important; }
   .bottom-sheet{ flex:0 0 48dvh !important; height:48dvh !important; max-height:48dvh !important; overflow:auto !important; border-radius:12px 12px 0 0; padding:7px 7px 70px; }
 
-  #topMapGpsBar{ top:5px !important; left:86px !important; right:6px !important; display:grid !important; grid-template-columns:1fr 1fr 1fr; gap:4px !important; }
+  #topMapGpsBar{ top:5px !important; left:86px !important; right:6px !important; display:grid !important; grid-template-columns:1fr 1fr 1fr .62fr; gap:4px !important; }
   #topMapGpsBar button{ min-width:0 !important; padding:6px 3px !important; font-size:11px !important; line-height:1.05 !important; border-radius:8px !important; white-space:normal; }
   #positionReportBtn{ font-size:0 !important; }
   #positionReportBtn::after{ content:'Θέση'; font-size:11px; }
@@ -472,6 +472,14 @@
   #toggleHudBtn::after{content:'HUD'; font-size:11px;}
 }
 
+/* FIX37D53: keep fire-circles toggle visible next to HUD on mobile */
+#toggleFireCirclesBtn.circles-on{background:#157347 !important;}
+#toggleFireCirclesBtn.circles-off{background:#6b7280 !important;}
+@media(max-width:700px){
+  #toggleFireCirclesBtn{font-size:0 !important; min-width:0 !important; padding-left:0 !important; padding-right:0 !important;}
+  #toggleFireCirclesBtn::after{content:'◎◎◎' !important; font-size:13px !important; letter-spacing:-1px;}
+}
+
 
 /* FIX25: rotating compass rose heading labels */
 #hsiHud .hsiNorth, #hsiHud .hsiE, #hsiHud .hsiW, #hsiHud .hsiS{display:none !important;}
@@ -530,6 +538,7 @@ body.pzl-screen-locked #lockMapBtn {
   #positionReportBtn::after{content:'Αναφορά\A θέσης' !important;}
   #gpsBtn::after{content:'GPS' !important;}
   #toggleHudBtn::after{content:'HUD' !important;}
+  #toggleFireCirclesBtn::after{content:'◎◎◎' !important; font-size:13px !important;}
   #fixBtn::after{content:'FIX' !important;}
   #useGpsAsStartBtn::after{content:'Αφετηρία' !important;}
   #hsiHud{ touch-action:none !important; user-select:none !important; }
