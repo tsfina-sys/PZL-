@@ -866,23 +866,23 @@ body.pzl-screen-locked #lockMapBtn {
 }
 .metarWindLabel.warn{border-color:rgba(255,0,0,.75)!important;color:#ffdddd!important;}
 .metarLabelArrow{display:inline-block;font-size:19px;font-weight:900;margin-right:5px;vertical-align:middle;transform-origin:center center;text-shadow:0 1px 4px #000;}
-.metarLabelArrow.ok{color:#ffdf00;}
+.metarLabelArrow.ok{color:#00e676;}
 .metarLabelArrow.warn{color:#ff2222;}
 .metarWindLine{display:flex;align-items:center;justify-content:center;gap:3px;margin-top:1px;}
 .metarXwLine{font-weight:900;color:#7CFF7C;}
-.metarWindLabel.warn .metarXwLine{color:#ff7777;}
+.metarXwLine.xwWarn{color:#ff7777!important;}
 </style>
 
 
 <style id="fix37d39-metar-toggle-center-arrows-css">
-.metarWindIcon{display:flex!important;width:46px;height:46px;align-items:center;justify-content:center;font-size:31px;font-weight:900;color:#ffdf00;-webkit-text-stroke:1px rgba(0,0,0,.75);text-shadow:0 2px 5px #000,0 0 3px #000;transform-origin:center center}
+.metarWindIcon{display:flex!important;width:46px;height:46px;align-items:center;justify-content:center;font-size:31px;font-weight:900;color:#00e676;-webkit-text-stroke:1px rgba(0,0,0,.75);text-shadow:0 2px 5px #000,0 0 3px #000;transform-origin:center center}
 .metarWindIcon.warn{color:#ff2222!important}
 .metarWindLabel{background:rgba(10,20,30,.50)!important;border:1px solid rgba(255,255,255,.32)!important;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);min-width:116px}
 .metarWindLabel.warn{border-color:rgba(255,0,0,.75)!important;color:#ffdddd!important}
 .metarLabelArrow{display:none!important}
 .metarWindLine{display:block!important;margin-top:1px}
 .metarXwLine{display:block;font-weight:900;color:#7CFF7C}
-.metarWindLabel.warn .metarXwLine{color:#ff7777}
+.metarXwLine.xwWarn{color:#ff7777!important}
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
@@ -905,7 +905,7 @@ body.pzl-screen-locked #lockMapBtn {
   position:absolute;
   left:0; top:6px;
   width:54px; height:6px;
-  background:#ffdf00;
+  background:#00e676;
   border:1px solid rgba(0,0,0,.85);
   border-right:none;
   border-radius:4px 0 0 4px;
@@ -917,7 +917,7 @@ body.pzl-screen-locked #lockMapBtn {
   width:0; height:0;
   border-top:9px solid transparent;
   border-bottom:9px solid transparent;
-  border-left:22px solid #ffdf00;
+  border-left:22px solid #00e676;
   filter:drop-shadow(0 0 1px #000);
 }
 .metarWindIcon.warn::before{background:#ff2222!important}
@@ -932,7 +932,7 @@ body.pzl-screen-locked #lockMapBtn {
 .metarLabelArrow{display:none!important}
 .metarWindLine{display:block!important}
 .metarXwLine{display:block;font-weight:900;color:#7CFF7C}
-.metarWindLabel.warn .metarXwLine{color:#ff7777}
+.metarXwLine.xwWarn{color:#ff7777!important}
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
@@ -4883,24 +4883,24 @@ try {
   }
   function ll(n){ try{if(typeof bases!="undefined"&&bases[n])return{lat:bases[n].lat,lon:bases[n].lon}}catch(e){} try{if(typeof airports!="undefined"&&airports[n])return{lat:airports[n].lat,lon:airports[n].lon}}catch(e){} return null; }
   function rwy(n){ try{if(typeof bases!="undefined"&&bases[n]&&bases[n].rwy)return Number(bases[n].rwy)}catch(e){} return RWY[n]||0; }
-  function label(n,m,x,gx,warn){
+  function label(n,m,x,gx,xWarn){
     const dir=m.windDir==null?"VRB":String(Math.round(m.windDir)).padStart(3,"0");
     const sp=m.windSpeed==null?"--":String(Math.round(m.windSpeed));
     const gu=m.windGust?"G"+Math.round(m.windGust):"";
     const xs=x==null?"XW --":"XW "+Math.round(x);
     const gxs=gx==null?"":" / GXW "+Math.round(gx);
-    return `${n}<br><span style="opacity:.9">${m.timeZ||"----Z"}</span><br><span class="metarWindLine">${dir}°/${sp}${gu} KT</span><span class="metarXwLine">${xs}${gxs}</span>`;
+    return `${n}<br><span style="opacity:.9">${m.timeZ||"----Z"}</span><br><span class="metarWindLine">${dir}°/${sp}${gu} KT</span><span class="metarXwLine ${xWarn?'xwWarn':''}">${xs}${gxs}</span>`;
   }
   function sector(llp,m,warn){ const start=m.varFrom!=null?m.varFrom:0, end=m.varTo!=null?m.varTo:360; let span=(end-start+360)%360; if(span===0)span=360; const pts=[[llp.lat,llp.lon]], km=4.5; for(let a=0;a<=span;a+=10){const dg=(start+a)%360,rad=dg*Math.PI/180; pts.push([llp.lat+Math.cos(rad)*km/111,llp.lon+Math.sin(rad)*km/(111*Math.cos(llp.lat*Math.PI/180))])} pts.push([llp.lat,llp.lon]); layers.push(L.polygon(pts,{color:warn?"#ff0000":"#00e676",fillColor:warn?"#ff0000":"#00e676",fillOpacity:.18,weight:2,className:"metarSector"}).addTo(map)); }
   function add(n,m){
     const pos=ll(n); if(!pos||!window.L||!window.map)return false;
     const rw=rwy(n), c=comp(m.windDir,m.windSpeed,rw), gc=m.windGust?comp(m.windDir,m.windGust,rw):{xw:null,hw:null};
     let maxVar=null; if(m.varFrom!=null&&m.varTo!=null){maxVar=0; [m.varFrom,m.varTo].forEach(d=>[m.windSpeed,m.windGust].filter(v=>v!=null&&!isNaN(v)).forEach(s=>{const cc=comp(d,s,rw); if(cc.xw!=null)maxVar=Math.max(maxVar,cc.xw)}))}
-    const warn=(m.windSpeed!=null&&m.windSpeed>=WIND_LIMIT)||(c.xw!=null&&c.xw>=XW_LIMIT)||(gc.xw!=null&&gc.xw>=XW_LIMIT)||(maxVar!=null&&maxVar>=XW_LIMIT);const arrowDeg=m.windDir==null?0:((Number(m.windDir)+90+360)%360);
+    const windWarn=(m.windSpeed!=null&&m.windSpeed>=WIND_LIMIT); const xWarn=(c.xw!=null&&c.xw>=XW_LIMIT)||(gc.xw!=null&&gc.xw>=XW_LIMIT)||(maxVar!=null&&maxVar>=XW_LIMIT); const warn=windWarn||xWarn; const arrowDeg=m.windDir==null?0:((Number(m.windDir)+90+360)%360);
     const windIcon=L.divIcon({className:"",html:`<div class="metarWindIcon ${warn?'warn':''}" style="transform:rotate(${arrowDeg}deg)"></div>`,iconSize:[46,46],iconAnchor:[23,23]});
     layers.push(L.marker([pos.lat,pos.lon],{icon:windIcon}).addTo(map));
     
-    const li=L.divIcon({className:"",html:`<div class="metarWindLabel ${warn?'warn':''}">${label(n,m,c.xw,gc.xw,warn)}</div>`,iconSize:[145,48],iconAnchor:[72,-8]});
+    const li=L.divIcon({className:"",html:`<div class="metarWindLabel ${warn?'warn':''}">${label(n,m,c.xw,gc.xw,xWarn)}</div>`,iconSize:[145,48],iconAnchor:[72,-8]});
     layers.push(L.marker([pos.lat,pos.lon],{icon:li}).addTo(map));
     if((m.varFrom!=null&&m.varTo!=null)||m.windDir==null) sector(pos,m,warn);
     return warn;
