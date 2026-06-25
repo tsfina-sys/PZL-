@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool v8.2 D59 Cockpit FIX37D413</title>
+  <title>PZL Mission Tool v8.2 D60 Cockpit FIX37D413</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -1155,7 +1155,7 @@ body.pzl-screen-locked #lockMapBtn {
 <body><button id="metarWindBtn" class="metar-off" onclick="pzlRefreshCheckwxMetars()" style="position:absolute;z-index:1000;top:52px;left:6px">METAR</button>
 <div id="app">
   <div id="mapWrap">
-    <header><span>PZL Mission Tool v8.2 D59</span><span>Cockpit</span></header>
+    <header><span>PZL Mission Tool v8.2 D60</span><span>Cockpit</span></header>
     <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><div class="splitControl topGpsSplit"><button id="gpsBtn">GPS</button><button id="useGpsAsStartBtn" class="secondary">Αφετηρία</button></div><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button></div>
 <div id="map"></div><div id="metarWindStatus"></div>
     <div id="hsiHud" aria-label="HSI HUD">
@@ -5345,6 +5345,98 @@ try {
   }
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", installManualEnter);
   else installManualEnter();
+})();
+</script>
+
+
+<style id="pzl-d60-final-fixes">
+/* FIX37D60: force GPS+Αφετηρία as one true 50/50 field and Airborne x2 visibility */
+#topMapGpsBar{gap:6px!important;align-items:stretch!important;}
+#topMapGpsBar .topGpsSplit{
+  display:inline-flex!important; flex-direction:row!important; gap:0!important;
+  overflow:hidden!important; border-radius:8px!important; flex:0 0 178px!important; width:178px!important;
+  box-shadow:0 1px 5px rgba(0,0,0,.24)!important;
+}
+#topMapGpsBar .topGpsSplit #gpsBtn,
+#topMapGpsBar .topGpsSplit #useGpsAsStartBtn{
+  flex:1 1 50%!important; width:50%!important; min-width:0!important; max-width:none!important;
+  margin:0!important; height:32px!important; border-radius:0!important; padding:4px 2px!important;
+  font-size:11px!important; line-height:1.05!important; white-space:normal!important;
+}
+#topMapGpsBar .topGpsSplit #gpsBtn{border-radius:8px 0 0 8px!important;border-right:1px solid rgba(255,255,255,.35)!important;}
+#topMapGpsBar .topGpsSplit #useGpsAsStartBtn{border-radius:0 8px 8px 0!important;}
+#newFireWithWaterBtn{font-weight:800!important;}
+#newFireWithWaterBtn .x2-mark{display:inline!important;font-size:.82em!important;font-weight:900!important;margin-left:3px!important;}
+#newFireWithWaterBtn.x2-pending,#takeoffBtn.x2-pending,#setManualTimeBtn.x2-pending,#clearViaBtn.x2-pending,#clearReturnWpBtn.x2-pending,#generalResetBtn.x2-pending{filter:brightness(1.28)!important;box-shadow:0 0 0 2px #ffd24a,0 1px 6px rgba(0,0,0,.3)!important;}
+@media(max-width:700px){
+  #topMapGpsBar{gap:4px!important;left:70px!important;}
+  #topMapGpsBar .topGpsSplit{flex-basis:160px!important;width:160px!important;}
+  #topMapGpsBar .topGpsSplit #gpsBtn,#topMapGpsBar .topGpsSplit #useGpsAsStartBtn{height:28px!important;font-size:10px!important;padding:2px 1px!important;}
+  #newFireWithWaterBtn{font-size:8.5px!important;line-height:1.05!important;}
+}
+@media(max-width:390px){
+  #topMapGpsBar .topGpsSplit{flex-basis:146px!important;width:146px!important;}
+  #topMapGpsBar .topGpsSplit #gpsBtn,#topMapGpsBar .topGpsSplit #useGpsAsStartBtn{font-size:9px!important;}
+}
+</style>
+<script id="pzl-d60-final-js">
+/* FIX37D60 final: x2 Airborne + Manual Practice enter behavior */
+(function(){
+  const WINDOW_MS=500;
+  const ids=["clearViaBtn","clearReturnWpBtn","generalResetBtn","takeoffBtn","newFireWithWaterBtn"];
+  const last=Object.create(null);
+  function markAirborne(){
+    const b=document.getElementById('newFireWithWaterBtn');
+    if(b){ b.innerHTML='Airborne Full Tank <span class="x2-mark">x2</span>'; b.title='Θέλει 2 πατήματα μέσα σε 0,5 δευτ.'; }
+  }
+  function forceGpsSplit(){
+    const gps=document.getElementById('gpsBtn'), start=document.getElementById('useGpsAsStartBtn'), bar=document.getElementById('topMapGpsBar');
+    if(!gps||!start||!bar) return;
+    let wrap=bar.querySelector('.topGpsSplit');
+    if(!wrap || gps.parentElement!==wrap || start.parentElement!==wrap){
+      wrap=document.createElement('div'); wrap.className='splitControl topGpsSplit';
+      bar.insertBefore(wrap,gps); wrap.appendChild(gps); wrap.appendChild(start);
+    }
+  }
+  function installX2(id){
+    const btn=document.getElementById(id); if(!btn || btn.dataset.d60x2==='1') return;
+    btn.dataset.d60x2='1';
+    btn.addEventListener('click',function(ev){
+      const now=Date.now(), prev=last[id]||0;
+      if(now-prev<=WINDOW_MS){ last[id]=0; btn.classList.remove('x2-pending'); return; }
+      last[id]=now; ev.preventDefault(); ev.stopImmediatePropagation(); btn.classList.add('x2-pending');
+      setTimeout(function(){ if(Date.now()-(last[id]||0)>=WINDOW_MS){ last[id]=0; btn.classList.remove('x2-pending'); }}, WINDOW_MS+40);
+    },true);
+  }
+  function installManual(){
+    const btn=document.getElementById('setManualTimeBtn');
+    const inp=document.getElementById('manualTime');
+    if(!btn || btn.dataset.d60manual==='1') return; btn.dataset.d60manual='1';
+    btn.innerHTML='Manual Practice <span class="x2-mark">x2</span>';
+    btn.title='Με άδειο πεδίο: 2 πατήματα. Με ώρα γραμμένη: λειτουργεί σαν Enter.';
+    btn.addEventListener('click',function(ev){
+      // If a time is already typed, allow the original handler to run immediately (old Enter behavior).
+      if(inp && inp.value && inp.value.trim()) return;
+      const id='setManualTimeBtn', now=Date.now(), prev=last[id]||0;
+      if(now-prev<=WINDOW_MS){ last[id]=0; btn.classList.remove('x2-pending'); return; }
+      last[id]=now; ev.preventDefault(); ev.stopImmediatePropagation(); btn.classList.add('x2-pending');
+      setTimeout(function(){ if(Date.now()-(last[id]||0)>=WINDOW_MS){ last[id]=0; btn.classList.remove('x2-pending'); }}, WINDOW_MS+40);
+    },true);
+    if(inp && inp.dataset.d60enter!=='1'){
+      inp.dataset.d60enter='1';
+      inp.addEventListener('keydown',function(ev){
+        if(ev.key==='Enter'){
+          ev.preventDefault();
+          if(typeof setTakeoffModeButtons==='function') setTakeoffModeButtons('manual');
+          if(typeof setManualCommandTimeFromInput==='function') { setManualCommandTimeFromInput(); try{calculate();}catch(e){} }
+          else btn.click();
+        }
+      });
+    }
+  }
+  function init(){ markAirborne(); forceGpsSplit(); ids.forEach(installX2); installManual(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  setTimeout(init,500); setTimeout(init,1500);
 })();
 </script>
 
