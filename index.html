@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool v8.2 D58 Cockpit FIX37D413</title>
+  <title>PZL Mission Tool v8.2 D59 Cockpit FIX37D413</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -1134,11 +1134,28 @@ body.pzl-screen-locked #lockMapBtn {
 #newFireWithWaterBtn .x2-mark{font-size:.78em!important;margin-left:2px!important;}
 @media(max-width:700px){#newFireWithWaterBtn{font-size:8.8px!important;line-height:1!important;}#topMapGpsBar .topGpsSplit{width:174px!important;max-width:38vw!important;}}
 
+
+/* FIX37D59: stronger GPS/Αφετηρία split + visible Airborne x2 */
+#topMapGpsBar{align-items:stretch!important;}
+#topMapGpsBar .topGpsSplit{display:inline-flex!important;gap:0!important;overflow:hidden!important;border-radius:8px!important;width:220px!important;max-width:34vw!important;flex:0 0 220px!important;}
+#topMapGpsBar .topGpsSplit button{display:flex!important;align-items:center!important;justify-content:center!important;height:36px!important;width:50%!important;min-width:0!important;margin:0!important;border-radius:0!important;white-space:normal!important;}
+#topMapGpsBar .topGpsSplit button:first-child{border-radius:8px 0 0 8px!important;border-right:1px solid rgba(255,255,255,.25)!important;}
+#topMapGpsBar .topGpsSplit button:last-child{border-radius:0 8px 8px 0!important;}
+#newFireWithWaterBtn{font-weight:800!important;}
+#newFireWithWaterBtn .x2-mark{display:inline!important;font-weight:900!important;font-size:.85em!important;margin-left:3px!important;}
+@media(max-width:700px){
+  #topMapGpsBar .topGpsSplit{width:160px!important;max-width:34vw!important;flex-basis:160px!important;}
+  #topMapGpsBar .topGpsSplit button{height:28px!important;font-size:10.5px!important;padding:3px 1px!important;}
+  #newFireWithWaterBtn{font-size:8.4px!important;line-height:1.05!important;}
+  #newFireWithWaterBtn .x2-mark{font-size:.8em!important;margin-left:1px!important;}
+}
+@media(max-width:380px){#topMapGpsBar .topGpsSplit{width:148px!important;flex-basis:148px!important;}#topMapGpsBar .topGpsSplit button{font-size:9.5px!important;}}
+
 </style>
 <body><button id="metarWindBtn" class="metar-off" onclick="pzlRefreshCheckwxMetars()" style="position:absolute;z-index:1000;top:52px;left:6px">METAR</button>
 <div id="app">
   <div id="mapWrap">
-    <header><span>PZL Mission Tool v8.2 D58</span><span>Cockpit</span></header>
+    <header><span>PZL Mission Tool v8.2 D59</span><span>Cockpit</span></header>
     <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><div class="splitControl topGpsSplit"><button id="gpsBtn">GPS</button><button id="useGpsAsStartBtn" class="secondary">Αφετηρία</button></div><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button></div>
 <div id="map"></div><div id="metarWindStatus"></div>
     <div id="hsiHud" aria-label="HSI HUD">
@@ -5268,6 +5285,16 @@ try {
       btn.dataset.pzlX2Guard = "1";
       btn.title = (btn.title ? btn.title + " - " : "") + "Θέλει 2 πατήματα μέσα σε 0,5 δευτ.";
       btn.addEventListener("click", function(ev){
+        // FIX37D59: Manual Practice works like old ENTER when a manual time is already typed.
+        // Δηλαδή μετά την εισαγωγή ώρας, ένα απλό πάτημα επιβεβαιώνει/ενεργοποιεί.
+        if(id === "setManualTimeBtn"){
+          const inp = document.getElementById("manualTime");
+          if(inp && inp.value && inp.value.trim()){
+            lastTap[id] = 0;
+            btn.classList.remove("x2-pending");
+            return;
+          }
+        }
         const now = Date.now();
         const prev = lastTap[id] || 0;
         if(now - prev <= WINDOW_MS){
@@ -5288,8 +5315,14 @@ try {
       }, true);
     });
   }
-  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", installX2Guard);
-  else installX2Guard();
+  function applyD59Labels(){
+    const a=document.getElementById("newFireWithWaterBtn");
+    if(a && !a.querySelector(".x2-mark")){ a.innerHTML='Airborne Full Tank <span class="x2-mark">x2</span>'; }
+    const g=document.querySelector("#topMapGpsBar .topGpsSplit");
+    if(g){ g.style.display='inline-flex'; g.style.gap='0'; }
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", function(){installX2Guard(); applyD59Labels();});
+  else { installX2Guard(); applyD59Labels(); }
 
   // FIX37D58: while typing manual time, Enter/OK on keyboard applies Manual Practice.
   function installManualEnter(){

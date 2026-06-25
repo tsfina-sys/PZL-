@@ -1,1 +1,1 @@
-PZL FIX37D58: GPS/Αφετηρία ενιαίο μισό-μισό, Airborne Full Tank x2, Manual Practice enter/activation fix.
+FIX37D59: GPS+Αφετηρία ενιαίο μισό-μισό, Airborne Full Tank x2 με διπλό πάτημα, Manual Practice ξανά σαν Enter όταν υπάρχει ώρα.
