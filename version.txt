@@ -1,5 +1,7 @@
-FIX37D37_CHECKWX_HEADER_FIX
-- βάση D36
-- CheckWX API key πλέον ως X-API-Key header
-- χρήση /decoded endpoint
-- πιο ανεκτική ανάγνωση ICAO από την απάντηση CheckWX
+FIX37D38_METAR_LABEL_ARROW_FIX
+- βάση D37
+- αφαιρεί/κρύβει τα ξεχωριστά πράσινα βέλη METAR
+- βάζει βέλος διεύθυνσης ανέμου μέσα στο πλαίσιο METAR
+- κίτρινο εντός ορίων, κόκκινο εκτός ορίων
+- ώρα METAR με λεπτά: DD/MM HH:MMZ
+- πιο διάφανο πλαίσιο METAR
