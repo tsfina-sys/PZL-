@@ -27,3 +27,6 @@ FIX37D50: HUD cardinals cleanup - removed fixed inner N/E/S/W, kept rotating out
 
 
 FIX37D51: Διόρθωση περιστροφής PZL marker στον χάρτη ώστε η μύτη να ταυτίζεται με το HUD heading. Αφαιρέθηκε το διπλό rotation parent+img.
+
+
+FIX37D52: Added ◎◎◎ button next to HUD to show/hide the three fire circles and labels.

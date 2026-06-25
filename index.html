@@ -995,7 +995,7 @@ body.pzl-screen-locked #lockMapBtn {
 <div id="app">
   <div id="mapWrap">
     <header><span>PZL Mission Tool v8.2</span><span>Cockpit</span></header>
-    <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><button id="gpsBtn">Ενεργοποίηση GPS</button><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button><button id="useGpsAsStartBtn" class="secondary">Χρήση GPS ως αφετηρία</button></div>
+    <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><button id="gpsBtn">Ενεργοποίηση GPS</button><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="toggleFireCirclesBtn" class="secondary" title="Εμφάνιση/απόκρυψη 3 κύκλων φωτιάς">◎◎◎</button><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button><button id="useGpsAsStartBtn" class="secondary">Χρήση GPS ως αφετηρία</button></div>
 <div id="map"></div><div id="metarWindStatus"></div>
     <div id="hsiHud" aria-label="HSI HUD">
       <div class="hsiDial" id="hsiDial">
@@ -1489,6 +1489,7 @@ function getRemainingAirborneMinutesForNewFire() {
     let viaPoints = [];
     let mode = "fire";
     let fireCircleLayers = [];
+    let fireCirclesVisible = true;
 let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, altLine = null, rwyLine = null, windLine = null, fireWindLine = null;
     let gpsWatchId = null;
     let currentGps = null;
@@ -1670,6 +1671,7 @@ function clearFireCircles(){
 }
 function drawFireCircles(){
   clearFireCircles();
+  if(!fireCirclesVisible) return;
   if(!firePoint) return;
 
   const defs=[
@@ -1705,6 +1707,19 @@ function drawFireCircles(){
    icon:L.divIcon({className:"",html:'<div style="color:black;font-weight:bold;font-size:24px">ΖΕΠ</div>'})
   }).addTo(map);
   fireCircleLayers.push(zep);
+}
+
+function updateFireCirclesButton(){
+  const btn=document.getElementById("toggleFireCirclesBtn");
+  if(!btn) return;
+  btn.textContent = fireCirclesVisible ? "◎◎◎" : "○○○";
+  btn.title = fireCirclesVisible ? "Κύκλοι φωτιάς: ON" : "Κύκλοι φωτιάς: OFF";
+  btn.className = fireCirclesVisible ? "active" : "secondary";
+}
+function toggleFireCircles(){
+  fireCirclesVisible = !fireCirclesVisible;
+  if(fireCirclesVisible) drawFireCircles(); else clearFireCircles();
+  updateFireCirclesButton();
 }
 function setFireMarker() {
       if (fireMarker) map.removeLayer(fireMarker);
@@ -2185,6 +2200,12 @@ function setFireMarker() {
         if (returnBtn) returnBtn.classList.remove("return-wp-active");
         updateReturnWpStatus();
       } catch(e) {}
+    }
+
+    const toggleFireCirclesBtn = document.getElementById("toggleFireCirclesBtn");
+    if (toggleFireCirclesBtn) {
+      toggleFireCirclesBtn.addEventListener("click", toggleFireCircles);
+      updateFireCirclesButton();
     }
 
     document.getElementById("fireModeBtn").addEventListener("click", () => {
