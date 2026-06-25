@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool v8.2 Cockpit FIX37D413</title>
+  <title>PZL Mission Tool v8.2 D55 Cockpit FIX37D413</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -1029,11 +1029,49 @@ body.pzl-screen-locked #lockMapBtn {
 .metarWindLine{display:block!important;margin-top:0!important}
 .metarXwLine{display:block!important;font-weight:900!important;color:#7CFF7C!important}
 .metarWindLabel.warn .metarXwLine{color:#ff7777!important}
+
+/* FIX37D55: combined fire search field + SRCH button */
+.searchCombo{
+  display:flex!important;
+  width:100%!important;
+  gap:0!important;
+  margin:0!important;
+  align-items:stretch!important;
+}
+.searchCombo #searchBox,
+.searchCombo #searchBtn{
+  width:50%!important;
+  min-width:0!important;
+  height:34px!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  font-size:12px!important;
+  line-height:1.1!important;
+}
+.searchCombo #searchBox{
+  border-radius:8px 0 0 8px!important;
+  border-right:0!important;
+  padding:7px 5px!important;
+}
+.searchCombo #searchBtn{
+  border-radius:0 8px 8px 0!important;
+  padding:7px 5px!important;
+  font-weight:900!important;
+}
+@media (max-width:520px){
+  .searchCombo #searchBox,
+  .searchCombo #searchBtn{ height:30px!important; font-size:11px!important; padding:5px 4px!important; }
+}
+@media (max-width:380px){
+  .searchCombo #searchBox,
+  .searchCombo #searchBtn{ height:28px!important; font-size:10px!important; padding:4px 3px!important; }
+}
+
 </style>
 <body><button id="metarWindBtn" class="metar-off" onclick="pzlRefreshCheckwxMetars()" style="position:absolute;z-index:1000;top:52px;left:6px">METAR</button>
 <div id="app">
   <div id="mapWrap">
-    <header><span>PZL Mission Tool v8.2</span><span>Cockpit</span></header>
+    <header><span>PZL Mission Tool v8.2 D55</span><span>Cockpit</span></header>
     <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><button id="gpsBtn">Ενεργοποίηση GPS</button><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="toggleFireCirclesBtn" class="secondary" title="Εμφάνιση/απόκρυψη 3 κύκλων φωτιάς"><span class="fire-circles-icon" aria-hidden="true"><span class="ring-red"></span><span class="ring-black"></span><span class="flame">🔥</span></span></button><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button><button id="useGpsAsStartBtn" class="secondary">Χρήση GPS ως αφετηρία</button></div>
 <div id="map"></div><div id="metarWindStatus"></div>
     <div id="hsiHud" aria-label="HSI HUD">
@@ -1057,7 +1095,7 @@ body.pzl-screen-locked #lockMapBtn {
 
     <div class="map-actions">
       <button id="lockMapBtn" class="secondary">🔓</button>
-      <button id="fireModeBtn" class="active">🔥 Fire</button><br><input id="searchBox" placeholder="Αναζήτηση φωτιάς π.χ. Πλωμάρι" /><button id="searchBtn">Αναζήτηση</button>
+      <button id="fireModeBtn" class="active">🔥 Fire</button><div class="searchCombo"><input id="searchBox" placeholder="Περιοχή" /><button id="searchBtn" type="button">SRCH</button></div>
       <button id="viaModeBtn" class="secondary">🔥 WPT</button>
       <button id="clearViaBtn" class="danger">🔥 CLR WPT <span class="x2-mark">x2</span></button>
 <button id="returnWpBtn" class="secondary">WPT RTB</button>
