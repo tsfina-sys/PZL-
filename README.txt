@@ -1,1 +1,4 @@
-FIX37D55: Ενώνει το πεδίο αναζήτησης φωτιάς και το κουμπί σε μία γραμμή 50/50 με κουμπί SRCH. Βάση: FIX37D54.
+PZL_FIX37D56_AIRBORNE_BLUE_WPT_COMBO
+- Airborne Full Tank button turns blue when active.
+- WPT/CLR and WPT RTB/CLR RTB are paired into split half-width controls.
+- CLR buttons keep x2 protection: two taps within 0.5 seconds.

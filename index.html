@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool v8.2 D55 Cockpit FIX37D413</title>
+  <title>PZL Mission Tool v8.2 D56 Cockpit FIX37D413</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -1067,11 +1067,48 @@ body.pzl-screen-locked #lockMapBtn {
   .searchCombo #searchBtn{ height:28px!important; font-size:10px!important; padding:4px 3px!important; }
 }
 
+
+/* FIX37D56: paired WPT/CLR controls + Airborne Full Tank blue active */
+.splitControl{
+  display:flex!important;
+  width:100%!important;
+  gap:0!important;
+  margin:0!important;
+  align-items:stretch!important;
+}
+.splitControl button{
+  width:50%!important;
+  min-width:0!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+  white-space:normal!important;
+}
+.splitControl button:first-child{
+  border-radius:8px 0 0 8px!important;
+  border-right:0!important;
+}
+.splitControl button:last-child{
+  border-radius:0 8px 8px 0!important;
+}
+#newFireWithWaterBtn.airborne-full-active{
+  background:#2563eb!important;
+  border-color:#1d4ed8!important;
+  color:#fff!important;
+  box-shadow:0 0 0 2px rgba(37,99,235,.35), 0 1px 5px rgba(0,0,0,.22)!important;
+}
+@media (max-width:700px){
+  .splitControl button{height:28px!important; font-size:9.2px!important; padding:3px 2px!important; line-height:1!important;}
+  .splitControl .x2-mark{font-size:.75em!important; margin-left:1px!important;}
+}
+@media (max-width:380px){
+  .splitControl button{font-size:8.5px!important; padding-left:1px!important; padding-right:1px!important;}
+}
+
 </style>
 <body><button id="metarWindBtn" class="metar-off" onclick="pzlRefreshCheckwxMetars()" style="position:absolute;z-index:1000;top:52px;left:6px">METAR</button>
 <div id="app">
   <div id="mapWrap">
-    <header><span>PZL Mission Tool v8.2 D55</span><span>Cockpit</span></header>
+    <header><span>PZL Mission Tool v8.2 D56</span><span>Cockpit</span></header>
     <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><button id="gpsBtn">Ενεργοποίηση GPS</button><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="toggleFireCirclesBtn" class="secondary" title="Εμφάνιση/απόκρυψη 3 κύκλων φωτιάς"><span class="fire-circles-icon" aria-hidden="true"><span class="ring-red"></span><span class="ring-black"></span><span class="flame">🔥</span></span></button><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button><button id="useGpsAsStartBtn" class="secondary">Χρήση GPS ως αφετηρία</button></div>
 <div id="map"></div><div id="metarWindStatus"></div>
     <div id="hsiHud" aria-label="HSI HUD">
@@ -1096,10 +1133,8 @@ body.pzl-screen-locked #lockMapBtn {
     <div class="map-actions">
       <button id="lockMapBtn" class="secondary">🔓</button>
       <button id="fireModeBtn" class="active">🔥 Fire</button><div class="searchCombo"><input id="searchBox" placeholder="Περιοχή" /><button id="searchBtn" type="button">SRCH</button></div>
-      <button id="viaModeBtn" class="secondary">🔥 WPT</button>
-      <button id="clearViaBtn" class="danger">🔥 CLR WPT <span class="x2-mark">x2</span></button>
-<button id="returnWpBtn" class="secondary">WPT RTB</button>
-<button id="clearReturnWpBtn" class="danger">CLR WPT RTB <span class="x2-mark">x2</span></button><br><button id="takeoffBtn">☎️ Εντολή</button><br><button class="secondary" id="setManualTimeBtn">☎️ Manual Εντολή</button><br><button id="newFireWithWaterBtn" class="secondary">Airborne Full Tank</button>
+      <div class="splitControl wptSplit"><button id="viaModeBtn" class="secondary">🔥 WPT</button><button id="clearViaBtn" class="danger">🔥 CLR <span class="x2-mark">x2</span></button></div>
+      <div class="splitControl rtbSplit"><button id="returnWpBtn" class="secondary">WPT RTB</button><button id="clearReturnWpBtn" class="danger">CLR RTB <span class="x2-mark">x2</span></button></div><button id="takeoffBtn">☎️ Εντολή</button><br><button class="secondary" id="setManualTimeBtn">☎️ Manual Εντολή</button><br><button id="newFireWithWaterBtn" class="secondary">Airborne Full Tank</button>
       <button id="generalResetBtn" class="danger">🔄 Reset <span class="x2-mark">x2</span></button>
     </div>
   </div>
@@ -2547,9 +2582,20 @@ function setFireMarker() {
     }
 
 
+    function updateNewFireWithWaterButtonState() {
+      const btn = document.getElementById("newFireWithWaterBtn");
+      if (!btn) return;
+      if (typeof newFireWithWaterMode !== "undefined" && newFireWithWaterMode) {
+        btn.classList.add("airborne-full-active");
+      } else {
+        btn.classList.remove("airborne-full-active");
+      }
+    }
+
     function setNewFireWithWaterStatus(text) {
       const el = document.getElementById("newFireWithWaterStatus");
       if (el) el.textContent = text;
+      updateNewFireWithWaterButtonState();
     }
 
     function resetMissionForNewFireWithWater() {
@@ -5187,8 +5233,8 @@ try {
 (function(){
   const WINDOW_MS = 500;
   const labels = {
-    clearViaBtn: "CLR WPT x2",
-    clearReturnWpBtn: "CLR WPT RTB x2",
+    clearViaBtn: "CLR x2",
+    clearReturnWpBtn: "CLR RTB x2",
     generalResetBtn: "Reset x2"
   };
   const lastTap = Object.create(null);
