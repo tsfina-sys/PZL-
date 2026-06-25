@@ -1,7 +1,7 @@
-FIX37D34_METAR_WIND_BASIC
+FIX37D35_CHECKWX_METAR_WIND
 - βάση D33
-- METAR wind για Α/Γ, Refill, Full Stop
+- CheckWX v2 METAR API με API key
+- METAR για Α/Γ, Refill, Full Stop
 - ώρα METAR, διεύθυνση, ένταση, ριπές
-- βέλη ανέμου πάνω στα Α/Δ
 - κόκκινο αν μέση ένταση >29.5 kt ή crosswind/ριπή crosswind >13 kt
 - sector/τρίγωνο για VRB ή 180V240
