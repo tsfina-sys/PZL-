@@ -1,7 +1,4 @@
-FIX37D35_CHECKWX_METAR_WIND
-- βάση D33
-- CheckWX v2 METAR API με API key
-- METAR για Α/Γ, Refill, Full Stop
-- ώρα METAR, διεύθυνση, ένταση, ριπές
-- κόκκινο αν μέση ένταση >29.5 kt ή crosswind/ριπή crosswind >13 kt
-- sector/τρίγωνο για VRB ή 180V240
+FIX37D36_CHECKWX_METAR_COMMA_FIX
+- βάση D35
+- διορθώνει το CheckWX URL ώστε τα πολλαπλά ICAO να στέλνονται ως LGMT,LGHI,LGKL και όχι LGMT%2CLGHI%2CLGKL
+- κρατά METAR wind markers/labels/sector
