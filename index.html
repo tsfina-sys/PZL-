@@ -4896,7 +4896,7 @@ try {
     const pos=ll(n); if(!pos||!window.L||!window.map)return false;
     const rw=rwy(n), c=comp(m.windDir,m.windSpeed,rw), gc=m.windGust?comp(m.windDir,m.windGust,rw):{xw:null,hw:null};
     let maxVar=null; if(m.varFrom!=null&&m.varTo!=null){maxVar=0; [m.varFrom,m.varTo].forEach(d=>[m.windSpeed,m.windGust].filter(v=>v!=null&&!isNaN(v)).forEach(s=>{const cc=comp(d,s,rw); if(cc.xw!=null)maxVar=Math.max(maxVar,cc.xw)}))}
-    const warn=(m.windSpeed!=null&&m.windSpeed>WIND_LIMIT)||(c.xw!=null&&c.xw>XW_LIMIT)||(gc.xw!=null&&gc.xw>XW_LIMIT)||(maxVar!=null&&maxVar>XW_LIMIT);const arrowDeg=m.windDir==null?0:(Number(m.windDir)+180)%360;
+    const warn=(m.windSpeed!=null&&m.windSpeed>WIND_LIMIT)||(c.xw!=null&&c.xw>XW_LIMIT)||(gc.xw!=null&&gc.xw>XW_LIMIT)||(maxVar!=null&&maxVar>XW_LIMIT);const arrowDeg=m.windDir==null?0:Number(m.windDir);
     const windIcon=L.divIcon({className:"",html:`<div class="metarWindIcon ${warn?'warn':''}" style="transform:rotate(${arrowDeg}deg)"></div>`,iconSize:[46,46],iconAnchor:[23,23]});
     layers.push(L.marker([pos.lat,pos.lon],{icon:windIcon}).addTo(map));
     
