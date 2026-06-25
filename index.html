@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool v8.2 Cockpit FIX37D363</title>
+  <title>PZL Mission Tool v8.2 Cockpit FIX37D373</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -617,7 +617,7 @@ body.pzl-screen-locked #lockMapBtn {
 }
 
 
-/* FIX37D363: stronger mobile compact mode - smaller right buttons + more map area */
+/* FIX37D373: stronger mobile compact mode - smaller right buttons + more map area */
 @media (max-width:700px) and (orientation:portrait){
   html, body { height:100dvh; overflow:hidden; }
   #app{ height:100dvh !important; overflow:hidden !important; display:flex !important; flex-direction:column !important; }
@@ -734,7 +734,7 @@ body.pzl-screen-locked #lockMapBtn {
 }
 
 
-/* FIX37D36: connected PZL moving aircraft marker */
+/* FIX37D37: connected PZL moving aircraft marker */
 .gps-aircraft-marker{
   width:58px !important;
   height:58px !important;
@@ -1071,7 +1071,7 @@ function getStoredOrPromptTakeoffTimeForNewFire(allowPrompt = true, useCommandFa
 
     if (!allowPrompt) return null;
 
-    // FIX37D36:
+    // FIX37D37:
     // Αν ανοίξουμε την εφαρμογή ενώ είμαστε ήδη airborne και δεν έχει πατηθεί
     // Εντολή/Manual Εντολή, το Airborne Full Tank ζητά ώρα πραγματικής Α/Γ.
     // Αυτή αποθηκεύεται ως Α/Γ, ενώ στο πεδίο/λογική της εντολής μπαίνει Α/Γ - 15'.
@@ -1121,7 +1121,7 @@ function getStoredOrPromptTakeoffTimeForNewFire(allowPrompt = true, useCommandFa
 
 function pzlGetScenarioNowForNewFire() {
   try {
-    // FIX37D3632: σε manual mode η χειροκίνητη ώρα υπερισχύει τυχόν παλιάς gpsTestModeASimNow.
+    // FIX37D3732: σε manual mode η χειροκίνητη ώρα υπερισχύει τυχόν παλιάς gpsTestModeASimNow.
     if (window.pzlManualCommandTimeActive && typeof commandTime !== "undefined" && commandTime) {
       return new Date(commandTime.getTime());
     }
@@ -2026,7 +2026,7 @@ function setFireMarker() {
       try {
         const manualActual = new Date(commandTime.getTime() + getInitialTakeoffDelayMin() * 60000);
 
-        // FIX37D3632: Αν είχε πατηθεί πρώτα η κανονική «Εντολή» και μετά αλλάξουμε σε
+        // FIX37D3732: Αν είχε πατηθεί πρώτα η κανονική «Εντολή» και μετά αλλάξουμε σε
         // Manual Εντολή, πρέπει να συγχρονιστεί και το εσωτερικό scenario clock.
         // Αλλιώς το Airborne Full Tank / Νέα φωτιά με νερό κρατά την παλιά ώρα
         // της κανονικής εντολής και βγάζει λάθος/0 ρίψεις.
@@ -2771,7 +2771,7 @@ function setFireMarker() {
         const firstDrop = addMinutes(calcCommandTime, getEffectiveInitialDelayMin() + D/speedKmPerMin + attackCircuitMin);
         const firstTakeoff = addMinutes(calcCommandTime, getEffectiveInitialDelayMin());
 
-        // FIX37D363:
+        // FIX37D373:
         // Το maxDrops πρέπει να ελέγχεται από την πραγματική ώρα Α/Γ έως την τελική Π/Γ.
         // Πριν, στο newFireWithWaterMode χρησιμοποιούσε "remaining airborne" από άλλη εσωτερική ώρα
         // και μπορούσε να βγάζει: "Ώρα πρώτης ρίψης" αλλά "Μέγιστες ρίψεις: 0".
@@ -2790,7 +2790,7 @@ function setFireMarker() {
           else break;
         }
 
-        // FIX37D36: hard stop στο Cutoff = ΤΦ - χρόνος full stop/εναλλακτικού.
+        // FIX37D37: hard stop στο Cutoff = ΤΦ - χρόνος full stop/εναλλακτικού.
         // Αν η εντολή είναι ήδη μετά το cutoff, ή αν η τελική Π/Γ μετά από ρίψη
         // βγει μετά το cutoff, τότε δεν επιτρέπεται ρίψη.
         let availableToCutoffMin = (cutoffInfo.cutoff.getTime()-calcCommandTime.getTime())/60000;
@@ -4015,7 +4015,7 @@ try {
       try { gpsDebugUpdate("periodic"); } catch(e) {}
     }, 1000); // GPS_DEBUG_PERIODIC
 
-    // FIX37D363: Manual time field - don't block typing on Android. Normalize only on blur/click.
+    // FIX37D373: Manual time field - don't block typing on Android. Normalize only on blur/click.
     function pzlNormalizeManualTime(raw) {
       raw = String(raw || '').trim();
       if (!raw) return '';
@@ -4218,7 +4218,7 @@ try {
 
 
 <script>
-/* FIX37D363: Fallback ΤΦ με ημερομηνία δεδομένων + manual εισαγωγή. */
+/* FIX37D373: Fallback ΤΦ με ημερομηνία δεδομένων + manual εισαγωγή. */
 (function(){
   function pzlPad2(n){ return String(n).padStart(2,'0'); }
   function pzlDateKey(d){ return d.getFullYear() + '-' + pzlPad2(d.getMonth()+1) + '-' + pzlPad2(d.getDate()); }
@@ -4308,7 +4308,7 @@ try {
 
 
 <script>
-/* FIX37D36: Γενικό Reset - σαν πρώτο άνοιγμα εφαρμογής */
+/* FIX37D37: Γενικό Reset - σαν πρώτο άνοιγμα εφαρμογής */
 (function(){
   function pzlGeneralReset(){
     const ok = confirm("Γενικό Reset;\nΘα καθαρίσει την τρέχουσα αποστολή και θα ανοίξει σαν πρώτη φορά.");
@@ -4362,7 +4362,7 @@ try {
 
 
 <script>
-/* FIX37D36: PZL moving marker nose follows heading/course */
+/* FIX37D37: PZL moving marker nose follows heading/course */
 (function(){
   function normDeg(v){
     v = Number(v);
@@ -4796,7 +4796,15 @@ try {
     if((m.varFrom!=null&&m.varTo!=null)||m.windDir==null) sector(pos,m,warn);
     return warn;
   }
-  async function fetchCW(ids){ const url="https://api.checkwx.com/v2/metar/"+ids.join(",")+"?x-api-key="+encodeURIComponent(CHECKWX_KEY); const r=await fetch(url,{cache:"no-store"}); if(!r.ok)throw new Error("CheckWX HTTP "+r.status); return await r.json(); }
+  async function fetchCW(ids){
+    const url="https://api.checkwx.com/v2/metar/"+ids.join(",")+"/decoded";
+    const r=await fetch(url,{
+      cache:"no-store",
+      headers:{"X-API-Key":CHECKWX_KEY}
+    });
+    if(!r.ok)throw new Error("CheckWX HTTP "+r.status);
+    return await r.json();
+  }
   window.pzlRefreshCheckwxMetars=async function(){
     const btn=document.getElementById("metarWindBtn");
     try{
@@ -4806,7 +4814,7 @@ try {
       const ids=Object.keys(idMap); if(!ids.length)throw new Error("Δεν βρέθηκαν ICAO");
       const json=await fetchCW(ids), data=Array.isArray(json.data)?json.data:[];
       let any=false, shown=0;
-      data.forEach(item=>{ let raw=item.raw_text||item.raw||""; let id=item.icao||item.station?.icao||item.station_id||""; if(!id&&raw){const m=raw.match(/^([A-Z]{4})\s+/); if(m)id=m[1]} id=String(id).toUpperCase(); const n=idMap[id]; if(n){any=add(n,norm(item))||any; shown++;} });
+      data.forEach(item=>{ let raw=item.raw_text||item.raw||""; let id=item.icao||item.icao_id||item.station?.icao||item.station?.icao_code||item.station_id||item.station||""; if(!id&&raw){const m=raw.match(/^([A-Z]{4})\s+/); if(m)id=m[1]} if (typeof id === "object" && id) id = id.icao || id.icao_code || id.id || ""; id=String(id).toUpperCase(); const n=idMap[id]; if(n){any=add(n,norm(item))||any; shown++;} });
       if(btn){btn.textContent="METAR";btn.className=any?"metar-warn":"metar-on"}
       st(shown?`METAR: ${shown}/${ids.length} Α/Δ`:`METAR: δεν βρέθηκαν δεδομένα για ${ids.join(",")}`,true); setTimeout(()=>st("",false),6000);
     }catch(e){ console.warn("CheckWX METAR",e); if(btn){btn.textContent="METAR";btn.className="metar-off"} st("METAR ERROR: "+(e.message||e),true); }

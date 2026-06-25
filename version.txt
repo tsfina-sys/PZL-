@@ -1,4 +1,5 @@
-FIX37D36_CHECKWX_METAR_COMMA_FIX
-- βάση D35
-- διορθώνει το CheckWX URL ώστε τα πολλαπλά ICAO να στέλνονται ως LGMT,LGHI,LGKL και όχι LGMT%2CLGHI%2CLGKL
-- κρατά METAR wind markers/labels/sector
+FIX37D37_CHECKWX_HEADER_FIX
+- βάση D36
+- CheckWX API key πλέον ως X-API-Key header
+- χρήση /decoded endpoint
+- πιο ανεκτική ανάγνωση ICAO από την απάντηση CheckWX
