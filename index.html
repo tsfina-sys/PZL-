@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool v8.2 Cockpit FIX37D393</title>
+  <title>PZL Mission Tool v8.2 Cockpit FIX37D403</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -617,7 +617,7 @@ body.pzl-screen-locked #lockMapBtn {
 }
 
 
-/* FIX37D393: stronger mobile compact mode - smaller right buttons + more map area */
+/* FIX37D403: stronger mobile compact mode - smaller right buttons + more map area */
 @media (max-width:700px) and (orientation:portrait){
   html, body { height:100dvh; overflow:hidden; }
   #app{ height:100dvh !important; overflow:hidden !important; display:flex !important; flex-direction:column !important; }
@@ -734,7 +734,7 @@ body.pzl-screen-locked #lockMapBtn {
 }
 
 
-/* FIX37D39: connected PZL moving aircraft marker */
+/* FIX37D40: connected PZL moving aircraft marker */
 .gps-aircraft-marker{
   width:58px !important;
   height:58px !important;
@@ -881,6 +881,56 @@ body.pzl-screen-locked #lockMapBtn {
 .metarWindLabel.warn{border-color:rgba(255,0,0,.75)!important;color:#ffdddd!important}
 .metarLabelArrow{display:none!important}
 .metarWindLine{display:block!important;margin-top:1px}
+.metarXwLine{display:block;font-weight:900;color:#7CFF7C}
+.metarWindLabel.warn .metarXwLine{color:#ff7777}
+#metarWindBtn.metar-hidden{background:#6b7280!important}
+</style>
+
+
+<style id="fix37d40-metar-long-arrows-css">
+/* Σβήνει το + / - zoom control για να μην κρύβει το METAR */
+.leaflet-control-zoom{display:none!important}
+
+/* Μακρόστενο βέλος ανέμου με κέντρο το Α/Δ */
+.metarWindIcon{
+  display:block!important;
+  position:relative!important;
+  width:74px!important;
+  height:18px!important;
+  transform-origin:9px 9px!important;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.9));
+}
+.metarWindIcon::before{
+  content:"";
+  position:absolute;
+  left:0; top:6px;
+  width:54px; height:6px;
+  background:#ffdf00;
+  border:1px solid rgba(0,0,0,.85);
+  border-right:none;
+  border-radius:4px 0 0 4px;
+}
+.metarWindIcon::after{
+  content:"";
+  position:absolute;
+  left:50px; top:0;
+  width:0; height:0;
+  border-top:9px solid transparent;
+  border-bottom:9px solid transparent;
+  border-left:22px solid #ffdf00;
+  filter:drop-shadow(0 0 1px #000);
+}
+.metarWindIcon.warn::before{background:#ff2222!important}
+.metarWindIcon.warn::after{border-left-color:#ff2222!important}
+
+.metarWindLabel{
+  background:rgba(10,20,30,.48)!important;
+  border:1px solid rgba(255,255,255,.30)!important;
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+}
+.metarLabelArrow{display:none!important}
+.metarWindLine{display:block!important}
 .metarXwLine{display:block;font-weight:900;color:#7CFF7C}
 .metarWindLabel.warn .metarXwLine{color:#ff7777}
 #metarWindBtn.metar-hidden{background:#6b7280!important}
@@ -1103,7 +1153,7 @@ function getStoredOrPromptTakeoffTimeForNewFire(allowPrompt = true, useCommandFa
 
     if (!allowPrompt) return null;
 
-    // FIX37D39:
+    // FIX37D40:
     // Αν ανοίξουμε την εφαρμογή ενώ είμαστε ήδη airborne και δεν έχει πατηθεί
     // Εντολή/Manual Εντολή, το Airborne Full Tank ζητά ώρα πραγματικής Α/Γ.
     // Αυτή αποθηκεύεται ως Α/Γ, ενώ στο πεδίο/λογική της εντολής μπαίνει Α/Γ - 15'.
@@ -1153,7 +1203,7 @@ function getStoredOrPromptTakeoffTimeForNewFire(allowPrompt = true, useCommandFa
 
 function pzlGetScenarioNowForNewFire() {
   try {
-    // FIX37D3932: σε manual mode η χειροκίνητη ώρα υπερισχύει τυχόν παλιάς gpsTestModeASimNow.
+    // FIX37D4032: σε manual mode η χειροκίνητη ώρα υπερισχύει τυχόν παλιάς gpsTestModeASimNow.
     if (window.pzlManualCommandTimeActive && typeof commandTime !== "undefined" && commandTime) {
       return new Date(commandTime.getTime());
     }
@@ -2058,7 +2108,7 @@ function setFireMarker() {
       try {
         const manualActual = new Date(commandTime.getTime() + getInitialTakeoffDelayMin() * 60000);
 
-        // FIX37D3932: Αν είχε πατηθεί πρώτα η κανονική «Εντολή» και μετά αλλάξουμε σε
+        // FIX37D4032: Αν είχε πατηθεί πρώτα η κανονική «Εντολή» και μετά αλλάξουμε σε
         // Manual Εντολή, πρέπει να συγχρονιστεί και το εσωτερικό scenario clock.
         // Αλλιώς το Airborne Full Tank / Νέα φωτιά με νερό κρατά την παλιά ώρα
         // της κανονικής εντολής και βγάζει λάθος/0 ρίψεις.
@@ -2803,7 +2853,7 @@ function setFireMarker() {
         const firstDrop = addMinutes(calcCommandTime, getEffectiveInitialDelayMin() + D/speedKmPerMin + attackCircuitMin);
         const firstTakeoff = addMinutes(calcCommandTime, getEffectiveInitialDelayMin());
 
-        // FIX37D393:
+        // FIX37D403:
         // Το maxDrops πρέπει να ελέγχεται από την πραγματική ώρα Α/Γ έως την τελική Π/Γ.
         // Πριν, στο newFireWithWaterMode χρησιμοποιούσε "remaining airborne" από άλλη εσωτερική ώρα
         // και μπορούσε να βγάζει: "Ώρα πρώτης ρίψης" αλλά "Μέγιστες ρίψεις: 0".
@@ -2822,7 +2872,7 @@ function setFireMarker() {
           else break;
         }
 
-        // FIX37D39: hard stop στο Cutoff = ΤΦ - χρόνος full stop/εναλλακτικού.
+        // FIX37D40: hard stop στο Cutoff = ΤΦ - χρόνος full stop/εναλλακτικού.
         // Αν η εντολή είναι ήδη μετά το cutoff, ή αν η τελική Π/Γ μετά από ρίψη
         // βγει μετά το cutoff, τότε δεν επιτρέπεται ρίψη.
         let availableToCutoffMin = (cutoffInfo.cutoff.getTime()-calcCommandTime.getTime())/60000;
@@ -4047,7 +4097,7 @@ try {
       try { gpsDebugUpdate("periodic"); } catch(e) {}
     }, 1000); // GPS_DEBUG_PERIODIC
 
-    // FIX37D393: Manual time field - don't block typing on Android. Normalize only on blur/click.
+    // FIX37D403: Manual time field - don't block typing on Android. Normalize only on blur/click.
     function pzlNormalizeManualTime(raw) {
       raw = String(raw || '').trim();
       if (!raw) return '';
@@ -4250,7 +4300,7 @@ try {
 
 
 <script>
-/* FIX37D393: Fallback ΤΦ με ημερομηνία δεδομένων + manual εισαγωγή. */
+/* FIX37D403: Fallback ΤΦ με ημερομηνία δεδομένων + manual εισαγωγή. */
 (function(){
   function pzlPad2(n){ return String(n).padStart(2,'0'); }
   function pzlDateKey(d){ return d.getFullYear() + '-' + pzlPad2(d.getMonth()+1) + '-' + pzlPad2(d.getDate()); }
@@ -4340,7 +4390,7 @@ try {
 
 
 <script>
-/* FIX37D39: Γενικό Reset - σαν πρώτο άνοιγμα εφαρμογής */
+/* FIX37D40: Γενικό Reset - σαν πρώτο άνοιγμα εφαρμογής */
 (function(){
   function pzlGeneralReset(){
     const ok = confirm("Γενικό Reset;\nΘα καθαρίσει την τρέχουσα αποστολή και θα ανοίξει σαν πρώτη φορά.");
@@ -4394,7 +4444,7 @@ try {
 
 
 <script>
-/* FIX37D39: PZL moving marker nose follows heading/course */
+/* FIX37D40: PZL moving marker nose follows heading/course */
 (function(){
   function normDeg(v){
     v = Number(v);
@@ -4772,9 +4822,10 @@ try {
   const ICAO = {"ΚΕΡΚΥΡΑ":"LGKR","ΑΚΤΙΟ":"LGPZ","ΚΑΒΑΛΑ":"LGKV","ΑΛΕΞΑΝΔΡΟΥΠΟΛΗ":"LGAL","ΚΕΦΑΛΛΟΝΙΑ":"LGKF","ΑΝΔΡΑΒΙΔΑ":"LGAD","ΤΡΙΠΟΛΗ":"LGTP","ΚΑΛΑΜΑΤΑ":"LGKL","ΛΑΜΙΑ":"LGLM","ΒΟΛΟΣ":"LGBL","ΜΥΤΙΛΗΝΗ":"LGMT","ΧΙΟΣ":"LGHI","ΤΑΤΟΪ":"LGTT","ΕΛΕΥΣΙΝΑ":"LGEL"};
   const RWY = {"ΚΕΡΚΥΡΑ":170,"ΑΚΤΙΟ":30,"ΚΑΒΑΛΑ":50,"ΑΛΕΞΑΝΔΡΟΥΠΟΛΗ":70,"ΚΕΦΑΛΛΟΝΙΑ":140,"ΑΝΔΡΑΒΙΔΑ":160,"ΤΡΙΠΟΛΗ":20,"ΚΑΛΑΜΑΤΑ":170,"ΛΑΜΙΑ":130,"ΒΟΛΟΣ":80,"ΜΥΤΙΛΗΝΗ":140,"ΧΙΟΣ":10,"ΤΑΤΟΪ":30,"ΕΛΕΥΣΙΝΑ":180};
   let layers = [];
+  window.pzlGetMetarLayers=function(){return layers;};
 
   function st(msg, show){ const e=document.getElementById("metarWindStatus"); if(!e)return; e.innerHTML=msg||""; e.style.display=show?"block":"none"; }
-  function clear(){ layers.forEach(l=>{try{map.removeLayer(l)}catch(e){}}); layers=[]; }
+  function clear(){ layers.forEach(l=>{try{map.removeLayer(l)}catch(e){}}); layers=[]; window.pzlGetMetarLayers=function(){return layers;}; }
   function diff(a,b){ return Math.abs((Number(a)-Number(b)+540)%360-180); }
   function comp(dir, spd, rwy){ if(dir==null||spd==null||isNaN(dir)||isNaN(spd)) return {xw:null,hw:null}; const a=diff(dir,rwy)*Math.PI/180; return {xw:Math.abs(spd*Math.sin(a)),hw:spd*Math.cos(a)}; }
   function rawParse(raw){
@@ -4826,8 +4877,8 @@ try {
     const pos=ll(n); if(!pos||!window.L||!window.map)return false;
     const rw=rwy(n), c=comp(m.windDir,m.windSpeed,rw), gc=m.windGust?comp(m.windDir,m.windGust,rw):{xw:null,hw:null};
     let maxVar=null; if(m.varFrom!=null&&m.varTo!=null){maxVar=0; [m.varFrom,m.varTo].forEach(d=>[m.windSpeed,m.windGust].filter(v=>v!=null&&!isNaN(v)).forEach(s=>{const cc=comp(d,s,rw); if(cc.xw!=null)maxVar=Math.max(maxVar,cc.xw)}))}
-    const warn=(m.windSpeed!=null&&m.windSpeed>WIND_LIMIT)||(c.xw!=null&&c.xw>XW_LIMIT)||(gc.xw!=null&&gc.xw>XW_LIMIT)||(maxVar!=null&&maxVar>XW_LIMIT);const arrowDeg=m.windDir==null?0:Number(m.windDir);
-    const windIcon=L.divIcon({className:"",html:`<div class="metarWindIcon ${warn?'warn':''}" style="transform:rotate(${arrowDeg}deg)">➤</div>`,iconSize:[46,46],iconAnchor:[23,23]});
+    const warn=(m.windSpeed!=null&&m.windSpeed>WIND_LIMIT)||(c.xw!=null&&c.xw>XW_LIMIT)||(gc.xw!=null&&gc.xw>XW_LIMIT)||(maxVar!=null&&maxVar>XW_LIMIT);const arrowDeg=m.windDir==null?0:(Number(m.windDir)+180)%360;
+    const windIcon=L.divIcon({className:"",html:`<div class="metarWindIcon ${warn?'warn':''}" style="transform:rotate(${arrowDeg}deg)"></div>`,iconSize:[46,46],iconAnchor:[23,23]});
     layers.push(L.marker([pos.lat,pos.lon],{icon:windIcon}).addTo(map));
     
     const li=L.divIcon({className:"",html:`<div class="metarWindLabel ${warn?'warn':''}">${label(n,m,c.xw,gc.xw,warn)}</div>`,iconSize:[145,48],iconAnchor:[72,-8]});
@@ -4863,26 +4914,29 @@ try {
 </script>
 
 
-<script id="fix37d39-metar-toggle-js">
+
+<script id="fix37d40-metar-toggle-hardfix-js">
 (function(){
-  window.pzlMetarVisible = localStorage.getItem("pzlMetarVisibleD39") !== "0";
-  function btnState(){
-    const b=document.getElementById("metarWindBtn");
-    if(!b)return;
-    b.classList.toggle("metar-hidden", !window.pzlMetarVisible);
-    b.textContent = window.pzlMetarVisible ? "METAR 👁" : "METAR ⛔";
-  }
-  window.pzlApplyMetarVisibility=function(){
+  function getLayers(){
     try{
-      if(typeof layers==="undefined") { btnState(); return; }
-      layers.forEach(l=>{
-        try{
-          if(window.pzlMetarVisible){ if(!map.hasLayer(l)) map.addLayer(l); }
-          else { if(map.hasLayer(l)) map.removeLayer(l); }
-        }catch(e){}
-      });
+      if(typeof window.pzlGetMetarLayers==="function") return window.pzlGetMetarLayers() || [];
     }catch(e){}
-    btnState();
+    return [];
+  }
+  window.pzlMetarVisible = localStorage.getItem("pzlMetarVisibleD39") !== "0";
+  window.pzlApplyMetarVisibility=function(){
+    const arr=getLayers();
+    arr.forEach(l=>{
+      try{
+        if(window.pzlMetarVisible){ if(!map.hasLayer(l)) map.addLayer(l); }
+        else { if(map.hasLayer(l)) map.removeLayer(l); }
+      }catch(e){}
+    });
+    const b=document.getElementById("metarWindBtn");
+    if(b){
+      b.classList.toggle("metar-hidden", !window.pzlMetarVisible);
+      b.textContent = window.pzlMetarVisible ? "METAR 👁" : "METAR ⛔";
+    }
   };
   window.pzlToggleMetarVisibility=function(){
     window.pzlMetarVisible=!window.pzlMetarVisible;
@@ -4890,16 +4944,17 @@ try {
     if(window.pzlMetarVisible && typeof window.pzlRefreshCheckwxMetars==="function"){
       window.pzlRefreshCheckwxMetars();
       setTimeout(window.pzlApplyMetarVisibility,700);
-    } else {
+    }else{
       window.pzlApplyMetarVisibility();
     }
   };
-  document.addEventListener("DOMContentLoaded", function(){
+  function install(){
     const b=document.getElementById("metarWindBtn");
-    if(b){ b.onclick=function(){window.pzlToggleMetarVisibility();}; }
-    btnState();
-  });
-  setTimeout(btnState,600);
+    if(b) b.onclick=function(){window.pzlToggleMetarVisibility();};
+    window.pzlApplyMetarVisibility();
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", install); else install();
+  setTimeout(install,600);
 })();
 </script>
 
