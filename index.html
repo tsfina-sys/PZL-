@@ -882,7 +882,7 @@ body.pzl-screen-locked #lockMapBtn {
 .metarLabelArrow{display:none!important}
 .metarWindLine{display:block!important;margin-top:1px}
 .metarXwLine{display:block;font-weight:900;color:#7CFF7C}
-.metarXwLine.xwWarn{color:#ff7777!important}
+.metarWindLabel.warn .metarXwLine{color:#ff7777}
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
@@ -932,7 +932,7 @@ body.pzl-screen-locked #lockMapBtn {
 .metarLabelArrow{display:none!important}
 .metarWindLine{display:block!important}
 .metarXwLine{display:block;font-weight:900;color:#7CFF7C}
-.metarXwLine.xwWarn{color:#ff7777!important}
+.metarWindLabel.warn .metarXwLine{color:#ff7777}
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
@@ -2047,7 +2047,7 @@ function setFireMarker() {
       const effective = Math.max(windSpeed, gust);
       const angle = normAngleDiff(windFrom, rwy);
       const cross = Math.abs(effective * Math.sin(deg2rad(angle)));
-      return {effective, cross, out: cross > pzlMaxCrosswindKts || effective > pzlMaxWindKts};
+      return {effective, cross, out: cross >= pzlMaxCrosswindKts || effective >= pzlMaxWindKts};
     }
 
     function drawRunwayAndWind() {
@@ -2065,7 +2065,7 @@ function setFireMarker() {
       const start = endpointFromBearing(b.lat,b.lon,windFrom,2.2);
       const end = endpointFromBearing(b.lat,b.lon,windTo,1.0);
       const st = windLimitStatus();
-      const color = st.out ? "red" : "yellow";
+      const color = st.out ? "red" : "lime";
       windLine = drawArrow(start, end, color, `Άνεμος από ${windFrom}° | κάθετος ${st.cross.toFixed(1)} kts | σύνολο ${st.effective.toFixed(1)} kts`);
     }
 
@@ -4883,24 +4883,26 @@ try {
   }
   function ll(n){ try{if(typeof bases!="undefined"&&bases[n])return{lat:bases[n].lat,lon:bases[n].lon}}catch(e){} try{if(typeof airports!="undefined"&&airports[n])return{lat:airports[n].lat,lon:airports[n].lon}}catch(e){} return null; }
   function rwy(n){ try{if(typeof bases!="undefined"&&bases[n]&&bases[n].rwy)return Number(bases[n].rwy)}catch(e){} return RWY[n]||0; }
-  function label(n,m,x,gx,xWarn){
+  function label(n,m,x,xwWarn){
     const dir=m.windDir==null?"VRB":String(Math.round(m.windDir)).padStart(3,"0");
     const sp=m.windSpeed==null?"--":String(Math.round(m.windSpeed));
     const gu=m.windGust?"G"+Math.round(m.windGust):"";
     const xs=x==null?"XW --":"XW "+Math.round(x);
-    const gxs=gx==null?"":" / GXW "+Math.round(gx);
-    return `${n}<br><span style="opacity:.9">${m.timeZ||"----Z"}</span><br><span class="metarWindLine">${dir}°/${sp}${gu} KT</span><span class="metarXwLine ${xWarn?'xwWarn':''}">${xs}${gxs}</span>`;
+    return `${n}<br><span style="opacity:.9">${m.timeZ||"----Z"}</span><br><span class="metarWindLine">${dir}°/${sp}${gu} KT</span><span class="metarXwLine ${xwWarn?'xwWarn':''}">${xs}</span>`;
   }
   function sector(llp,m,warn){ const start=m.varFrom!=null?m.varFrom:0, end=m.varTo!=null?m.varTo:360; let span=(end-start+360)%360; if(span===0)span=360; const pts=[[llp.lat,llp.lon]], km=4.5; for(let a=0;a<=span;a+=10){const dg=(start+a)%360,rad=dg*Math.PI/180; pts.push([llp.lat+Math.cos(rad)*km/111,llp.lon+Math.sin(rad)*km/(111*Math.cos(llp.lat*Math.PI/180))])} pts.push([llp.lat,llp.lon]); layers.push(L.polygon(pts,{color:warn?"#ff0000":"#00e676",fillColor:warn?"#ff0000":"#00e676",fillOpacity:.18,weight:2,className:"metarSector"}).addTo(map)); }
   function add(n,m){
     const pos=ll(n); if(!pos||!window.L||!window.map)return false;
-    const rw=rwy(n), c=comp(m.windDir,m.windSpeed,rw), gc=m.windGust?comp(m.windDir,m.windGust,rw):{xw:null,hw:null};
-    let maxVar=null; if(m.varFrom!=null&&m.varTo!=null){maxVar=0; [m.varFrom,m.varTo].forEach(d=>[m.windSpeed,m.windGust].filter(v=>v!=null&&!isNaN(v)).forEach(s=>{const cc=comp(d,s,rw); if(cc.xw!=null)maxVar=Math.max(maxVar,cc.xw)}))}
-    const windWarn=(m.windSpeed!=null&&m.windSpeed>=WIND_LIMIT); const xWarn=(c.xw!=null&&c.xw>=XW_LIMIT)||(gc.xw!=null&&gc.xw>=XW_LIMIT)||(maxVar!=null&&maxVar>=XW_LIMIT); const warn=windWarn||xWarn; const arrowDeg=m.windDir==null?0:((Number(m.windDir)+90+360)%360);
+    const rw=rwy(n);
+    const effectiveWind = Math.max(Number(m.windSpeed||0), Number(m.windGust||0));
+    const c=comp(m.windDir, effectiveWind, rw);
+    let maxVar=null; if(m.varFrom!=null&&m.varTo!=null){maxVar=0; [m.varFrom,m.varTo].forEach(d=>[effectiveWind].filter(v=>v!=null&&!isNaN(v)).forEach(s=>{const cc=comp(d,s,rw); if(cc.xw!=null)maxVar=Math.max(maxVar,cc.xw)}))}
+    const xwWarn=(c.xw!=null&&c.xw>=XW_LIMIT)||(maxVar!=null&&maxVar>=XW_LIMIT);
+    const warn=(effectiveWind>=WIND_LIMIT)||xwWarn;const arrowDeg=m.windDir==null?0:((Number(m.windDir)+90+360)%360);
     const windIcon=L.divIcon({className:"",html:`<div class="metarWindIcon ${warn?'warn':''}" style="transform:rotate(${arrowDeg}deg)"></div>`,iconSize:[46,46],iconAnchor:[23,23]});
     layers.push(L.marker([pos.lat,pos.lon],{icon:windIcon}).addTo(map));
     
-    const li=L.divIcon({className:"",html:`<div class="metarWindLabel ${warn?'warn':''}">${label(n,m,c.xw,gc.xw,xWarn)}</div>`,iconSize:[145,48],iconAnchor:[72,-8]});
+    const li=L.divIcon({className:"",html:`<div class="metarWindLabel ${warn?'warn':''}">${label(n,m,c.xw,xwWarn)}</div>`,iconSize:[145,48],iconAnchor:[72,-8]});
     layers.push(L.marker([pos.lat,pos.lon],{icon:li}).addTo(map));
     if((m.varFrom!=null&&m.varTo!=null)||m.windDir==null) sector(pos,m,warn);
     return warn;
