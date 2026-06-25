@@ -866,7 +866,7 @@ body.pzl-screen-locked #lockMapBtn {
 }
 .metarWindLabel.warn{border-color:rgba(255,0,0,.75)!important;color:#ffdddd!important;}
 .metarLabelArrow{display:inline-block;font-size:19px;font-weight:900;margin-right:5px;vertical-align:middle;transform-origin:center center;text-shadow:0 1px 4px #000;}
-.metarLabelArrow.ok{color:#ffdf00;}
+.metarLabelArrow.ok{color:#00e676;}
 .metarLabelArrow.warn{color:#ff2222;}
 .metarWindLine{display:flex;align-items:center;justify-content:center;gap:3px;margin-top:1px;}
 .metarXwLine{font-weight:900;color:#7CFF7C;}
@@ -875,9 +875,9 @@ body.pzl-screen-locked #lockMapBtn {
 
 
 <style id="fix37d39-metar-toggle-center-arrows-css">
-.metarWindIcon{display:flex!important;width:46px;height:46px;align-items:center;justify-content:center;font-size:31px;font-weight:900;color:#ffdf00;-webkit-text-stroke:1px rgba(0,0,0,.75);text-shadow:0 2px 5px #000,0 0 3px #000;transform-origin:center center}
+.metarWindIcon{display:flex!important;width:46px;height:46px;align-items:center;justify-content:center;font-size:31px;font-weight:900;color:#00e676;-webkit-text-stroke:1px rgba(0,0,0,.75);text-shadow:0 2px 5px #000,0 0 3px #000;transform-origin:center center}
 .metarWindIcon.warn{color:#ff2222!important}
-.metarWindLabel{background:rgba(10,20,30,.50)!important;border:1px solid rgba(255,255,255,.32)!important;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);min-width:116px}
+.metarWindLabel{background:rgba(10,20,30,.50)!important;border:1px solid rgba(255,255,255,.32)!important;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);min-width:92px}
 .metarWindLabel.warn{border-color:rgba(255,0,0,.75)!important;color:#ffdddd!important}
 .metarLabelArrow{display:none!important}
 .metarWindLine{display:block!important;margin-top:1px}
@@ -905,7 +905,7 @@ body.pzl-screen-locked #lockMapBtn {
   position:absolute;
   left:0; top:6px;
   width:54px; height:6px;
-  background:#ffdf00;
+  background:#00e676;
   border:1px solid rgba(0,0,0,.85);
   border-right:none;
   border-radius:4px 0 0 4px;
@@ -917,7 +917,7 @@ body.pzl-screen-locked #lockMapBtn {
   width:0; height:0;
   border-top:9px solid transparent;
   border-bottom:9px solid transparent;
-  border-left:22px solid #ffdf00;
+  border-left:22px solid #00e676;
   filter:drop-shadow(0 0 1px #000);
 }
 .metarWindIcon.warn::before{background:#ff2222!important}
@@ -926,6 +926,9 @@ body.pzl-screen-locked #lockMapBtn {
 .metarWindLabel{
   background:rgba(10,20,30,.48)!important;
   border:1px solid rgba(255,255,255,.30)!important;
+  padding:3px 5px!important;
+  font-size:8px!important;
+  margin-top:18px!important;
   backdrop-filter:blur(2px);
   -webkit-backdrop-filter:blur(2px);
 }
@@ -2047,7 +2050,7 @@ function setFireMarker() {
       const effective = Math.max(windSpeed, gust);
       const angle = normAngleDiff(windFrom, rwy);
       const cross = Math.abs(effective * Math.sin(deg2rad(angle)));
-      return {effective, cross, out: cross > pzlMaxCrosswindKts || effective > pzlMaxWindKts};
+      return {effective, cross, out: cross >= pzlMaxCrosswindKts || effective >= pzlMaxWindKts};
     }
 
     function drawRunwayAndWind() {
@@ -2065,7 +2068,7 @@ function setFireMarker() {
       const start = endpointFromBearing(b.lat,b.lon,windFrom,2.2);
       const end = endpointFromBearing(b.lat,b.lon,windTo,1.0);
       const st = windLimitStatus();
-      const color = st.out ? "red" : "lime";
+      const color = st.out ? "red" : "green";
       windLine = drawArrow(start, end, color, `Άνεμος από ${windFrom}° | κάθετος ${st.cross.toFixed(1)} kts | σύνολο ${st.effective.toFixed(1)} kts`);
     }
 
@@ -2076,7 +2079,7 @@ function setFireMarker() {
       const windTo = (windFrom + 180) % 360;
       const start = endpointFromBearing(firePoint.lat,firePoint.lon,windFrom,1.8);
       const end = endpointFromBearing(firePoint.lat,firePoint.lon,windTo,0.8);
-      fireWindLine = drawArrow(start, end, "yellow", "Άνεμος φωτιάς από " + windFrom + "°");
+      fireWindLine = drawArrow(start, end, "green", "Άνεμος φωτιάς από " + windFrom + "°");
     }
 
     baseSelect.addEventListener("change", () => { selectedBaseName = baseSelect.value;
@@ -3185,7 +3188,7 @@ const base = bases[selectedBaseName];
       const angle = normAngleDiff(windFrom, rwy);
       const cross = Math.abs(effective * Math.sin(deg2rad(angle)));
       const head = effective * Math.cos(deg2rad(angle));
-      const status = (cross <= pzlMaxCrosswindKts && effective <= pzlMaxWindKts) ? "ΕΝΤΟΣ ΟΡΙΩΝ" : "ΕΚΤΟΣ ΟΡΙΩΝ";
+      const status = (cross < pzlMaxCrosswindKts && effective < pzlMaxWindKts) ? "ΕΝΤΟΣ ΟΡΙΩΝ" : "ΕΚΤΟΣ ΟΡΙΩΝ";
 
       document.getElementById("windResult").innerHTML =
         `Γωνία ανέμου ως προς διάδρομο: ${angle.toFixed(0)}°\n` +
@@ -4816,6 +4819,7 @@ try {
 
 
 <script id="fix37d35-checkwx-metar-js">
+/* FIX37D44: METAR/manual wind arrows green/red; gust included in total wind and XW; >= limits red. */
 (function(){
   const CHECKWX_KEY = "a8122bb537b640e5ae6de8cc11a07267";
   const XW_LIMIT = 13, WIND_LIMIT = 29.5;
@@ -4896,7 +4900,8 @@ try {
     const pos=ll(n); if(!pos||!window.L||!window.map)return false;
     const rw=rwy(n), c=comp(m.windDir,m.windSpeed,rw), gc=m.windGust?comp(m.windDir,m.windGust,rw):{xw:null,hw:null};
     let maxVar=null; if(m.varFrom!=null&&m.varTo!=null){maxVar=0; [m.varFrom,m.varTo].forEach(d=>[m.windSpeed,m.windGust].filter(v=>v!=null&&!isNaN(v)).forEach(s=>{const cc=comp(d,s,rw); if(cc.xw!=null)maxVar=Math.max(maxVar,cc.xw)}))}
-    const warn=(m.windSpeed!=null&&m.windSpeed>WIND_LIMIT)||(c.xw!=null&&c.xw>XW_LIMIT)||(gc.xw!=null&&gc.xw>XW_LIMIT)||(maxVar!=null&&maxVar>XW_LIMIT);const arrowDeg=m.windDir==null?0:((Number(m.windDir)+90+360)%360);
+    const effWind=Math.max(Number(m.windSpeed)||0, Number(m.windGust)||0);
+    const warn=(effWind>=WIND_LIMIT)||(c.xw!=null&&c.xw>=XW_LIMIT)||(gc.xw!=null&&gc.xw>=XW_LIMIT)||(maxVar!=null&&maxVar>=XW_LIMIT);const arrowDeg=m.windDir==null?0:((Number(m.windDir)+90+360)%360);
     const windIcon=L.divIcon({className:"",html:`<div class="metarWindIcon ${warn?'warn':''}" style="transform:rotate(${arrowDeg}deg)"></div>`,iconSize:[46,46],iconAnchor:[23,23]});
     layers.push(L.marker([pos.lat,pos.lon],{icon:windIcon}).addTo(map));
     
