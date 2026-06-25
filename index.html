@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool v8.2 Cockpit FIX37D403</title>
+  <title>PZL Mission Tool v8.2 Cockpit FIX37D413</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -617,7 +617,7 @@ body.pzl-screen-locked #lockMapBtn {
 }
 
 
-/* FIX37D403: stronger mobile compact mode - smaller right buttons + more map area */
+/* FIX37D413: stronger mobile compact mode - smaller right buttons + more map area */
 @media (max-width:700px) and (orientation:portrait){
   html, body { height:100dvh; overflow:hidden; }
   #app{ height:100dvh !important; overflow:hidden !important; display:flex !important; flex-direction:column !important; }
@@ -734,7 +734,7 @@ body.pzl-screen-locked #lockMapBtn {
 }
 
 
-/* FIX37D40: connected PZL moving aircraft marker */
+/* FIX37D41: connected PZL moving aircraft marker */
 .gps-aircraft-marker{
   width:58px !important;
   height:58px !important;
@@ -1153,7 +1153,7 @@ function getStoredOrPromptTakeoffTimeForNewFire(allowPrompt = true, useCommandFa
 
     if (!allowPrompt) return null;
 
-    // FIX37D40:
+    // FIX37D41:
     // Αν ανοίξουμε την εφαρμογή ενώ είμαστε ήδη airborne και δεν έχει πατηθεί
     // Εντολή/Manual Εντολή, το Airborne Full Tank ζητά ώρα πραγματικής Α/Γ.
     // Αυτή αποθηκεύεται ως Α/Γ, ενώ στο πεδίο/λογική της εντολής μπαίνει Α/Γ - 15'.
@@ -1203,7 +1203,7 @@ function getStoredOrPromptTakeoffTimeForNewFire(allowPrompt = true, useCommandFa
 
 function pzlGetScenarioNowForNewFire() {
   try {
-    // FIX37D4032: σε manual mode η χειροκίνητη ώρα υπερισχύει τυχόν παλιάς gpsTestModeASimNow.
+    // FIX37D4132: σε manual mode η χειροκίνητη ώρα υπερισχύει τυχόν παλιάς gpsTestModeASimNow.
     if (window.pzlManualCommandTimeActive && typeof commandTime !== "undefined" && commandTime) {
       return new Date(commandTime.getTime());
     }
@@ -2108,7 +2108,7 @@ function setFireMarker() {
       try {
         const manualActual = new Date(commandTime.getTime() + getInitialTakeoffDelayMin() * 60000);
 
-        // FIX37D4032: Αν είχε πατηθεί πρώτα η κανονική «Εντολή» και μετά αλλάξουμε σε
+        // FIX37D4132: Αν είχε πατηθεί πρώτα η κανονική «Εντολή» και μετά αλλάξουμε σε
         // Manual Εντολή, πρέπει να συγχρονιστεί και το εσωτερικό scenario clock.
         // Αλλιώς το Airborne Full Tank / Νέα φωτιά με νερό κρατά την παλιά ώρα
         // της κανονικής εντολής και βγάζει λάθος/0 ρίψεις.
@@ -2853,7 +2853,7 @@ function setFireMarker() {
         const firstDrop = addMinutes(calcCommandTime, getEffectiveInitialDelayMin() + D/speedKmPerMin + attackCircuitMin);
         const firstTakeoff = addMinutes(calcCommandTime, getEffectiveInitialDelayMin());
 
-        // FIX37D403:
+        // FIX37D413:
         // Το maxDrops πρέπει να ελέγχεται από την πραγματική ώρα Α/Γ έως την τελική Π/Γ.
         // Πριν, στο newFireWithWaterMode χρησιμοποιούσε "remaining airborne" από άλλη εσωτερική ώρα
         // και μπορούσε να βγάζει: "Ώρα πρώτης ρίψης" αλλά "Μέγιστες ρίψεις: 0".
@@ -2872,7 +2872,7 @@ function setFireMarker() {
           else break;
         }
 
-        // FIX37D40: hard stop στο Cutoff = ΤΦ - χρόνος full stop/εναλλακτικού.
+        // FIX37D41: hard stop στο Cutoff = ΤΦ - χρόνος full stop/εναλλακτικού.
         // Αν η εντολή είναι ήδη μετά το cutoff, ή αν η τελική Π/Γ μετά από ρίψη
         // βγει μετά το cutoff, τότε δεν επιτρέπεται ρίψη.
         let availableToCutoffMin = (cutoffInfo.cutoff.getTime()-calcCommandTime.getTime())/60000;
@@ -4097,7 +4097,7 @@ try {
       try { gpsDebugUpdate("periodic"); } catch(e) {}
     }, 1000); // GPS_DEBUG_PERIODIC
 
-    // FIX37D403: Manual time field - don't block typing on Android. Normalize only on blur/click.
+    // FIX37D413: Manual time field - don't block typing on Android. Normalize only on blur/click.
     function pzlNormalizeManualTime(raw) {
       raw = String(raw || '').trim();
       if (!raw) return '';
@@ -4300,7 +4300,7 @@ try {
 
 
 <script>
-/* FIX37D403: Fallback ΤΦ με ημερομηνία δεδομένων + manual εισαγωγή. */
+/* FIX37D413: Fallback ΤΦ με ημερομηνία δεδομένων + manual εισαγωγή. */
 (function(){
   function pzlPad2(n){ return String(n).padStart(2,'0'); }
   function pzlDateKey(d){ return d.getFullYear() + '-' + pzlPad2(d.getMonth()+1) + '-' + pzlPad2(d.getDate()); }
@@ -4390,7 +4390,7 @@ try {
 
 
 <script>
-/* FIX37D40: Γενικό Reset - σαν πρώτο άνοιγμα εφαρμογής */
+/* FIX37D41: Γενικό Reset - σαν πρώτο άνοιγμα εφαρμογής */
 (function(){
   function pzlGeneralReset(){
     const ok = confirm("Γενικό Reset;\nΘα καθαρίσει την τρέχουσα αποστολή και θα ανοίξει σαν πρώτη φορά.");
@@ -4444,7 +4444,7 @@ try {
 
 
 <script>
-/* FIX37D40: PZL moving marker nose follows heading/course */
+/* FIX37D41: PZL moving marker nose follows heading/course */
 (function(){
   function normDeg(v){
     v = Number(v);
@@ -4820,6 +4820,24 @@ try {
   const CHECKWX_KEY = "a8122bb537b640e5ae6de8cc11a07267";
   const XW_LIMIT = 13, WIND_LIMIT = 29.5;
   const ICAO = {"ΚΕΡΚΥΡΑ":"LGKR","ΑΚΤΙΟ":"LGPZ","ΚΑΒΑΛΑ":"LGKV","ΑΛΕΞΑΝΔΡΟΥΠΟΛΗ":"LGAL","ΚΕΦΑΛΛΟΝΙΑ":"LGKF","ΑΝΔΡΑΒΙΔΑ":"LGAD","ΤΡΙΠΟΛΗ":"LGTP","ΚΑΛΑΜΑΤΑ":"LGKL","ΛΑΜΙΑ":"LGLM","ΒΟΛΟΣ":"LGBL","ΜΥΤΙΛΗΝΗ":"LGMT","ΧΙΟΣ":"LGHI","ΤΑΤΟΪ":"LGTT","ΕΛΕΥΣΙΝΑ":"LGEL"};
+
+  const FULLSTOP_ALT_METAR = {
+    "ΚΕΡΚΥΡΑ":"ΑΚΤΙΟ",
+    "ΑΚΤΙΟ":"ΚΕΡΚΥΡΑ",
+    "ΚΑΒΑΛΑ":"ΑΛΕΞΑΝΔΡΟΥΠΟΛΗ",
+    "ΑΛΕΞΑΝΔΡΟΥΠΟΛΗ":"ΚΑΒΑΛΑ",
+    "ΚΕΦΑΛΛΟΝΙΑ":"ΑΝΔΡΑΒΙΔΑ",
+    "ΑΝΔΡΑΒΙΔΑ":"ΚΕΦΑΛΛΟΝΙΑ",
+    "ΤΡΙΠΟΛΗ":"ΚΑΛΑΜΑΤΑ",
+    "ΚΑΛΑΜΑΤΑ":"ΤΡΙΠΟΛΗ",
+    "ΛΑΜΙΑ":"ΒΟΛΟΣ",
+    "ΒΟΛΟΣ":"ΛΑΜΙΑ",
+    "ΜΥΤΙΛΗΝΗ":"ΧΙΟΣ",
+    "ΧΙΟΣ":"ΜΥΤΙΛΗΝΗ",
+    "ΤΑΤΟΪ":"ΕΛΕΥΣΙΝΑ",
+    "ΕΛΕΥΣΙΝΑ":"ΤΑΤΟΪ"
+  };
+
   const RWY = {"ΚΕΡΚΥΡΑ":170,"ΑΚΤΙΟ":30,"ΚΑΒΑΛΑ":50,"ΑΛΕΞΑΝΔΡΟΥΠΟΛΗ":70,"ΚΕΦΑΛΛΟΝΙΑ":140,"ΑΝΔΡΑΒΙΔΑ":160,"ΤΡΙΠΟΛΗ":20,"ΚΑΛΑΜΑΤΑ":170,"ΛΑΜΙΑ":130,"ΒΟΛΟΣ":80,"ΜΥΤΙΛΗΝΗ":140,"ΧΙΟΣ":10,"ΤΑΤΟΪ":30,"ΕΛΕΥΣΙΝΑ":180};
   let layers = [];
   window.pzlGetMetarLayers=function(){return layers;};
@@ -4860,7 +4878,8 @@ try {
     try{ if(typeof selectedFullStopBaseName!="undefined"&&selectedFullStopBaseName) full=selectedFullStopBaseName; }catch(e){}
     try{ const el=document.getElementById("fullStopBaseSelect")||document.getElementById("fullStopSelect")||document.querySelector("select[id*='full' i]"); if(el&&el.value) full=el.value; }catch(e){}
     if(!full) full=s;
-    return Array.from(new Set([s,refill,full].filter(Boolean)));
+    const fullAlt = full && FULLSTOP_ALT_METAR[full] ? FULLSTOP_ALT_METAR[full] : null;
+    return Array.from(new Set([s,refill,full,fullAlt].filter(Boolean)));
   }
   function ll(n){ try{if(typeof bases!="undefined"&&bases[n])return{lat:bases[n].lat,lon:bases[n].lon}}catch(e){} try{if(typeof airports!="undefined"&&airports[n])return{lat:airports[n].lat,lon:airports[n].lon}}catch(e){} return null; }
   function rwy(n){ try{if(typeof bases!="undefined"&&bases[n]&&bases[n].rwy)return Number(bases[n].rwy)}catch(e){} return RWY[n]||0; }
