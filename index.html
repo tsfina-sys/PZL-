@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool v8.2 D57 Cockpit FIX37D413</title>
+  <title>PZL Mission Tool v8.2 D58 Cockpit FIX37D413</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -1125,11 +1125,20 @@ body.pzl-screen-locked #lockMapBtn {
   .splitControl button{font-size:8.5px!important; padding-left:1px!important; padding-right:1px!important;}
 }
 
+
+/* FIX37D58: GPS + Αφετηρία one half-half control, Airborne x2 */
+#topMapGpsBar .topGpsSplit{display:flex!important;gap:0!important;margin:0!important;align-items:stretch!important;}
+#topMapGpsBar .topGpsSplit button{width:50%!important;min-width:0!important;margin:0!important;box-sizing:border-box!important;}
+#topMapGpsBar .topGpsSplit button:first-child{border-radius:8px 0 0 8px!important;border-right:0!important;}
+#topMapGpsBar .topGpsSplit button:last-child{border-radius:0 8px 8px 0!important;}
+#newFireWithWaterBtn .x2-mark{font-size:.78em!important;margin-left:2px!important;}
+@media(max-width:700px){#newFireWithWaterBtn{font-size:8.8px!important;line-height:1!important;}#topMapGpsBar .topGpsSplit{width:174px!important;max-width:38vw!important;}}
+
 </style>
 <body><button id="metarWindBtn" class="metar-off" onclick="pzlRefreshCheckwxMetars()" style="position:absolute;z-index:1000;top:52px;left:6px">METAR</button>
 <div id="app">
   <div id="mapWrap">
-    <header><span>PZL Mission Tool v8.2 D57</span><span>Cockpit</span></header>
+    <header><span>PZL Mission Tool v8.2 D58</span><span>Cockpit</span></header>
     <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><div class="splitControl topGpsSplit"><button id="gpsBtn">GPS</button><button id="useGpsAsStartBtn" class="secondary">Αφετηρία</button></div><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button></div>
 <div id="map"></div><div id="metarWindStatus"></div>
     <div id="hsiHud" aria-label="HSI HUD">
@@ -1155,7 +1164,7 @@ body.pzl-screen-locked #lockMapBtn {
       <button id="lockMapBtn" class="secondary">🔓</button>
       <div class="splitControl fireSplit"><button id="fireModeBtn" class="active">🔥 Fire</button><button id="toggleFireCirclesBtn" class="secondary" title="Εμφάνιση/απόκρυψη 3 κύκλων φωτιάς"><span class="fire-circles-icon" aria-hidden="true"><span class="ring-red"></span><span class="ring-black"></span><span class="flame">🔥</span></span></button></div><div class="searchCombo"><input id="searchBox" placeholder="Περιοχή" /><button id="searchBtn" type="button">SRCH</button></div>
       <div class="splitControl wptSplit"><button id="viaModeBtn" class="secondary">🔥 WPT</button><button id="clearViaBtn" class="danger">🔥 CLR <span class="x2-mark">x2</span></button></div>
-      <div class="splitControl rtbSplit"><button id="returnWpBtn" class="secondary">WPT RTB</button><button id="clearReturnWpBtn" class="danger">CLR RTB <span class="x2-mark">x2</span></button></div><div class="splitControl commandSplit"><button id="takeoffBtn">☎️ Εντολή <span class="x2-mark">x2</span></button><button class="secondary" id="setManualTimeBtn">Manual Practice <span class="x2-mark">x2</span></button></div><button id="newFireWithWaterBtn" class="secondary">Airborne Full Tank</button>
+      <div class="splitControl rtbSplit"><button id="returnWpBtn" class="secondary">WPT RTB</button><button id="clearReturnWpBtn" class="danger">CLR RTB <span class="x2-mark">x2</span></button></div><div class="splitControl commandSplit"><button id="takeoffBtn">☎️ Εντολή <span class="x2-mark">x2</span></button><button class="secondary" id="setManualTimeBtn">Manual Practice <span class="x2-mark">x2</span></button></div><button id="newFireWithWaterBtn" class="secondary">Airborne Full Tank <span class="x2-mark">x2</span></button>
       <button id="generalResetBtn" class="danger">🔄 Reset <span class="x2-mark">x2</span></button>
     </div>
   </div>
@@ -2299,23 +2308,12 @@ function setFireMarker() {
       resetAutoTakeoffFullStopDisplays(); document.getElementById("manualTime").value = toHHMM(commandTime); calculate();
     });
     document.getElementById("setManualTimeBtn").addEventListener("click", () => {
+      // FIX37D58: Manual Practice works again as the old Manual Εντολή/ENTER.
       setTakeoffModeButtons("manual");
-      resetAutoTakeoffFullStopDisplays();
-      const manualInputEl = document.getElementById("manualTime");
-      const value = pzlNormalizeManualTime(manualInputEl.value);
-      if (manualInputEl && value) manualInputEl.value = value;
-      if (!value) return alert("Βάλε ώρα εντολής.");
-      const now = gpsTestModeASimNow ? new Date(gpsTestModeASimNow.getTime()) : new Date(); const [h,m] = value.split(":").map(Number);
-      commandTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
-      window.pzlManualCommandTimeActive = true;
-      window.manualNewFireCommandTime = null;
+      const ok = (typeof setManualCommandTimeFromInput === "function") ? setManualCommandTimeFromInput() : false;
+      if (!ok) return;
       try {
         const manualActual = new Date(commandTime.getTime() + getInitialTakeoffDelayMin() * 60000);
-
-        // FIX37D4132: Αν είχε πατηθεί πρώτα η κανονική «Εντολή» και μετά αλλάξουμε σε
-        // Manual Εντολή, πρέπει να συγχρονιστεί και το εσωτερικό scenario clock.
-        // Αλλιώς το Airborne Full Tank / Νέα φωτιά με νερό κρατά την παλιά ώρα
-        // της κανονικής εντολής και βγάζει λάθος/0 ρίψεις.
         if (typeof gpsTestModeASimNow !== "undefined") gpsTestModeASimNow = new Date(commandTime.getTime());
         if (typeof gpsTestModeATakeoffSimTime !== "undefined") gpsTestModeATakeoffSimTime = manualActual;
         if (typeof newFireActualTakeoffTime !== "undefined") newFireActualTakeoffTime = manualActual;
@@ -5258,12 +5256,13 @@ try {
     clearReturnWpBtn: "CLR RTB x2",
     generalResetBtn: "Reset x2",
     takeoffBtn: "Εντολή x2",
-    setManualTimeBtn: "Manual Practice x2"
+    setManualTimeBtn: "Manual Practice x2",
+    newFireWithWaterBtn: "Airborne Full Tank x2"
   };
   const lastTap = Object.create(null);
 
   function installX2Guard(){
-    ["clearViaBtn","clearReturnWpBtn","generalResetBtn","takeoffBtn","setManualTimeBtn"].forEach(function(id){
+    ["clearViaBtn","clearReturnWpBtn","generalResetBtn","takeoffBtn","setManualTimeBtn","newFireWithWaterBtn"].forEach(function(id){
       const btn = document.getElementById(id);
       if(!btn || btn.dataset.pzlX2Guard === "1") return;
       btn.dataset.pzlX2Guard = "1";
@@ -5291,6 +5290,28 @@ try {
   }
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", installX2Guard);
   else installX2Guard();
+
+  // FIX37D58: while typing manual time, Enter/OK on keyboard applies Manual Practice.
+  function installManualEnter(){
+    const input = document.getElementById("manualTime");
+    const btn = document.getElementById("setManualTimeBtn");
+    if(!input || !btn || input.dataset.pzlManualEnter === "1") return;
+    input.dataset.pzlManualEnter = "1";
+    input.addEventListener("keydown", function(ev){
+      if(ev.key === "Enter"){
+        ev.preventDefault();
+        if(typeof setManualCommandTimeFromInput === "function"){
+          setTakeoffModeButtons("manual");
+          setManualCommandTimeFromInput();
+        } else {
+          btn.click();
+          setTimeout(function(){ btn.click(); }, 80);
+        }
+      }
+    });
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", installManualEnter);
+  else installManualEnter();
 })();
 </script>
 

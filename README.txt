@@ -1,1 +1,1 @@
-PZL FIX37D57: split Fire/κύκλοι, GPS/Αφετηρία, Εντολή/Manual Practice. Εντολή και Manual Practice απαιτούν x2 σε 0.5 sec. Βάση D56.
+PZL FIX37D58: GPS/Αφετηρία ενιαίο μισό-μισό, Airborne Full Tank x2, Manual Practice enter/activation fix.
