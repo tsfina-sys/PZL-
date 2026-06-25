@@ -5035,12 +5035,12 @@ try {
 
 
 
-<!-- FIX37D48: HUD D33 cardinal cleanup - keep only rotating outer N/E/S/W, hide legacy inner letters -->
-<style id="fix37d48-hud-no-inner-cardinals">
+<!-- FIX37D49: HUD cardinal cleanup - keep only rotating outer compass labels, hide legacy inner N/E/S/W -->
+<style id="fix37d49-hud-cardinals-final">
 #hsiHud .hsiNorth,
 #hsiHud .hsiE,
-#hsiHud .hsiW,
-#hsiHud .hsiS{
+#hsiHud .hsiS,
+#hsiHud .hsiW{
   display:none !important;
   visibility:hidden !important;
   opacity:0 !important;
@@ -5053,32 +5053,22 @@ try {
   font-weight:900 !important;
   text-shadow:0 3px 7px rgba(0,0,0,.98),0 0 4px #000 !important;
 }
-#hsiHud .hsiRoseLabel.north{ color:#fff !important; }
+#hsiHud .hsiRoseLabel.north{
+  color:#fff !important;
+}
 </style>
-<script id="fix37d48-hud-no-inner-cardinals-js">
+<script id="fix37d49-remove-legacy-hud-cardinals">
 (function(){
-  function hideLegacyCardinals(){
-    var h=document.getElementById('hsiHud');
-    if(!h) return;
-    ['hsiNorth','hsiE','hsiW','hsiS'].forEach(function(cls){
-      h.querySelectorAll('.'+cls).forEach(function(el){
-        el.style.setProperty('display','none','important');
-        el.style.setProperty('visibility','hidden','important');
-        el.style.setProperty('opacity','0','important');
-      });
-    });
-    h.querySelectorAll('.hsiRoseLabel.cardinal').forEach(function(el){
-      el.style.setProperty('display','block','important');
-      el.style.setProperty('visibility','visible','important');
-      el.style.setProperty('opacity','1','important');
-      el.style.setProperty('color','#fff','important');
+  function hideLegacyHudCardinals(){
+    document.querySelectorAll('#hsiHud .hsiNorth,#hsiHud .hsiE,#hsiHud .hsiS,#hsiHud .hsiW').forEach(function(el){
+      el.style.display='none';
+      el.style.visibility='hidden';
+      el.style.opacity='0';
     });
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', hideLegacyCardinals); else hideLegacyCardinals();
-  setTimeout(hideLegacyCardinals,100);
-  setTimeout(hideLegacyCardinals,500);
-  setTimeout(hideLegacyCardinals,1200);
-  setInterval(hideLegacyCardinals,1500);
+  document.addEventListener('DOMContentLoaded', hideLegacyHudCardinals);
+  window.addEventListener('load', hideLegacyHudCardinals);
+  setInterval(hideLegacyHudCardinals, 1500);
 })();
 </script>
 
