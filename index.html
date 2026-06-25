@@ -5035,8 +5035,8 @@ try {
 
 
 
-<!-- FIX37D49: HUD cardinal cleanup - keep only rotating outer compass labels, hide legacy inner N/E/S/W -->
-<style id="fix37d49-hud-cardinals-final">
+<!-- FIX37D50: HUD D33-style outer cardinals only. Hide/remove old fixed inner N/E/S/W. -->
+<style id="fix37d50-hud-no-inner-cardinals">
 #hsiHud .hsiNorth,
 #hsiHud .hsiE,
 #hsiHud .hsiS,
@@ -5044,6 +5044,7 @@ try {
   display:none !important;
   visibility:hidden !important;
   opacity:0 !important;
+  pointer-events:none !important;
 }
 #hsiHud .hsiRoseLabel.cardinal{
   display:block !important;
@@ -5053,22 +5054,18 @@ try {
   font-weight:900 !important;
   text-shadow:0 3px 7px rgba(0,0,0,.98),0 0 4px #000 !important;
 }
-#hsiHud .hsiRoseLabel.north{
-  color:#fff !important;
-}
 </style>
-<script id="fix37d49-remove-legacy-hud-cardinals">
+<script id="fix37d50-remove-inner-cardinals">
 (function(){
-  function hideLegacyHudCardinals(){
-    document.querySelectorAll('#hsiHud .hsiNorth,#hsiHud .hsiE,#hsiHud .hsiS,#hsiHud .hsiW').forEach(function(el){
-      el.style.display='none';
-      el.style.visibility='hidden';
-      el.style.opacity='0';
-    });
+  function removeInnerCardinals(){
+    try{
+      document.querySelectorAll('#hsiHud .hsiNorth,#hsiHud .hsiE,#hsiHud .hsiS,#hsiHud .hsiW').forEach(function(el){ el.remove(); });
+    }catch(e){}
   }
-  document.addEventListener('DOMContentLoaded', hideLegacyHudCardinals);
-  window.addEventListener('load', hideLegacyHudCardinals);
-  setInterval(hideLegacyHudCardinals, 1500);
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', removeInnerCardinals);
+  else removeInnerCardinals();
+  setTimeout(removeInnerCardinals, 500);
+  setTimeout(removeInnerCardinals, 1500);
 })();
 </script>
 

@@ -23,5 +23,4 @@ FIX37D_TF_FALLBACK_MANUAL
 
 FIX37D46: METAR boxes smaller/offset; all wind arrows green/red only; gust logic retained.
 
-
-FIX37D49: HUD cardinal cleanup. Κρύβει οριστικά τα παλιά εσωτερικά N/E/S/W και κρατά μόνο τα εξωτερικά περιστρεφόμενα στοιχεία της πυξίδας.
+FIX37D50: HUD cardinals cleanup - removed fixed inner N/E/S/W, kept rotating outer N/E/S/W.
