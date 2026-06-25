@@ -936,28 +936,6 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-
-<style id="fix37d47-hud-d33-cardinals-clean">
-/* FIX37D47: Restore clean D33-style HUD cardinals.
-   Keep only rotating rose labels (N/E/S/W outside circle) and hide old static internal letters. */
-#hsiHud .hsiDial > .hsiNorth,
-#hsiHud .hsiDial > .hsiE,
-#hsiHud .hsiDial > .hsiS,
-#hsiHud .hsiDial > .hsiW{
-  display:none !important;
-  visibility:hidden !important;
-  opacity:0 !important;
-}
-#hsiHud .hsiRoseLabel.cardinal{
-  display:block !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  color:#fff !important;
-  font-weight:900 !important;
-  text-shadow:0 3px 7px rgba(0,0,0,.98),0 0 4px #000 !important;
-}
-#hsiHud .hsiRoseLabel.north{ color:#fff !important; }
-</style>
 </head>
 
 <style id="fix37d46-metar-final-css">
@@ -5052,6 +5030,55 @@ try {
   }
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", install); else install();
   setTimeout(install,600);
+})();
+</script>
+
+
+
+<!-- FIX37D48: HUD D33 cardinal cleanup - keep only rotating outer N/E/S/W, hide legacy inner letters -->
+<style id="fix37d48-hud-no-inner-cardinals">
+#hsiHud .hsiNorth,
+#hsiHud .hsiE,
+#hsiHud .hsiW,
+#hsiHud .hsiS{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+}
+#hsiHud .hsiRoseLabel.cardinal{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  color:#fff !important;
+  font-weight:900 !important;
+  text-shadow:0 3px 7px rgba(0,0,0,.98),0 0 4px #000 !important;
+}
+#hsiHud .hsiRoseLabel.north{ color:#fff !important; }
+</style>
+<script id="fix37d48-hud-no-inner-cardinals-js">
+(function(){
+  function hideLegacyCardinals(){
+    var h=document.getElementById('hsiHud');
+    if(!h) return;
+    ['hsiNorth','hsiE','hsiW','hsiS'].forEach(function(cls){
+      h.querySelectorAll('.'+cls).forEach(function(el){
+        el.style.setProperty('display','none','important');
+        el.style.setProperty('visibility','hidden','important');
+        el.style.setProperty('opacity','0','important');
+      });
+    });
+    h.querySelectorAll('.hsiRoseLabel.cardinal').forEach(function(el){
+      el.style.setProperty('display','block','important');
+      el.style.setProperty('visibility','visible','important');
+      el.style.setProperty('opacity','1','important');
+      el.style.setProperty('color','#fff','important');
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', hideLegacyCardinals); else hideLegacyCardinals();
+  setTimeout(hideLegacyCardinals,100);
+  setTimeout(hideLegacyCardinals,500);
+  setTimeout(hideLegacyCardinals,1200);
+  setInterval(hideLegacyCardinals,1500);
 })();
 </script>
 
