@@ -19,3 +19,6 @@ FIX37C_MANUAL_TIME_INPUT
 
 FIX37D_TF_FALLBACK_MANUAL
 - Fallback ΤΦ με ημερομηνία δεδομένων και manual εισαγωγή.
+
+
+FIX37D46: METAR boxes smaller/offset; all wind arrows green/red only; gust logic retained.
