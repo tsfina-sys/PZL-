@@ -472,13 +472,36 @@
   #toggleHudBtn::after{content:'HUD'; font-size:11px;}
 }
 
-/* FIX37D53: keep fire-circles toggle visible next to HUD on mobile */
+/* FIX37D54: fire-circles button icon + orange active position report */
 #toggleFireCirclesBtn.circles-on{background:#157347 !important;}
 #toggleFireCirclesBtn.circles-off{background:#6b7280 !important;}
-@media(max-width:700px){
-  #toggleFireCirclesBtn{font-size:0 !important; min-width:0 !important; padding-left:0 !important; padding-right:0 !important;}
-  #toggleFireCirclesBtn::after{content:'◎◎◎' !important; font-size:13px !important; letter-spacing:-1px;}
+#positionReportBtn.position-report-active{background:#f97316 !important;color:#fff !important;}
+#toggleFireCirclesBtn .fire-circles-icon{
+  position:relative;display:inline-block;width:24px;height:24px;vertical-align:middle;
 }
+#toggleFireCirclesBtn .fire-circles-icon::before{
+  content:'';position:absolute;left:1px;top:1px;width:22px;height:22px;border-radius:50%;
+  border:2px solid #2563eb;box-sizing:border-box;
+}
+#toggleFireCirclesBtn .fire-circles-icon .ring-red{
+  position:absolute;left:5px;top:5px;width:14px;height:14px;border-radius:50%;
+  border:2px solid #ef4444;box-sizing:border-box;
+}
+#toggleFireCirclesBtn .fire-circles-icon .ring-black{
+  position:absolute;left:9px;top:9px;width:6px;height:6px;border-radius:50%;
+  border:2px solid #111827;box-sizing:border-box;background:transparent;
+}
+#toggleFireCirclesBtn .fire-circles-icon .flame{
+  position:absolute;left:4px;top:2px;width:16px;height:16px;font-size:13px;line-height:16px;text-align:center;
+}
+#toggleFireCirclesBtn.circles-off .fire-circles-icon{opacity:.45;}
+@media(max-width:700px){
+  #toggleFireCirclesBtn{font-size:0 !important; min-width:34px !important; padding-left:4px !important; padding-right:4px !important;}
+  #toggleFireCirclesBtn::after{content:'' !important;}
+  #toggleFireCirclesBtn .fire-circles-icon{font-size:13px !important;}
+}
+.x2-mark{font-size:.82em;font-weight:900;margin-left:3px;opacity:.95;}
+button.x2-pending{outline:3px solid #f97316 !important; box-shadow:0 0 0 3px rgba(249,115,22,.35) !important;}
 
 
 /* FIX25: rotating compass rose heading labels */
@@ -773,6 +796,13 @@ body.pzl-screen-locked #lockMapBtn {
   .gps-plane-symbol img{ width:52px !important; height:52px !important; }
 }
 
+
+/* FIX37D54 final override: show custom fire icon on mobile despite compact labels */
+@media(max-width:700px){
+  #topMapGpsBar #toggleFireCirclesBtn{ text-indent:0 !important; display:flex !important; align-items:center !important; justify-content:center !important; }
+  #topMapGpsBar #toggleFireCirclesBtn::after{ content:'' !important; display:none !important; }
+  #topMapGpsBar #toggleFireCirclesBtn .fire-circles-icon{ text-indent:0 !important; flex:0 0 auto !important; }
+}
 </style>
 
 <style id="fix37d9-panel-visible">
@@ -1004,7 +1034,7 @@ body.pzl-screen-locked #lockMapBtn {
 <div id="app">
   <div id="mapWrap">
     <header><span>PZL Mission Tool v8.2</span><span>Cockpit</span></header>
-    <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><button id="gpsBtn">Ενεργοποίηση GPS</button><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="toggleFireCirclesBtn" class="secondary" title="Εμφάνιση/απόκρυψη 3 κύκλων φωτιάς">◎◎◎</button><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button><button id="useGpsAsStartBtn" class="secondary">Χρήση GPS ως αφετηρία</button></div>
+    <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><button id="gpsBtn">Ενεργοποίηση GPS</button><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="toggleFireCirclesBtn" class="secondary" title="Εμφάνιση/απόκρυψη 3 κύκλων φωτιάς"><span class="fire-circles-icon" aria-hidden="true"><span class="ring-red"></span><span class="ring-black"></span><span class="flame">🔥</span></span></button><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button><button id="useGpsAsStartBtn" class="secondary">Χρήση GPS ως αφετηρία</button></div>
 <div id="map"></div><div id="metarWindStatus"></div>
     <div id="hsiHud" aria-label="HSI HUD">
       <div class="hsiDial" id="hsiDial">
@@ -1029,10 +1059,10 @@ body.pzl-screen-locked #lockMapBtn {
       <button id="lockMapBtn" class="secondary">🔓</button>
       <button id="fireModeBtn" class="active">🔥 Fire</button><br><input id="searchBox" placeholder="Αναζήτηση φωτιάς π.χ. Πλωμάρι" /><button id="searchBtn">Αναζήτηση</button>
       <button id="viaModeBtn" class="secondary">🔥 WPT</button>
-      <button id="clearViaBtn" class="danger">🔥 CLR WPT</button>
+      <button id="clearViaBtn" class="danger">🔥 CLR WPT <span class="x2-mark">x2</span></button>
 <button id="returnWpBtn" class="secondary">WPT RTB</button>
-<button id="clearReturnWpBtn" class="danger">CLR WPT RTB</button><br><button id="takeoffBtn">☎️ Εντολή</button><br><button class="secondary" id="setManualTimeBtn">☎️ Manual Εντολή</button><br><button id="newFireWithWaterBtn" class="secondary">Airborne Full Tank</button>
-      <button id="generalResetBtn" class="danger">🔄 Reset</button>
+<button id="clearReturnWpBtn" class="danger">CLR WPT RTB <span class="x2-mark">x2</span></button><br><button id="takeoffBtn">☎️ Εντολή</button><br><button class="secondary" id="setManualTimeBtn">☎️ Manual Εντολή</button><br><button id="newFireWithWaterBtn" class="secondary">Airborne Full Tank</button>
+      <button id="generalResetBtn" class="danger">🔄 Reset <span class="x2-mark">x2</span></button>
     </div>
   </div>
   <div class="bottom-sheet">
@@ -1721,9 +1751,11 @@ function drawFireCircles(){
 function updateFireCirclesButton(){
   const btn=document.getElementById("toggleFireCirclesBtn");
   if(!btn) return;
-  btn.textContent = fireCirclesVisible ? "◎◎◎" : "○○○";
   btn.title = fireCirclesVisible ? "Κύκλοι φωτιάς: ON" : "Κύκλοι φωτιάς: OFF";
-  btn.className = fireCirclesVisible ? "active" : "secondary";
+  btn.className = fireCirclesVisible ? "active circles-on" : "secondary circles-off";
+  if(!btn.querySelector(".fire-circles-icon")){
+    btn.innerHTML = '<span class="fire-circles-icon" aria-hidden="true"><span class="ring-red"></span><span class="ring-black"></span><span class="flame">🔥</span></span>';
+  }
 }
 function toggleFireCircles(){
   fireCirclesVisible = !fireCirclesVisible;
@@ -3295,7 +3327,10 @@ const base = bases[selectedBaseName];
 
     const positionReportBtn = document.getElementById("positionReportBtn");
     if (positionReportBtn) {
-      positionReportBtn.addEventListener("click", makePositionReport);
+      positionReportBtn.addEventListener("click", function(){
+        makePositionReport();
+        positionReportBtn.classList.add("position-report-active");
+      });
     }
 
     loadSavedFixPoints();
@@ -5105,6 +5140,49 @@ try {
   else removeInnerCardinals();
   setTimeout(removeInnerCardinals, 500);
   setTimeout(removeInnerCardinals, 1500);
+})();
+</script>
+
+
+<script>
+/* FIX37D54: x2 guard for destructive buttons - 2 taps within 0.5 sec */
+(function(){
+  const WINDOW_MS = 500;
+  const labels = {
+    clearViaBtn: "CLR WPT x2",
+    clearReturnWpBtn: "CLR WPT RTB x2",
+    generalResetBtn: "Reset x2"
+  };
+  const lastTap = Object.create(null);
+
+  function installX2Guard(){
+    ["clearViaBtn","clearReturnWpBtn","generalResetBtn"].forEach(function(id){
+      const btn = document.getElementById(id);
+      if(!btn || btn.dataset.pzlX2Guard === "1") return;
+      btn.dataset.pzlX2Guard = "1";
+      btn.title = (btn.title ? btn.title + " - " : "") + "Θέλει 2 πατήματα μέσα σε 0,5 δευτ.";
+      btn.addEventListener("click", function(ev){
+        const now = Date.now();
+        const prev = lastTap[id] || 0;
+        if(now - prev <= WINDOW_MS){
+          lastTap[id] = 0;
+          return; // αφήνει το υπάρχον handler να εκτελέσει την εντολή
+        }
+        lastTap[id] = now;
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        btn.classList.add("x2-pending");
+        setTimeout(function(){
+          if(Date.now() - (lastTap[id] || 0) >= WINDOW_MS){
+            lastTap[id] = 0;
+            btn.classList.remove("x2-pending");
+          }
+        }, WINDOW_MS + 40);
+      }, true);
+    });
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", installX2Guard);
+  else installX2Guard();
 })();
 </script>
 
