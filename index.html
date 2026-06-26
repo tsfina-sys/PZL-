@@ -1644,9 +1644,6 @@ function getRemainingAirborneMinutesForNewFire() {
     let selectedRefillBaseName = selectedBaseName;
     let selectedFullStopBaseName = selectedBaseName;
     let commandTime = null;
-    let autoActualTakeoffTime = null;
-    let pzlLastDynamicGsRecalcMs = 0;
-    let pzlCalculateRunning = false;
     let firePoint = null;
     let viaPoints = [];
     let mode = "fire";
@@ -1667,6 +1664,17 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
     let calculatedFuelBurnedL = 0;
     let lastHeavyCalcTime = 0;
     const heavyCalcIntervalMs = 30000; // βαριοί υπολογισμοί ανά 30''
+
+    // FIX37D75_SAFE: δυναμική ενημέρωση ρίψεων με πραγματική GS, χωρίς να πειράζεται η αρχική ροή της Εντολής.
+    const pzlDynamicGsRecalcIntervalMs = 10000;
+    const pzlDynamicGsThresholdKmh = 100;
+    let pzlDynamicGsState = {
+      commandMs: null,
+      actualTakeoffTime: null,
+      currentGsKmh: null,
+      lastRecalcMs: 0
+    };
+
     const airborneStartSpeedKmh = 100;
     const airborneStopSpeedKmh = 30;
     let viaMarkers = [];
@@ -2531,6 +2539,7 @@ function setFireMarker() {
 
           const speedKmh = speedMps && !isNaN(speedMps) ? speedMps * 3.6 : null;
           const speedKt = speedKmh ? speedKmh / 1.852 : null;
+          pzlFeedDynamicGsRecalc(speedKmh, now);
           try { if (window.pzlWindEstFeed) window.pzlWindEstFeed(now, speedKmh, currentGps.heading); } catch(e) {}
 
           handleAutoTakeoffFullStop(speedKmh, now);
@@ -2567,20 +2576,6 @@ function setFireMarker() {
 
           // Ελαφρύ update σε κάθε GPS fix: μόνο status/gauges.
           updateFlightStatus();
-
-          // D81: Μόλις διαβάσει GS > 100, κρατά πραγματική ώρα Α/Γ.
-          // Μετά, ανανεώνει τους υπολογισμούς κάθε 10 δευτερόλεπτα με την πραγματική GS.
-          try {
-            if (commandTime && speedKmh && speedKmh > 100 && !autoActualTakeoffTime) {
-              autoActualTakeoffTime = new Date();
-              pzlLastDynamicGsRecalcMs = 0;
-            }
-            const nowMsDyn = Date.now();
-            if (commandTime && autoActualTakeoffTime && speedKmh && speedKmh > 30 && (nowMsDyn - pzlLastDynamicGsRecalcMs) >= 10000) {
-              pzlLastDynamicGsRecalcMs = nowMsDyn;
-              calculate();
-            }
-          } catch(e) {}
 
           // Βαρύς υπολογισμός/refresh οθόνης μόνο ανά 30'', για να μη τρεμοπαίζει.
           if (now.getTime() - lastHeavyCalcTime > heavyCalcIntervalMs) {
@@ -3184,9 +3179,66 @@ function setFireMarker() {
     }
 
 
+    function pzlSyncDynamicGsStateToCommand() {
+      try {
+        const cmdMs = (typeof commandTime !== "undefined" && commandTime) ? commandTime.getTime() : null;
+        if (!pzlDynamicGsState || pzlDynamicGsState.commandMs !== cmdMs) {
+          pzlDynamicGsState = {
+            commandMs: cmdMs,
+            actualTakeoffTime: null,
+            currentGsKmh: null,
+            lastRecalcMs: 0
+          };
+        }
+      } catch(e) {}
+    }
+
+    function pzlFeedDynamicGsRecalc(speedKmh, now) {
+      try {
+        pzlSyncDynamicGsStateToCommand();
+        if (!commandTime || !firePoint) return;
+        const gs = Number(speedKmh);
+        if (!Number.isFinite(gs) || gs <= pzlDynamicGsThresholdKmh) return;
+
+        if (!pzlDynamicGsState.actualTakeoffTime) {
+          pzlDynamicGsState.actualTakeoffTime = new Date(now.getTime());
+        }
+        pzlDynamicGsState.currentGsKmh = gs;
+
+        if (now.getTime() - pzlDynamicGsState.lastRecalcMs >= pzlDynamicGsRecalcIntervalMs) {
+          pzlDynamicGsState.lastRecalcMs = now.getTime();
+          // Ανεξάρτητη ανανέωση. Δεν καλείται από το κουμπί Εντολή.
+          try { calculate(); } catch(e) { console.warn('dynamic gs calculate', e); }
+        }
+      } catch(e) {
+        console.warn('pzlFeedDynamicGsRecalc', e);
+      }
+    }
+
+    function pzlGetDynamicGsCalcInfo() {
+      try {
+        pzlSyncDynamicGsStateToCommand();
+        if (!pzlDynamicGsState || !pzlDynamicGsState.actualTakeoffTime) return null;
+        const gs = Number(pzlDynamicGsState.currentGsKmh);
+        if (!Number.isFinite(gs) || gs <= pzlDynamicGsThresholdKmh) return null;
+        if (!commandTime) return null;
+        let actualDelayMin = (pzlDynamicGsState.actualTakeoffTime.getTime() - commandTime.getTime()) / 60000;
+        if (!Number.isFinite(actualDelayMin)) return null;
+        actualDelayMin = Math.max(0, actualDelayMin);
+        return {
+          active: true,
+          speedKmPerMin: gs / 60,
+          initialDelayMin: actualDelayMin,
+          actualTakeoffTime: pzlDynamicGsState.actualTakeoffTime,
+          gsKmh: gs
+        };
+      } catch(e) {
+        return null;
+      }
+    }
+
+
     async function calculate() {
-      if (pzlCalculateRunning) return;
-      pzlCalculateRunning = true;
       try { updateHsiHud(); } catch(e) {}
       const returnToCurrentGpsKm = computeFireToCurrentGpsKm();
       const calcId = ++lastCalcId;
@@ -3200,19 +3252,10 @@ function setFireMarker() {
       const firstLegDistanceKm = newFireFirstLegDistanceKm();
       const D = (newFireWithWaterMode && firstLegDistanceKm !== null) ? firstLegDistanceKm : normalD;
       const calcCommandTime = (newFireWithWaterMode && newFireCalcStartTime) ? newFireCalcStartTime : commandTime;
+      const dynGsInfo = (!newFireWithWaterMode && typeof pzlGetDynamicGsCalcInfo === "function") ? pzlGetDynamicGsCalcInfo() : null;
+      const calcSpeedKmPerMin = (dynGsInfo && dynGsInfo.speedKmPerMin) ? dynGsInfo.speedKmPerMin : speedKmPerMin;
+      const calcInitialDelayMin = (dynGsInfo && dynGsInfo.initialDelayMin !== null && dynGsInfo.initialDelayMin !== undefined) ? dynGsInfo.initialDelayMin : getEffectiveInitialDelayMin();
       const fmtUntilFromCalcCommand = (targetTime) => pzlFormatDropCountdownPair(targetTime, calcCommandTime);
-
-      // D81: Δυναμικός υπολογισμός με πραγματική Α/Γ και πραγματική GS, χωρίς να μπλοκάρει την Εντολή.
-      const liveGsKmhForCalc = (currentGps && currentGps.speedMps !== null && currentGps.speedMps !== undefined && !isNaN(currentGps.speedMps))
-        ? Number(currentGps.speedMps) * 3.6
-        : null;
-      const hasRealTakeoffForCalc = (!newFireWithWaterMode && autoActualTakeoffTime && calcCommandTime);
-      const activeSpeedKmPerMin = (hasRealTakeoffForCalc && liveGsKmhForCalc && liveGsKmhForCalc > 30)
-        ? Math.max(0.5, liveGsKmhForCalc / 60)
-        : speedKmPerMin;
-      const initialDelayForCalc = hasRealTakeoffForCalc
-        ? Math.max(0, (autoActualTakeoffTime.getTime() - calcCommandTime.getTime()) / 60000)
-        : getEffectiveInitialDelayMin();
 
       updateWindResult();
       updateFireWindResult();
@@ -3222,27 +3265,23 @@ function setFireMarker() {
         dropsDiv.innerHTML = "";
         fuelResult.textContent = "Αναμονή δεδομένων καυσίμων...";
         updateFuelGauges(Number(initialTankFuel.value), Number(initialTankFuel.value));
-        pzlCalculateRunning = false;
         return;
       }
 
       result.textContent = "Υπολογισμός...";
       try {
-        const cutoffInfo = await Promise.race([
-          getCutoffTime(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout ΤΦ')), 7000))
-        ]);
-        if (calcId !== lastCalcId) { pzlCalculateRunning = false; return; }
+        const cutoffInfo = await getCutoffTime();
+        if (calcId !== lastCalcId) return;
 
         const returnLegD = (returnRouteD !== null) ? returnRouteD : ((refillCycleD !== null) ? refillCycleD : D);
         const approachLegD = (approachRouteD !== null) ? approachRouteD : ((newFireWithWaterMode && normalD !== null) ? normalD : D);
         const finalReturnLegD = (finalReturnRouteD !== null) ? finalReturnRouteD : returnLegD;
         const cycleDistanceKm = returnLegD + approachLegD;
-        const cycleMin = returnLegD/activeSpeedKmPerMin + getRefillTakeoffDelayMin() + approachLegD/activeSpeedKmPerMin;
-        const firstLegMin = D/activeSpeedKmPerMin + attackCircuitMin;
-        const finalReturnMin = finalReturnLegD/activeSpeedKmPerMin;
-        const firstDrop = addMinutes(calcCommandTime, initialDelayForCalc + D/activeSpeedKmPerMin + attackCircuitMin);
-        const firstTakeoff = addMinutes(calcCommandTime, initialDelayForCalc);
+        const cycleMin = returnLegD/calcSpeedKmPerMin + getRefillTakeoffDelayMin() + approachLegD/calcSpeedKmPerMin;
+        const firstLegMin = D/calcSpeedKmPerMin + attackCircuitMin;
+        const finalReturnMin = finalReturnLegD/calcSpeedKmPerMin;
+        const firstDrop = addMinutes(calcCommandTime, calcInitialDelayMin + D/calcSpeedKmPerMin + attackCircuitMin);
+        const firstTakeoff = addMinutes(calcCommandTime, calcInitialDelayMin);
 
         // FIX37D333:
         // Το maxDrops πρέπει να ελέγχεται από την πραγματική ώρα Α/Γ έως την τελική Π/Γ.
@@ -3290,7 +3329,7 @@ const base = bases[selectedBaseName];
         const fullStopForTf = bases[fullStopForTfName] || base;
         const fullStopAlt = airports[fullStopForTf.alt || fullStopForTf.ref];
         const altD = fullStopAlt ? haversineKm({lat: fullStopForTf.lat, lon: fullStopForTf.lon}, fullStopAlt) : 0;
-        const altTimeMin = altD / speedKmPerMin;
+        const altTimeMin = altD / calcSpeedKmPerMin;
 
         let limiting = "ΚΑΙ ΤΑ ΔΥΟ";
         if (maxBy3Hours < maxByCutoff) limiting = "3 ΩΡΕΣ";
@@ -3308,8 +3347,9 @@ const base = bases[selectedBaseName];
           `${newFireWithWaterMode ? 'Επαναμετάβαση από επαναπλήρωση: ' + approachLegD.toFixed(1) + ' km' + (viaMarkers.length ? ' με 🔥 WPT' : ' direct') + '\n' : ''}` +
           `Τελική επιστροφή προς Full Stop: ${finalReturnLegD.toFixed(1)} km${returnWpMarkers.length ? ' με WPT RTB' : ' direct'}\n` +
           `${newFireWithWaterMode ? 'Ώρα νέας εντολής στον αέρα: ' + fmtTime(calcCommandTime) : 'Ώρα εντολής: ' + fmtTime(commandTime)}\n` +
+          `${dynGsInfo ? 'Δυναμική GS: ενεργή | Α/Γ ' + fmtTime(dynGsInfo.actualTakeoffTime) + ' | GS ' + dynGsInfo.gsKmh.toFixed(0) + ' km/h | update 10s\n' : ''}` +
           `${(typeof newFireWithWaterMode !== "undefined" && newFireWithWaterMode) ? "Νέα φωτιά με νερό: χωρίς 15\' αρχικής Α/Γ\n" : ""}` +
-          `Χρόνος αρχικής Α/Γ: ${getInitialTakeoffDelayMin()}\'\n` +
+          `Χρόνος αρχικής Α/Γ: ${dynGsInfo ? calcInitialDelayMin.toFixed(0) : getInitialTakeoffDelayMin()}\'${dynGsInfo ? " (πραγματική από GS>100)" : ""}\n` +
           `Χρόνος Α/Γ μετά επαναπλήρωση: ${getRefillTakeoffDelayMin()}\'\n` +
           `Ώρα πρώτης ρίψης: ${fmtTime(firstDrop)} (σε ${fmtUntilFromCalcCommand(firstDrop)} από τώρα/εντολή)\n` +
           `Μέγιστες ρίψεις: ${maxDrops}\n` +
