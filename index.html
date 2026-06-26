@@ -2532,6 +2532,7 @@ function setFireMarker() {
 
           handleAutoTakeoffFullStop(speedKmh, now);
           updateAirborneAndFuel(now, speedKmh);
+          try { if (window.pzlD75MaybeRecalculateDrops) window.pzlD75MaybeRecalculateDrops(speedKmh, now); } catch(e) {}
 
           // Compact Live GPS panel: GS and coordinates are already visible in the HUD.
           let text = `Ακρίβεια: ±${c.accuracy.toFixed(0)} m
@@ -3053,7 +3054,27 @@ function setFireMarker() {
       try {
         if (typeof newFireWithWaterMode !== "undefined" && newFireWithWaterMode) return 0;
       } catch(e) {}
+      try {
+        // D75: Μετά την πραγματική απογείωση (GS > 100), δεν κρατάμε υποχρεωτικά το +15'.
+        // Χρησιμοποιούμε τη διαφορά πραγματικής Α/Γ - εντολής, ώστε αν η Α/Γ έγινε νωρίτερα/αργότερα
+        // να μετακινηθούν αντίστοιχα οι ώρες ρίψεων και ο αριθμός ρίψεων.
+        if (typeof autoActualTakeoffTime !== "undefined" && autoActualTakeoffTime && typeof commandTime !== "undefined" && commandTime) {
+          const m = (autoActualTakeoffTime.getTime() - commandTime.getTime()) / 60000;
+          if (isFinite(m) && m >= 0) return m;
+        }
+      } catch(e) {}
       return (typeof getInitialTakeoffDelayMin === "function") ? getInitialTakeoffDelayMin() : 15;
+    }
+
+    function getOperationalSpeedKmPerMin() {
+      try {
+        const gps = (typeof currentGps !== "undefined" && currentGps) ? currentGps : null;
+        const speedKmh = gps && gps.speedMps !== null && gps.speedMps !== undefined && !isNaN(gps.speedMps) ? Number(gps.speedMps) * 3.6 : null;
+        const hasRealTakeoff = (typeof autoActualTakeoffTime !== "undefined" && autoActualTakeoffTime);
+        // D75: Πριν την Α/Γ: 180 km/h. Μετά το πρώτο GS>100: πραγματική GS, με ελάχιστο φίλτρο >30.
+        if (hasRealTakeoff && speedKmh && isFinite(speedKmh) && speedKmh > 30) return speedKmh / 60;
+      } catch(e) {}
+      return (typeof speedKmPerMin !== "undefined" && speedKmPerMin) ? speedKmPerMin : 3;
     }
 
 
@@ -3203,10 +3224,11 @@ function setFireMarker() {
         const approachLegD = (approachRouteD !== null) ? approachRouteD : ((newFireWithWaterMode && normalD !== null) ? normalD : D);
         const finalReturnLegD = (finalReturnRouteD !== null) ? finalReturnRouteD : returnLegD;
         const cycleDistanceKm = returnLegD + approachLegD;
-        const cycleMin = returnLegD/speedKmPerMin + getRefillTakeoffDelayMin() + approachLegD/speedKmPerMin;
-        const firstLegMin = D/speedKmPerMin + attackCircuitMin;
-        const finalReturnMin = finalReturnLegD/speedKmPerMin;
-        const firstDrop = addMinutes(calcCommandTime, getEffectiveInitialDelayMin() + D/speedKmPerMin + attackCircuitMin);
+        const opSpeedKmPerMin = getOperationalSpeedKmPerMin();
+        const cycleMin = returnLegD/opSpeedKmPerMin + getRefillTakeoffDelayMin() + approachLegD/opSpeedKmPerMin;
+        const firstLegMin = D/opSpeedKmPerMin + attackCircuitMin;
+        const finalReturnMin = finalReturnLegD/opSpeedKmPerMin;
+        const firstDrop = addMinutes(calcCommandTime, getEffectiveInitialDelayMin() + D/opSpeedKmPerMin + attackCircuitMin);
         const firstTakeoff = addMinutes(calcCommandTime, getEffectiveInitialDelayMin());
 
         // FIX37D333:
@@ -3255,7 +3277,7 @@ const base = bases[selectedBaseName];
         const fullStopForTf = bases[fullStopForTfName] || base;
         const fullStopAlt = airports[fullStopForTf.alt || fullStopForTf.ref];
         const altD = fullStopAlt ? haversineKm({lat: fullStopForTf.lat, lon: fullStopForTf.lon}, fullStopAlt) : 0;
-        const altTimeMin = altD / speedKmPerMin;
+        const altTimeMin = altD / opSpeedKmPerMin;
 
         let limiting = "ΚΑΙ ΤΑ ΔΥΟ";
         if (maxBy3Hours < maxByCutoff) limiting = "3 ΩΡΕΣ";
@@ -3276,6 +3298,7 @@ const base = bases[selectedBaseName];
           `${(typeof newFireWithWaterMode !== "undefined" && newFireWithWaterMode) ? "Νέα φωτιά με νερό: χωρίς 15\' αρχικής Α/Γ\n" : ""}` +
           `Χρόνος αρχικής Α/Γ: ${getInitialTakeoffDelayMin()}\'\n` +
           `Χρόνος Α/Γ μετά επαναπλήρωση: ${getRefillTakeoffDelayMin()}\'\n` +
+          `GS υπολογισμού: ${(opSpeedKmPerMin*60).toFixed(0)} km/h${(typeof autoActualTakeoffTime !== "undefined" && autoActualTakeoffTime) ? " (GPS)" : " (πρόβλεψη)"}\n` +
           `Ώρα πρώτης ρίψης: ${fmtTime(firstDrop)} (σε ${fmtUntilFromCalcCommand(firstDrop)} από τώρα/εντολή)\n` +
           `Μέγιστες ρίψεις: ${maxDrops}\n` +
           `Τελευταία Π/Γ: ${lastLanding ? fmtTime(lastLanding) : "-"}\n` +
@@ -3312,7 +3335,7 @@ const base = bases[selectedBaseName];
             html += `<tr><td>${i}</td><td>${fmtTime(dropTime)}</td><td class="drop-countdown-cell" data-drop-ms="${dropTime.getTime()}" data-base-ms="${calcCommandTime.getTime()}">${pzlFormatDropCountdownPair(dropTime, calcCommandTime)}</td></tr>`;
           }
           html += "</table>";
-        }
+         }
         dropsDiv.innerHTML = html;
         pzlUpdateLiveDropCountdownCells();
 
@@ -6158,6 +6181,30 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 <!-- FIX37D70_WIND_EST_IAS_GPS_VECTORS_ON_D69 -->
 
 
+<!-- FIX37D75: dynamic airborne recalculation every 10 sec with real GPS GS -->
+<script id="fix37d75-dynamic-gs-recalc">
+(function(){
+  window.__pzlD75LastDropRecalcMs = 0;
+  window.pzlD75MaybeRecalculateDrops = function(speedKmh, now){
+    try{
+      if(!speedKmh || !isFinite(speedKmh)) return;
+      if(typeof commandTime === 'undefined' || !commandTime || typeof firePoint === 'undefined' || !firePoint) return;
+      if(speedKmh <= 100 && !(typeof autoActualTakeoffTime !== 'undefined' && autoActualTakeoffTime)) return;
+      var t = now && now.getTime ? now.getTime() : Date.now();
+      if(t - window.__pzlD75LastDropRecalcMs < 10000) return;
+      window.__pzlD75LastDropRecalcMs = t;
+      if(typeof calculate === 'function') calculate();
+    }catch(e){}
+  };
+  if(window.__pzlD75Timer) clearInterval(window.__pzlD75Timer);
+  window.__pzlD75Timer = setInterval(function(){
+    try{
+      if(typeof currentGps === 'undefined' || !currentGps || currentGps.speedMps == null || isNaN(currentGps.speedMps)) return;
+      window.pzlD75MaybeRecalculateDrops(Number(currentGps.speedMps)*3.6, new Date());
+    }catch(e){}
+  }, 10000);
+})();
+</script>
 <!-- FIX37D74: robust live Από τώρα/εντολή countdown + SRCH disarms Fire -->
 <style id="fix37d74-fire-disarm-css">
   #fireModeBtn.fire-disarmed,
