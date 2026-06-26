@@ -1644,6 +1644,9 @@ function getRemainingAirborneMinutesForNewFire() {
     let selectedRefillBaseName = selectedBaseName;
     let selectedFullStopBaseName = selectedBaseName;
     let commandTime = null;
+    let autoActualTakeoffTime = null;
+    let pzlLastDynamicGsRecalcMs = 0;
+    let pzlCalculateRunning = false;
     let firePoint = null;
     let viaPoints = [];
     let mode = "fire";
@@ -1663,7 +1666,7 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
     let lastAirborneTick = null;
     let calculatedFuelBurnedL = 0;
     let lastHeavyCalcTime = 0;
-    const heavyCalcIntervalMs = 10000; // βαριοί υπολογισμοί ανά 10'' μετά την Α/Γ
+    const heavyCalcIntervalMs = 30000; // βαριοί υπολογισμοί ανά 30''
     const airborneStartSpeedKmh = 100;
     const airborneStopSpeedKmh = 30;
     let viaMarkers = [];
@@ -2565,9 +2568,22 @@ function setFireMarker() {
           // Ελαφρύ update σε κάθε GPS fix: μόνο status/gauges.
           updateFlightStatus();
 
-          // D80: βαρύς υπολογισμός/refresh μόνο μετά την πραγματική Α/Γ (GS>100) και ανά 10''.
-          // Δεν ξανατρέχει στην αρχική Εντολή, ώστε να μη μένει η οθόνη στο "Υπολογισμός...".
-          if (commandTime && autoActualTakeoffTime && now.getTime() - lastHeavyCalcTime > heavyCalcIntervalMs) {
+          // D81: Μόλις διαβάσει GS > 100, κρατά πραγματική ώρα Α/Γ.
+          // Μετά, ανανεώνει τους υπολογισμούς κάθε 10 δευτερόλεπτα με την πραγματική GS.
+          try {
+            if (commandTime && speedKmh && speedKmh > 100 && !autoActualTakeoffTime) {
+              autoActualTakeoffTime = new Date();
+              pzlLastDynamicGsRecalcMs = 0;
+            }
+            const nowMsDyn = Date.now();
+            if (commandTime && autoActualTakeoffTime && speedKmh && speedKmh > 30 && (nowMsDyn - pzlLastDynamicGsRecalcMs) >= 10000) {
+              pzlLastDynamicGsRecalcMs = nowMsDyn;
+              calculate();
+            }
+          } catch(e) {}
+
+          // Βαρύς υπολογισμός/refresh οθόνης μόνο ανά 30'', για να μη τρεμοπαίζει.
+          if (now.getTime() - lastHeavyCalcTime > heavyCalcIntervalMs) {
             lastHeavyCalcTime = now.getTime();
             drawAll();
             calculate();
@@ -2652,8 +2668,6 @@ function setFireMarker() {
       return haversineKm({lat:b.lat,lon:b.lon}, alt);
     }
 
-    let pzlLastCutoffInfoCache = null;
-
     async function getCutoffTime() {
       // Ο περιορισμός ΤΦ/Cutoff υπολογίζεται με βάση το Α/Δ Full Stop.
       // Π.χ. Κλιμάκιο ΤΑΤΟΪ, επαναπλήρωση ΛΑΜΙΑ, Full Stop ΤΑΤΟΪ => ΤΦ ΕΛΕΥΣΙΝΑΣ - 15'.
@@ -2664,20 +2678,13 @@ function setFireMarker() {
       const base = bases[fullStopName] || bases[selectedBaseName];
       const ref = airports[base.ref];
       const url = `https://api.sunrise-sunset.org/json?lat=${ref.lat}&lng=${ref.lon}&formatted=0`;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
-      try {
-        const res = await fetch(url, {signal: controller.signal});
-        const data = await res.json();
-        if (data.status !== "OK") throw new Error("Sunset API error");
-        const sunset = new Date(data.results.sunset);
-        const twilight = new Date(sunset.getTime() + twilightAfterSunsetMin*60000);
-        const cutoff = new Date(twilight.getTime() - base.offset*60000);
-        pzlLastCutoffInfoCache = {sunset, twilight, cutoff, refName:base.ref, offset:base.offset, fullStopName};
-        return pzlLastCutoffInfoCache;
-      } finally {
-        clearTimeout(timeoutId);
-      }
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.status !== "OK") throw new Error("Sunset API error");
+      const sunset = new Date(data.results.sunset);
+      const twilight = new Date(sunset.getTime() + twilightAfterSunsetMin*60000);
+      const cutoff = new Date(twilight.getTime() - base.offset*60000);
+      return {sunset, twilight, cutoff, refName:base.ref, offset:base.offset, fullStopName};
     }
 
     let lastCalcId = 0;
@@ -3178,6 +3185,8 @@ function setFireMarker() {
 
 
     async function calculate() {
+      if (pzlCalculateRunning) return;
+      pzlCalculateRunning = true;
       try { updateHsiHud(); } catch(e) {}
       const returnToCurrentGpsKm = computeFireToCurrentGpsKm();
       const calcId = ++lastCalcId;
@@ -3193,13 +3202,11 @@ function setFireMarker() {
       const calcCommandTime = (newFireWithWaterMode && newFireCalcStartTime) ? newFireCalcStartTime : commandTime;
       const fmtUntilFromCalcCommand = (targetTime) => pzlFormatDropCountdownPair(targetTime, calcCommandTime);
 
-      // D80 dynamic GS logic:
-      // - πριν την πραγματική Α/Γ: 15' και 180 km/h
-      // - μετά από GS>100: πραγματική ώρα Α/Γ + τρέχουσα GS για τους μελλοντικούς υπολογισμούς
+      // D81: Δυναμικός υπολογισμός με πραγματική Α/Γ και πραγματική GS, χωρίς να μπλοκάρει την Εντολή.
       const liveGsKmhForCalc = (currentGps && currentGps.speedMps !== null && currentGps.speedMps !== undefined && !isNaN(currentGps.speedMps))
         ? Number(currentGps.speedMps) * 3.6
         : null;
-      const hasRealTakeoffForCalc = (!newFireWithWaterMode && typeof autoActualTakeoffTime !== "undefined" && autoActualTakeoffTime && calcCommandTime);
+      const hasRealTakeoffForCalc = (!newFireWithWaterMode && autoActualTakeoffTime && calcCommandTime);
       const activeSpeedKmPerMin = (hasRealTakeoffForCalc && liveGsKmhForCalc && liveGsKmhForCalc > 30)
         ? Math.max(0.5, liveGsKmhForCalc / 60)
         : speedKmPerMin;
@@ -3215,13 +3222,17 @@ function setFireMarker() {
         dropsDiv.innerHTML = "";
         fuelResult.textContent = "Αναμονή δεδομένων καυσίμων...";
         updateFuelGauges(Number(initialTankFuel.value), Number(initialTankFuel.value));
+        pzlCalculateRunning = false;
         return;
       }
 
       result.textContent = "Υπολογισμός...";
       try {
-        const cutoffInfo = await getCutoffTime();
-        if (calcId !== lastCalcId) return;
+        const cutoffInfo = await Promise.race([
+          getCutoffTime(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout ΤΦ')), 7000))
+        ]);
+        if (calcId !== lastCalcId) { pzlCalculateRunning = false; return; }
 
         const returnLegD = (returnRouteD !== null) ? returnRouteD : ((refillCycleD !== null) ? refillCycleD : D);
         const approachLegD = (approachRouteD !== null) ? approachRouteD : ((newFireWithWaterMode && normalD !== null) ? normalD : D);
@@ -3279,7 +3290,7 @@ const base = bases[selectedBaseName];
         const fullStopForTf = bases[fullStopForTfName] || base;
         const fullStopAlt = airports[fullStopForTf.alt || fullStopForTf.ref];
         const altD = fullStopAlt ? haversineKm({lat: fullStopForTf.lat, lon: fullStopForTf.lon}, fullStopAlt) : 0;
-        const altTimeMin = altD / activeSpeedKmPerMin;
+        const altTimeMin = altD / speedKmPerMin;
 
         let limiting = "ΚΑΙ ΤΑ ΔΥΟ";
         if (maxBy3Hours < maxByCutoff) limiting = "3 ΩΡΕΣ";
@@ -3343,8 +3354,7 @@ const base = bases[selectedBaseName];
         updateFuel(maxDrops, D, altD, missionDurationMin);
 
       } catch(err) {
-        // Δεν αφήνουμε ποτέ την εφαρμογή κολλημένη στο "Υπολογισμός...".
-        result.textContent = "Δεν ολοκληρώθηκε ο υπολογισμός. Πάτησε ξανά Εντολή ή έλεγξε σύνδεση για ΤΦ.\nΣφάλμα: " + (err && err.message ? err.message : err);
+        result.textContent = "Δεν μπόρεσα να πάρω αυτόματα ΤΦ από διαδίκτυο.\nΣφάλμα: " + err.message;
       }
     }
 
@@ -4729,10 +4739,7 @@ const base = bases[selectedBaseName];
     const todayKey = pzlDateKey(new Date());
     try {
       const url = `https://api.sunrise-sunset.org/json?lat=${ref.lat}&lng=${ref.lon}&formatted=0`;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
-      const res = await fetch(url, {cache:'no-store', signal: controller.signal});
-      clearTimeout(timeoutId);
+      const res = await fetch(url, {cache:'no-store'});
       const data = await res.json();
       if (data.status !== 'OK') throw new Error('Sunset API error');
       const sunset = new Date(data.results.sunset);

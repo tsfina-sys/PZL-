@@ -1,1 +1,1 @@
-D80: based on stable D74. Dynamic GS after actual takeoff GS>100, recalculation every 10 seconds, with safer command calculation/no freeze.
+D81: βάση D74 + δυναμικό GS ανά 10 sec μετά από πραγματική Α/Γ GS>100, με timeout για να μην μένει στο Υπολογισμός.
