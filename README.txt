@@ -1,1 +1,3 @@
-FIX37D70: D69 base kept. Added WIND EST mode: input IAS, estimate wind from GPS ground-vector samples across different tracks. UI/aesthetic D69 preserved.
+PZL FIX37D71
+Βάση: D70 WIND EST IAS/GPS vectors.
+Αλλαγή: στη στήλη «Από τώρα/εντολή» εμφανίζεται ζωντανό countdown / αρχικός χρόνος από εντολή, π.χ. 29' / 30'.

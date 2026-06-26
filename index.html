@@ -2676,6 +2676,45 @@ function setFireMarker() {
     }
 
 
+    // D71: Ζωντανή ένδειξη «Από τώρα/εντολή» ως countdown / αρχικός χρόνος.
+    function fmtPzlDurationFromMinutes(mins) {
+      if (!isFinite(mins)) return "-";
+      mins = Math.max(0, Math.round(mins));
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return h > 0 ? `${h}ω ${m}'` : `${m}'`;
+    }
+
+    function fmtNowCommandPair(targetTime, calcCommandTime) {
+      if (!targetTime || !calcCommandTime) return "-";
+      const now = new Date();
+      const remainingMin = (targetTime.getTime() - now.getTime()) / 60000;
+      const originalMin = (targetTime.getTime() - calcCommandTime.getTime()) / 60000;
+      return `${fmtPzlDurationFromMinutes(remainingMin)} / ${fmtPzlDurationFromMinutes(originalMin)}`;
+    }
+
+    function updateDropCountdownCells() {
+      try {
+        const cells = document.querySelectorAll('[data-pzl-drop-target][data-pzl-drop-command]');
+        cells.forEach(cell => {
+          const target = new Date(Number(cell.getAttribute('data-pzl-drop-target')));
+          const cmd = new Date(Number(cell.getAttribute('data-pzl-drop-command')));
+          if (!isNaN(target.getTime()) && !isNaN(cmd.getTime())) {
+            cell.textContent = fmtNowCommandPair(target, cmd);
+          }
+        });
+        const first = document.getElementById('pzlFirstDropNowCommand');
+        if (first) {
+          const target = new Date(Number(first.getAttribute('data-pzl-drop-target')));
+          const cmd = new Date(Number(first.getAttribute('data-pzl-drop-command')));
+          if (!isNaN(target.getTime()) && !isNaN(cmd.getTime())) {
+            first.textContent = fmtNowCommandPair(target, cmd);
+          }
+        }
+      } catch(e) {}
+    }
+
+
     function updateNewFireWithWaterButtonState() {
       const btn = document.getElementById("newFireWithWaterBtn");
       if (!btn) return;
@@ -3236,7 +3275,7 @@ const base = bases[selectedBaseName];
           `${(typeof newFireWithWaterMode !== "undefined" && newFireWithWaterMode) ? "Νέα φωτιά με νερό: χωρίς 15\' αρχικής Α/Γ\n" : ""}` +
           `Χρόνος αρχικής Α/Γ: ${getInitialTakeoffDelayMin()}\'\n` +
           `Χρόνος Α/Γ μετά επαναπλήρωση: ${getRefillTakeoffDelayMin()}\'\n` +
-          `Ώρα πρώτης ρίψης: ${fmtTime(firstDrop)} (σε ${fmtUntilFromCalcCommand(firstDrop)} από τώρα/εντολή)\n` +
+          `Ώρα πρώτης ρίψης: ${fmtTime(firstDrop)} (σε ${fmtNowCommandPair(firstDrop, calcCommandTime)} από τώρα/εντολή)\n` +
           `Μέγιστες ρίψεις: ${maxDrops}\n` +
           `Τελευταία Π/Γ: ${lastLanding ? fmtTime(lastLanding) : "-"}\n` +
           `Διάρκεια/ώρα επιστροφής: ${fmtDurationMin(returnDurationMin)} / ${lastLanding ? fmtTime(lastLanding) : "-"}\n` +
@@ -3269,7 +3308,7 @@ const base = bases[selectedBaseName];
           html += "<table class=\"drop-table\"><tr><th>#</th><th>Ώρα</th><th>Από τώρα/εντολή</th></tr>";
           for (let i=1; i<=maxDrops; i++) {
             const dropTime = addMinutes(firstDrop, (i-1)*cycleMin);
-            html += `<tr><td>${i}</td><td>${fmtTime(dropTime)}</td><td>${fmtUntilFromCalcCommand(dropTime)}</td></tr>`;
+            html += `<tr><td>${i}</td><td>${fmtTime(dropTime)}</td><td data-pzl-drop-target="${dropTime.getTime()}" data-pzl-drop-command="${calcCommandTime ? calcCommandTime.getTime() : ''}">${fmtNowCommandPair(dropTime, calcCommandTime)}</td></tr>`;
           }
           html += "</table>";
         }
@@ -4337,6 +4376,11 @@ const base = bases[selectedBaseName];
     setInterval(() => {
       try { updateReturnToGpsDistanceBox(); } catch(e) {}
     }, 1000); // RETURN_TO_GPS_DISTANCE_BOX_TIMER
+
+
+    setInterval(() => {
+      try { updateDropCountdownCells(); } catch(e) {}
+    }, 1000); // D71_DROP_NOW_COMMAND_COUNTDOWN_TIMER
 
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
