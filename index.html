@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool v8.2 Cockpit FIX37D333</title>
+  <title>PZL Mission Tool v8.2 D67 Cockpit FIX37D413</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -284,7 +284,7 @@
   #map{ inset:34px 0 0 0 !important; height:calc(100% - 34px) !important; }
   .bottom-sheet{ flex:0 0 48dvh !important; height:48dvh !important; max-height:48dvh !important; overflow:auto !important; border-radius:12px 12px 0 0; padding:7px 7px 70px; }
 
-  #topMapGpsBar{ top:5px !important; left:86px !important; right:6px !important; display:grid !important; grid-template-columns:1fr 1fr 1fr; gap:4px !important; }
+  #topMapGpsBar{ top:5px !important; left:86px !important; right:6px !important; display:grid !important; grid-template-columns:1fr 1fr 1fr .62fr; gap:4px !important; }
   #topMapGpsBar button{ min-width:0 !important; padding:6px 3px !important; font-size:11px !important; line-height:1.05 !important; border-radius:8px !important; white-space:normal; }
   #positionReportBtn{ font-size:0 !important; }
   #positionReportBtn::after{ content:'Θέση'; font-size:11px; }
@@ -472,6 +472,37 @@
   #toggleHudBtn::after{content:'HUD'; font-size:11px;}
 }
 
+/* FIX37D54: fire-circles button icon + orange active position report */
+#toggleFireCirclesBtn.circles-on{background:#157347 !important;}
+#toggleFireCirclesBtn.circles-off{background:#6b7280 !important;}
+#positionReportBtn.position-report-active{background:#f97316 !important;color:#fff !important;}
+#toggleFireCirclesBtn .fire-circles-icon{
+  position:relative;display:inline-block;width:24px;height:24px;vertical-align:middle;
+}
+#toggleFireCirclesBtn .fire-circles-icon::before{
+  content:'';position:absolute;left:1px;top:1px;width:22px;height:22px;border-radius:50%;
+  border:2px solid #2563eb;box-sizing:border-box;
+}
+#toggleFireCirclesBtn .fire-circles-icon .ring-red{
+  position:absolute;left:5px;top:5px;width:14px;height:14px;border-radius:50%;
+  border:2px solid #ef4444;box-sizing:border-box;
+}
+#toggleFireCirclesBtn .fire-circles-icon .ring-black{
+  position:absolute;left:9px;top:9px;width:6px;height:6px;border-radius:50%;
+  border:2px solid #111827;box-sizing:border-box;background:transparent;
+}
+#toggleFireCirclesBtn .fire-circles-icon .flame{
+  position:absolute;left:4px;top:2px;width:16px;height:16px;font-size:13px;line-height:16px;text-align:center;
+}
+#toggleFireCirclesBtn.circles-off .fire-circles-icon{opacity:.45;}
+@media(max-width:700px){
+  #toggleFireCirclesBtn{font-size:0 !important; min-width:34px !important; padding-left:4px !important; padding-right:4px !important;}
+  #toggleFireCirclesBtn::after{content:'' !important;}
+  #toggleFireCirclesBtn .fire-circles-icon{font-size:13px !important;}
+}
+.x2-mark{font-size:.82em;font-weight:900;margin-left:3px;opacity:.95;}
+button.x2-pending{outline:3px solid #f97316 !important; box-shadow:0 0 0 3px rgba(249,115,22,.35) !important;}
+
 
 /* FIX25: rotating compass rose heading labels */
 #hsiHud .hsiNorth, #hsiHud .hsiE, #hsiHud .hsiW, #hsiHud .hsiS{display:none !important;}
@@ -530,6 +561,7 @@ body.pzl-screen-locked #lockMapBtn {
   #positionReportBtn::after{content:'Αναφορά\A θέσης' !important;}
   #gpsBtn::after{content:'GPS' !important;}
   #toggleHudBtn::after{content:'HUD' !important;}
+  #toggleFireCirclesBtn::after{content:'◎◎◎' !important; font-size:13px !important;}
   #fixBtn::after{content:'FIX' !important;}
   #useGpsAsStartBtn::after{content:'Αφετηρία' !important;}
   #hsiHud{ touch-action:none !important; user-select:none !important; }
@@ -617,7 +649,7 @@ body.pzl-screen-locked #lockMapBtn {
 }
 
 
-/* FIX37D333: stronger mobile compact mode - smaller right buttons + more map area */
+/* FIX37D413: stronger mobile compact mode - smaller right buttons + more map area */
 @media (max-width:700px) and (orientation:portrait){
   html, body { height:100dvh; overflow:hidden; }
   #app{ height:100dvh !important; overflow:hidden !important; display:flex !important; flex-direction:column !important; }
@@ -734,7 +766,7 @@ body.pzl-screen-locked #lockMapBtn {
 }
 
 
-/* FIX37D33: connected PZL moving aircraft marker */
+/* FIX37D41: connected PZL moving aircraft marker */
 .gps-aircraft-marker{
   width:58px !important;
   height:58px !important;
@@ -762,6 +794,34 @@ body.pzl-screen-locked #lockMapBtn {
   .gps-aircraft-marker{ width:52px !important; height:52px !important; }
   .gps-plane-symbol{ width:52px !important; height:52px !important; }
   .gps-plane-symbol img{ width:52px !important; height:52px !important; }
+}
+
+
+/* FIX37D54 final override: show custom fire icon on mobile despite compact labels */
+@media(max-width:700px){
+  #topMapGpsBar #toggleFireCirclesBtn{ text-indent:0 !important; display:flex !important; align-items:center !important; justify-content:center !important; }
+  #topMapGpsBar #toggleFireCirclesBtn::after{ content:'' !important; display:none !important; }
+  #topMapGpsBar #toggleFireCirclesBtn .fire-circles-icon{ text-indent:0 !important; flex:0 0 auto !important; }
+}
+
+/* FIX37D57: split Fire/circles, GPS/Αφετηρία, Εντολή/Manual Practice */
+#topMapGpsBar .topGpsSplit{width:230px!important;max-width:34vw!important;}
+#topMapGpsBar .topGpsSplit button{height:36px!important;}
+.fireSplit #toggleFireCirclesBtn{display:flex!important;align-items:center!important;justify-content:center!important;}
+.fireSplit #toggleFireCirclesBtn::after{content:''!important;display:none!important;}
+.fireSplit .fire-circles-icon{transform:scale(.95);}
+.commandSplit button{height:34px!important;}
+.commandSplit .x2-mark{font-size:.75em!important;}
+#setManualTimeBtn{font-size:10.5px!important;}
+@media (max-width:700px){
+  #topMapGpsBar .topGpsSplit{width:174px!important;max-width:38vw!important;}
+  #topMapGpsBar .topGpsSplit button{height:28px!important;font-size:10px!important;padding:3px 2px!important;}
+  .fireSplit button,.commandSplit button{height:28px!important;font-size:9.2px!important;padding:3px 2px!important;line-height:1!important;}
+  #setManualTimeBtn{font-size:8.7px!important;}
+}
+@media (max-width:380px){
+  #topMapGpsBar .topGpsSplit{width:154px!important;}
+  .fireSplit button,.commandSplit button{font-size:8.3px!important;}
 }
 
 </style>
@@ -839,13 +899,265 @@ body.pzl-screen-locked #lockMapBtn {
 #hsiHud .hsiRoseLabel.north{color:#fff !important;}
 </style>
 
+
+<style id="fix37d35-checkwx-metar-css">
+#metarWindBtn.metar-on{background:#157347!important}
+#metarWindBtn.metar-warn{background:#b91c1c!important}
+#metarWindBtn.metar-off{background:#6b7280!important}
+#metarWindBtn.metar-loading{background:#0f6ab4!important}
+.metarWindIcon{width:46px;height:46px;display:flex;align-items:center;justify-content:center;font-size:29px;font-weight:900;color:#00e676;text-shadow:0 2px 5px #000,0 0 3px #000;transform-origin:center center}
+.metarWindIcon.warn{color:#ff2b2b}
+.metarWindLabel{background:rgba(10,20,30,.84);color:#fff;border:1px solid rgba(255,255,255,.55);border-radius:8px;padding:3px 5px;font-size:10px;line-height:1.08;font-weight:900;white-space:nowrap;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.metarWindLabel.warn{border-color:#ff2b2b;color:#ffdddd}
+.metarSector{pointer-events:none}
+#metarWindStatus{position:absolute;left:8px;bottom:8px;z-index:850;background:rgba(10,20,30,.78);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:10px;padding:5px 7px;font-size:10px;line-height:1.15;max-width:285px;display:none}
+@media(max-width:700px){#metarWindBtn{font-size:0!important}#metarWindBtn::after{content:'METAR';font-size:10px}.metarWindLabel{font-size:9px}}
+</style>
+
+
+<style id="fix37d38-metar-label-arrow-css">
+.metarWindIcon{display:none!important;}
+.metarWindLabel{
+  background:rgba(10,20,30,.56)!important;
+  border:1px solid rgba(255,255,255,.35)!important;
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+  min-width:114px;
+}
+.metarWindLabel.warn{border-color:rgba(255,0,0,.75)!important;color:#ffdddd!important;}
+.metarLabelArrow{display:inline-block;font-size:19px;font-weight:900;margin-right:5px;vertical-align:middle;transform-origin:center center;text-shadow:0 1px 4px #000;}
+.metarLabelArrow.ok{color:#00e676;}
+.metarLabelArrow.warn{color:#ff2222;}
+.metarWindLine{display:flex;align-items:center;justify-content:center;gap:3px;margin-top:1px;}
+.metarXwLine{font-weight:900;color:#7CFF7C;}
+.metarWindLabel.warn .metarXwLine{color:#ff7777;}
+</style>
+
+
+<style id="fix37d39-metar-toggle-center-arrows-css">
+.metarWindIcon{display:flex!important;width:46px;height:46px;align-items:center;justify-content:center;font-size:31px;font-weight:900;color:#00e676;-webkit-text-stroke:1px rgba(0,0,0,.75);text-shadow:0 2px 5px #000,0 0 3px #000;transform-origin:center center}
+.metarWindIcon.warn{color:#ff2222!important}
+.metarWindLabel{background:rgba(10,20,30,.50)!important;border:1px solid rgba(255,255,255,.32)!important;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);min-width:116px}
+.metarWindLabel.warn{border-color:rgba(255,0,0,.75)!important;color:#ffdddd!important}
+.metarLabelArrow{display:none!important}
+.metarWindLine{display:block!important;margin-top:1px}
+.metarXwLine{display:block;font-weight:900;color:#7CFF7C}
+.metarWindLabel.warn .metarXwLine{color:#ff7777}
+#metarWindBtn.metar-hidden{background:#6b7280!important}
+</style>
+
+
+<style id="fix37d40-metar-long-arrows-css">
+/* Σβήνει το + / - zoom control για να μην κρύβει το METAR */
+.leaflet-control-zoom{display:none!important}
+
+/* Μακρόστενο βέλος ανέμου με κέντρο το Α/Δ */
+.metarWindIcon{
+  display:block!important;
+  position:relative!important;
+  width:74px!important;
+  height:18px!important;
+  transform-origin:9px 9px!important;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.9));
+}
+.metarWindIcon::before{
+  content:"";
+  position:absolute;
+  left:0; top:6px;
+  width:54px; height:6px;
+  background:#00e676;
+  border:1px solid rgba(0,0,0,.85);
+  border-right:none;
+  border-radius:4px 0 0 4px;
+}
+.metarWindIcon::after{
+  content:"";
+  position:absolute;
+  left:50px; top:0;
+  width:0; height:0;
+  border-top:9px solid transparent;
+  border-bottom:9px solid transparent;
+  border-left:22px solid #00e676;
+  filter:drop-shadow(0 0 1px #000);
+}
+.metarWindIcon.warn::before{background:#ff2222!important}
+.metarWindIcon.warn::after{border-left-color:#ff2222!important}
+
+.metarWindLabel{
+  background:rgba(10,20,30,.48)!important;
+  border:1px solid rgba(255,255,255,.30)!important;
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+}
+.metarLabelArrow{display:none!important}
+.metarWindLine{display:block!important}
+.metarXwLine{display:block;font-weight:900;color:#7CFF7C}
+.metarWindLabel.warn .metarXwLine{color:#ff7777}
+#metarWindBtn.metar-hidden{background:#6b7280!important}
+</style>
+
 </head>
-<body>
+
+<style id="fix37d46-metar-final-css">
+/* FIX37D46: smaller METAR boxes, no yellow arrows, label offset away from airport/arrow center */
+.metarWindIcon{
+  display:block!important;
+  position:relative!important;
+  width:74px!important;
+  height:18px!important;
+  transform-origin:9px 9px!important;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.9))!important;
+}
+.metarWindIcon::before{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;top:6px!important;
+  width:54px!important;height:6px!important;
+  background:#00e676!important;
+  border:1px solid rgba(0,0,0,.85)!important;
+  border-right:none!important;
+  border-radius:4px 0 0 4px!important;
+}
+.metarWindIcon::after{
+  content:""!important;
+  position:absolute!important;
+  left:50px!important;top:0!important;
+  width:0!important;height:0!important;
+  border-top:9px solid transparent!important;
+  border-bottom:9px solid transparent!important;
+  border-left:22px solid #00e676!important;
+  filter:drop-shadow(0 0 1px #000)!important;
+}
+.metarWindIcon.warn::before{background:#ff2222!important}
+.metarWindIcon.warn::after{border-left-color:#ff2222!important}
+.metarWindLabel{
+  background:rgba(10,20,30,.50)!important;
+  border:1px solid rgba(255,255,255,.28)!important;
+  border-radius:8px!important;
+  padding:3px 7px!important;
+  font-size:9.5px!important;
+  line-height:1.06!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+  text-align:center!important;
+  min-width:92px!important;
+  max-width:124px!important;
+  box-shadow:0 2px 6px rgba(0,0,0,.35)!important;
+  backdrop-filter:blur(2px)!important;
+  -webkit-backdrop-filter:blur(2px)!important;
+}
+.metarWindLabel.warn{border-color:rgba(255,0,0,.75)!important;color:#ffdddd!important}
+.metarWindLine{display:block!important;margin-top:0!important}
+.metarXwLine{display:block!important;font-weight:900!important;color:#7CFF7C!important}
+.metarWindLabel.warn .metarXwLine{color:#ff7777!important}
+
+/* FIX37D55: combined fire search field + SRCH button */
+.searchCombo{
+  display:flex!important;
+  width:100%!important;
+  gap:0!important;
+  margin:0!important;
+  align-items:stretch!important;
+}
+.searchCombo #searchBox,
+.searchCombo #searchBtn{
+  width:50%!important;
+  min-width:0!important;
+  height:34px!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  font-size:12px!important;
+  line-height:1.1!important;
+}
+.searchCombo #searchBox{
+  border-radius:8px 0 0 8px!important;
+  border-right:0!important;
+  padding:7px 5px!important;
+}
+.searchCombo #searchBtn{
+  border-radius:0 8px 8px 0!important;
+  padding:7px 5px!important;
+  font-weight:900!important;
+}
+@media (max-width:520px){
+  .searchCombo #searchBox,
+  .searchCombo #searchBtn{ height:30px!important; font-size:11px!important; padding:5px 4px!important; }
+}
+@media (max-width:380px){
+  .searchCombo #searchBox,
+  .searchCombo #searchBtn{ height:28px!important; font-size:10px!important; padding:4px 3px!important; }
+}
+
+
+/* FIX37D56: paired WPT/CLR controls + Airborne Full Tank blue active */
+.splitControl{
+  display:flex!important;
+  width:100%!important;
+  gap:0!important;
+  margin:0!important;
+  align-items:stretch!important;
+}
+.splitControl button{
+  width:50%!important;
+  min-width:0!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+  white-space:normal!important;
+}
+.splitControl button:first-child{
+  border-radius:8px 0 0 8px!important;
+  border-right:0!important;
+}
+.splitControl button:last-child{
+  border-radius:0 8px 8px 0!important;
+}
+#newFireWithWaterBtn.airborne-full-active{
+  background:#2563eb!important;
+  border-color:#1d4ed8!important;
+  color:#fff!important;
+  box-shadow:0 0 0 2px rgba(37,99,235,.35), 0 1px 5px rgba(0,0,0,.22)!important;
+}
+@media (max-width:700px){
+  .splitControl button{height:28px!important; font-size:9.2px!important; padding:3px 2px!important; line-height:1!important;}
+  .splitControl .x2-mark{font-size:.75em!important; margin-left:1px!important;}
+}
+@media (max-width:380px){
+  .splitControl button{font-size:8.5px!important; padding-left:1px!important; padding-right:1px!important;}
+}
+
+
+/* FIX37D58: GPS + Αφετηρία one half-half control, Airborne x2 */
+#topMapGpsBar .topGpsSplit{display:flex!important;gap:0!important;margin:0!important;align-items:stretch!important;}
+#topMapGpsBar .topGpsSplit button{width:50%!important;min-width:0!important;margin:0!important;box-sizing:border-box!important;}
+#topMapGpsBar .topGpsSplit button:first-child{border-radius:8px 0 0 8px!important;border-right:0!important;}
+#topMapGpsBar .topGpsSplit button:last-child{border-radius:0 8px 8px 0!important;}
+#newFireWithWaterBtn .x2-mark{font-size:.78em!important;margin-left:2px!important;}
+@media(max-width:700px){#newFireWithWaterBtn{font-size:8.8px!important;line-height:1!important;}#topMapGpsBar .topGpsSplit{width:174px!important;max-width:38vw!important;}}
+
+
+/* FIX37D59: stronger GPS/Αφετηρία split + visible Airborne x2 */
+#topMapGpsBar{align-items:stretch!important;}
+#topMapGpsBar .topGpsSplit{display:inline-flex!important;gap:0!important;overflow:hidden!important;border-radius:8px!important;width:220px!important;max-width:34vw!important;flex:0 0 220px!important;}
+#topMapGpsBar .topGpsSplit button{display:flex!important;align-items:center!important;justify-content:center!important;height:36px!important;width:50%!important;min-width:0!important;margin:0!important;border-radius:0!important;white-space:normal!important;}
+#topMapGpsBar .topGpsSplit button:first-child{border-radius:8px 0 0 8px!important;border-right:1px solid rgba(255,255,255,.25)!important;}
+#topMapGpsBar .topGpsSplit button:last-child{border-radius:0 8px 8px 0!important;}
+#newFireWithWaterBtn{font-weight:800!important;}
+#newFireWithWaterBtn .x2-mark{display:inline!important;font-weight:900!important;font-size:.85em!important;margin-left:3px!important;}
+@media(max-width:700px){
+  #topMapGpsBar .topGpsSplit{width:160px!important;max-width:34vw!important;flex-basis:160px!important;}
+  #topMapGpsBar .topGpsSplit button{height:28px!important;font-size:10.5px!important;padding:3px 1px!important;}
+  #newFireWithWaterBtn{font-size:8.4px!important;line-height:1.05!important;}
+  #newFireWithWaterBtn .x2-mark{font-size:.8em!important;margin-left:1px!important;}
+}
+@media(max-width:380px){#topMapGpsBar .topGpsSplit{width:148px!important;flex-basis:148px!important;}#topMapGpsBar .topGpsSplit button{font-size:9.5px!important;}}
+
+</style>
+<body><button id="metarWindBtn" class="metar-off" onclick="pzlRefreshCheckwxMetars()" style="position:absolute;z-index:1000;top:52px;left:6px">METAR</button>
 <div id="app">
   <div id="mapWrap">
-    <header><span>PZL Mission Tool v8.2</span><span>Cockpit</span></header>
-    <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><button id="gpsBtn">Ενεργοποίηση GPS</button><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button><button id="useGpsAsStartBtn" class="secondary">Χρήση GPS ως αφετηρία</button></div>
-<div id="map"></div>
+    <header><span>PZL Mission Tool v8.2 D60</span><span>Cockpit</span></header>
+    <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><div class="splitControl topGpsSplit"><button id="gpsBtn">GPS</button><button id="useGpsAsStartBtn" class="secondary">Αφετηρία</button></div><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="toggleActionsBtn" class="secondary" title="Εμφάνιση/απόκρυψη δεξιού πάνελ">PNL</button><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button></div>
+<div id="map"></div><div id="metarWindStatus"></div>
     <div id="hsiHud" aria-label="HSI HUD">
       <div class="hsiDial" id="hsiDial">
         <div class="hsiRose" id="hsiRose"></div>
@@ -867,12 +1179,10 @@ body.pzl-screen-locked #lockMapBtn {
 
     <div class="map-actions">
       <button id="lockMapBtn" class="secondary">🔓</button>
-      <button id="fireModeBtn" class="active">🔥 Fire</button><br><input id="searchBox" placeholder="Αναζήτηση φωτιάς π.χ. Πλωμάρι" /><button id="searchBtn">Αναζήτηση</button>
-      <button id="viaModeBtn" class="secondary">🔥 WPT</button>
-      <button id="clearViaBtn" class="danger">🔥 CLR WPT</button>
-<button id="returnWpBtn" class="secondary">WPT RTB</button>
-<button id="clearReturnWpBtn" class="danger">CLR WPT RTB</button><br><button id="takeoffBtn">☎️ Εντολή</button><br><button class="secondary" id="setManualTimeBtn">☎️ Manual Εντολή</button><br><button id="newFireWithWaterBtn" class="secondary">Airborne Full Tank</button>
-      <button id="generalResetBtn" class="danger">🔄 Reset</button>
+      <div class="splitControl fireSplit"><button id="fireModeBtn" class="active">🔥 Fire</button><button id="toggleFireCirclesBtn" class="secondary" title="Εμφάνιση/απόκρυψη 3 κύκλων φωτιάς"><span class="fire-circles-icon" aria-hidden="true"><span class="ring-red"></span><span class="ring-black"></span><span class="flame">🔥</span></span></button></div><div class="searchCombo"><input id="searchBox" placeholder="Περιοχή" /><button id="searchBtn" type="button">SRCH</button></div>
+      <div class="splitControl wptSplit"><button id="viaModeBtn" class="secondary">🔥 WPT</button><button id="clearViaBtn" class="danger">🔥 CLR <span class="x2-mark">x2</span></button></div>
+      <div class="splitControl rtbSplit"><button id="returnWpBtn" class="secondary">WPT RTB</button><button id="clearReturnWpBtn" class="danger">CLR RTB <span class="x2-mark">x2</span></button></div><div class="splitControl commandSplit"><button id="takeoffBtn">☎️ Εντολή <span class="x2-mark">x2</span></button><button class="secondary" id="setManualTimeBtn">Manual Practice <span class="x2-mark">x2</span></button></div><button id="newFireWithWaterBtn" class="secondary">Airborne Full Tank <span class="x2-mark">x2</span></button>
+      <button id="generalResetBtn" class="danger">🔄 Reset <span class="x2-mark">x2</span></button>
     </div>
   </div>
   <div class="bottom-sheet">
@@ -1337,7 +1647,9 @@ function getRemainingAirborneMinutesForNewFire() {
     let firePoint = null;
     let viaPoints = [];
     let mode = "fire";
+    let fireSelectionArmed = true; // Fire πράσινο μόνο όταν επιτρέπεται επιλογή/αλλαγή φωτιάς στον χάρτη
     let fireCircleLayers = [];
+    let fireCirclesVisible = true;
 let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, altLine = null, rwyLine = null, windLine = null, fireWindLine = null;
     let gpsWatchId = null;
     let currentGps = null;
@@ -1503,11 +1815,26 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
         return;
       }
       if (mode === "fire") {
+        if (!fireSelectionArmed) {
+          const result = document.getElementById("result");
+          if (result) result.textContent = "Fire ανενεργό: πάτησε πρώτα το κουμπί Fire για αλλαγή θέσης φωτιάς.";
+          return;
+        }
         firePoint = {lat:e.latlng.lat, lon:e.latlng.lng, label:"Φωτιά"};
         setFireMarker();
-      } else {
+        fireSelectionArmed = false;
+        updateFireModeButtonState();
+      } else if (mode === "via") {
         viaPoints.push({lat:e.latlng.lat, lon:e.latlng.lng});
         addViaMarker(e.latlng, viaPoints.length);
+        // FIX37D63: μετά από κάθε WPT μετάβασης, αφοπλίζει αυτόματα.
+        // Για επόμενο WPT πρέπει να ξαναπατηθεί το WPT ώστε να γίνει πράσινο.
+        mode = "none";
+        setViaWptArmed(false);
+      } else {
+        const result = document.getElementById("result");
+        if (result) result.textContent = "Επιλογή WPT ανενεργή: πάτησε πρώτα WPT ή WPT RTB.";
+        return;
       }
       calculate();
     });
@@ -1519,6 +1846,7 @@ function clearFireCircles(){
 }
 function drawFireCircles(){
   clearFireCircles();
+  if(!fireCirclesVisible) return;
   if(!firePoint) return;
 
   const defs=[
@@ -1554,6 +1882,21 @@ function drawFireCircles(){
    icon:L.divIcon({className:"",html:'<div style="color:black;font-weight:bold;font-size:24px">ΖΕΠ</div>'})
   }).addTo(map);
   fireCircleLayers.push(zep);
+}
+
+function updateFireCirclesButton(){
+  const btn=document.getElementById("toggleFireCirclesBtn");
+  if(!btn) return;
+  btn.title = fireCirclesVisible ? "Κύκλοι φωτιάς: ON" : "Κύκλοι φωτιάς: OFF";
+  btn.className = fireCirclesVisible ? "active circles-on" : "secondary circles-off";
+  if(!btn.querySelector(".fire-circles-icon")){
+    btn.innerHTML = '<span class="fire-circles-icon" aria-hidden="true"><span class="ring-red"></span><span class="ring-black"></span><span class="flame">🔥</span></span>';
+  }
+}
+function toggleFireCircles(){
+  fireCirclesVisible = !fireCirclesVisible;
+  if(fireCirclesVisible) drawFireCircles(); else clearFireCircles();
+  updateFireCirclesButton();
 }
 function setFireMarker() {
       if (fireMarker) map.removeLayer(fireMarker);
@@ -1950,7 +2293,7 @@ function setFireMarker() {
       const effective = Math.max(windSpeed, gust);
       const angle = normAngleDiff(windFrom, rwy);
       const cross = Math.abs(effective * Math.sin(deg2rad(angle)));
-      return {effective, cross, out: cross > pzlMaxCrosswindKts || effective > pzlMaxWindKts};
+      return {effective, cross, out: cross >= pzlMaxCrosswindKts || effective >= pzlMaxWindKts};
     }
 
     function drawRunwayAndWind() {
@@ -1968,7 +2311,7 @@ function setFireMarker() {
       const start = endpointFromBearing(b.lat,b.lon,windFrom,2.2);
       const end = endpointFromBearing(b.lat,b.lon,windTo,1.0);
       const st = windLimitStatus();
-      const color = st.out ? "red" : "yellow";
+      const color = st.out ? "red" : "green";
       windLine = drawArrow(start, end, color, `Άνεμος από ${windFrom}° | κάθετος ${st.cross.toFixed(1)} kts | σύνολο ${st.effective.toFixed(1)} kts`);
     }
 
@@ -1979,7 +2322,7 @@ function setFireMarker() {
       const windTo = (windFrom + 180) % 360;
       const start = endpointFromBearing(firePoint.lat,firePoint.lon,windFrom,1.8);
       const end = endpointFromBearing(firePoint.lat,firePoint.lon,windTo,0.8);
-      fireWindLine = drawArrow(start, end, "yellow", "Άνεμος φωτιάς από " + windFrom + "°");
+      fireWindLine = drawArrow(start, end, "green", "Άνεμος φωτιάς από " + windFrom + "°");
     }
 
     baseSelect.addEventListener("change", () => { selectedBaseName = baseSelect.value;
@@ -1998,23 +2341,12 @@ function setFireMarker() {
       resetAutoTakeoffFullStopDisplays(); document.getElementById("manualTime").value = toHHMM(commandTime); calculate();
     });
     document.getElementById("setManualTimeBtn").addEventListener("click", () => {
+      // FIX37D58: Manual Practice works again as the old Manual Εντολή/ENTER.
       setTakeoffModeButtons("manual");
-      resetAutoTakeoffFullStopDisplays();
-      const manualInputEl = document.getElementById("manualTime");
-      const value = pzlNormalizeManualTime(manualInputEl.value);
-      if (manualInputEl && value) manualInputEl.value = value;
-      if (!value) return alert("Βάλε ώρα εντολής.");
-      const now = gpsTestModeASimNow ? new Date(gpsTestModeASimNow.getTime()) : new Date(); const [h,m] = value.split(":").map(Number);
-      commandTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
-      window.pzlManualCommandTimeActive = true;
-      window.manualNewFireCommandTime = null;
+      const ok = (typeof setManualCommandTimeFromInput === "function") ? setManualCommandTimeFromInput() : false;
+      if (!ok) return;
       try {
         const manualActual = new Date(commandTime.getTime() + getInitialTakeoffDelayMin() * 60000);
-
-        // FIX37D3332: Αν είχε πατηθεί πρώτα η κανονική «Εντολή» και μετά αλλάξουμε σε
-        // Manual Εντολή, πρέπει να συγχρονιστεί και το εσωτερικό scenario clock.
-        // Αλλιώς το Airborne Full Tank / Νέα φωτιά με νερό κρατά την παλιά ώρα
-        // της κανονικής εντολής και βγάζει λάθος/0 ρίψεις.
         if (typeof gpsTestModeASimNow !== "undefined") gpsTestModeASimNow = new Date(commandTime.getTime());
         if (typeof gpsTestModeATakeoffSimTime !== "undefined") gpsTestModeATakeoffSimTime = manualActual;
         if (typeof newFireActualTakeoffTime !== "undefined") newFireActualTakeoffTime = manualActual;
@@ -2036,19 +2368,66 @@ function setFireMarker() {
       } catch(e) {}
     }
 
+    function updateFireModeButtonState() {
+      const fireBtn = document.getElementById("fireModeBtn");
+      if (!fireBtn) return;
+      if (mode === "fire" && fireSelectionArmed) {
+        fireBtn.className = "active";
+        fireBtn.title = "Fire: ενεργό — πάτησε στον χάρτη για σημείο φωτιάς";
+      } else {
+        fireBtn.className = "secondary";
+        fireBtn.title = "Fire: πατημένο για ενεργοποίηση επιλογής φωτιάς";
+      }
+    }
+
+    function setViaWptArmed(active) {
+      const viaBtn = document.getElementById("viaModeBtn");
+      if (!viaBtn) return;
+      if (active) {
+        viaBtn.className = "active";
+        viaBtn.title = "WPT μετάβασης ενεργό — πάτησε στον χάρτη για 1 σημείο";
+      } else {
+        viaBtn.className = "secondary";
+        viaBtn.title = "WPT μετάβασης: πάτησε για ενεργοποίηση πριν βάλεις σημείο στον χάρτη";
+      }
+    }
+
+    function setReturnWptArmed(active) {
+      const btn = document.getElementById("returnWpBtn");
+      if (!btn) return;
+      btn.classList.toggle("return-wp-active", !!active);
+      btn.className = active ? "active return-wp-active" : "secondary";
+      btn.title = active ? "WPT RTB ενεργό — πάτησε στον χάρτη για 1 σημείο επιστροφής" : "WPT RTB: πάτησε για ενεργοποίηση πριν βάλεις σημείο στον χάρτη";
+    }
+
+    const toggleFireCirclesBtn = document.getElementById("toggleFireCirclesBtn");
+    if (toggleFireCirclesBtn) {
+      toggleFireCirclesBtn.addEventListener("click", toggleFireCircles);
+      updateFireCirclesButton();
+    }
+    updateFireModeButtonState();
+
     document.getElementById("fireModeBtn").addEventListener("click", () => {
       exitReturnWpModeForNormalMode();
       mode="fire";
-      fireModeBtn.className="active";
-      viaModeBtn.className="secondary";
+      fireSelectionArmed = true;
+      updateFireModeButtonState();
+      setViaWptArmed(false);
     });
     document.getElementById("viaModeBtn").addEventListener("click", () => {
       exitReturnWpModeForNormalMode();
       mode="via";
-      viaModeBtn.className="active";
-      fireModeBtn.className="secondary";
+      fireSelectionArmed = false;
+      setViaWptArmed(true);
+      returnWpMode = false;
+      setReturnWptArmed(false);
+      updateFireModeButtonState();
     });
-    document.getElementById("clearViaBtn").addEventListener("click", clearViaMarkers);
+    document.getElementById("clearViaBtn").addEventListener("click", () => {
+      clearViaMarkers();
+      mode = "none";
+      setViaWptArmed(false);
+    });
 
     document.getElementById("lockMapBtn").addEventListener("click", () => {
       mapLocked = !mapLocked;
@@ -2296,9 +2675,20 @@ function setFireMarker() {
     }
 
 
+    function updateNewFireWithWaterButtonState() {
+      const btn = document.getElementById("newFireWithWaterBtn");
+      if (!btn) return;
+      if (typeof newFireWithWaterMode !== "undefined" && newFireWithWaterMode) {
+        btn.classList.add("airborne-full-active");
+      } else {
+        btn.classList.remove("airborne-full-active");
+      }
+    }
+
     function setNewFireWithWaterStatus(text) {
       const el = document.getElementById("newFireWithWaterStatus");
       if (el) el.textContent = text;
+      updateNewFireWithWaterButtonState();
     }
 
     function resetMissionForNewFireWithWater() {
@@ -2430,6 +2820,15 @@ function setFireMarker() {
       updateReturnWpStatus();
       updateReturnWpLine();
       try { updateReturnToGpsDistanceBox(); } catch(e) {} // UPDATE_RETURN_DISTANCE_AFTER_RETURN_WP_CHANGE
+      // FIX37D63: μετά από κάθε WPT RTB, αφοπλίζει αυτόματα.
+      // Για επόμενο WPT RTB πρέπει να ξαναπατηθεί το WPT RTB ώστε να γίνει πράσινο.
+      try {
+        returnWpMode = false;
+        if (modeBeforeReturnWp && typeof mode !== "undefined") mode = modeBeforeReturnWp;
+        modeBeforeReturnWp = null;
+        setReturnWptArmed(false);
+        updateReturnWpStatus();
+      } catch(e) {}
       calculate();
     }
 
@@ -2558,28 +2957,41 @@ function setFireMarker() {
 
         resetAutoTakeoffFullStopDisplays();
 
-        const fixedManualTime = pzlNormalizeManualTime(input.value);
+        const fixedManualTime = (typeof pzlNormalizeManualTime === "function") ? pzlNormalizeManualTime(input.value) : String(input.value || "").trim();
         if (!fixedManualTime) { alert("Βάλε ώρα σε μορφή HH:MM ή 1000."); return false; }
         input.value = fixedManualTime;
-        const [hh, mm] = fixedManualTime.split(":").map(Number);
-        const d = new Date();
-        d.setHours(hh, mm, 0, 0);
 
-        // Σημαντικό: η χειροκίνητη ώρα είναι ΕΝΤΟΛΗ Α/Γ.
-        // Η πραγματική Α/Γ υπολογίζεται μετά με +15'.
+        const scenarioNow = (typeof gpsTestModeASimNow !== "undefined" && gpsTestModeASimNow) ? new Date(gpsTestModeASimNow.getTime()) : new Date();
+        const [hh, mm] = fixedManualTime.split(":").map(Number);
+        const d = new Date(scenarioNow.getFullYear(), scenarioNow.getMonth(), scenarioNow.getDate(), hh, mm, 0, 0);
+
+        // Η χειροκίνητη ώρα είναι ΩΡΑ ΕΝΤΟΛΗΣ Α/Γ.
+        // Η πραγματική Α/Γ για τους υπολογισμούς είναι εντολή + 15'.
         commandTime = d;
         window.pzlManualCommandTimeActive = true;
         window.manualNewFireCommandTime = null;
 
         try {
           const manualActual = new Date(commandTime.getTime() + getInitialTakeoffDelayMin() * 60000);
-          if (typeof gpsTestModeATakeoffSimTime !== "undefined") gpsTestModeATakeoffSimTime = manualActual;
-          if (typeof newFireActualTakeoffTime !== "undefined") newFireActualTakeoffTime = manualActual;
+
+          // Κρίσιμο: συγχρονίζουμε ΟΛΕΣ τις εσωτερικές ώρες, όπως στη D33,
+          // ώστε Manual Practice να μπορεί να χρησιμοποιηθεί μετά και από Airborne Full Tank.
+          if (typeof gpsTestModeASimNow !== "undefined") gpsTestModeASimNow = new Date(commandTime.getTime());
+          if (typeof gpsTestModeATakeoffSimTime !== "undefined") gpsTestModeATakeoffSimTime = new Date(manualActual.getTime());
+          if (typeof newFireActualTakeoffTime !== "undefined") newFireActualTakeoffTime = new Date(manualActual.getTime());
+          if (typeof actualTakeoffTime !== "undefined") actualTakeoffTime = new Date(manualActual.getTime());
+          if (typeof autoActualTakeoffTime !== "undefined") autoActualTakeoffTime = new Date(manualActual.getTime());
+          if (typeof takeoffTime !== "undefined") takeoffTime = new Date(manualActual.getTime());
+          window.manualActualTakeoffTimeForNewFire = new Date(manualActual.getTime());
+
+          const tko = document.getElementById("actualTakeoffClock");
+          if (tko) tko.textContent = "Ώρα Α/Γ: " + fmtTime(manualActual);
         } catch(e) {}
 
         const cmdEl = document.getElementById("commandClock");
         if (cmdEl) cmdEl.textContent = "Ώρα Εντολής Α/Γ: " + fmtTime(commandTime);
 
+        if (typeof setTakeoffModeButtons === "function") setTakeoffModeButtons("manual");
         calculate();
         return true;
       } catch(e) {
@@ -3088,7 +3500,7 @@ const base = bases[selectedBaseName];
       const angle = normAngleDiff(windFrom, rwy);
       const cross = Math.abs(effective * Math.sin(deg2rad(angle)));
       const head = effective * Math.cos(deg2rad(angle));
-      const status = (cross <= pzlMaxCrosswindKts && effective <= pzlMaxWindKts) ? "ΕΝΤΟΣ ΟΡΙΩΝ" : "ΕΚΤΟΣ ΟΡΙΩΝ";
+      const status = (cross < pzlMaxCrosswindKts && effective < pzlMaxWindKts) ? "ΕΝΤΟΣ ΟΡΙΩΝ" : "ΕΚΤΟΣ ΟΡΙΩΝ";
 
       document.getElementById("windResult").innerHTML =
         `Γωνία ανέμου ως προς διάδρομο: ${angle.toFixed(0)}°\n` +
@@ -3114,7 +3526,10 @@ const base = bases[selectedBaseName];
 
     const positionReportBtn = document.getElementById("positionReportBtn");
     if (positionReportBtn) {
-      positionReportBtn.addEventListener("click", makePositionReport);
+      positionReportBtn.addEventListener("click", function(){
+        makePositionReport();
+        positionReportBtn.classList.add("position-report-active");
+      });
     }
 
     loadSavedFixPoints();
@@ -3144,8 +3559,8 @@ const base = bases[selectedBaseName];
       ensureGpsPlaneInnerSymbol();
       const el = document.querySelector(".gps-plane-symbol");
       if (el && deg !== null && !isNaN(deg)) {
-        // Το emoji ✈️ κοιτάει περίπου βορειοανατολικά, οπότε το διορθώνουμε λίγο.
-        el.style.transform = `rotate(${deg - 45}deg)`;
+        // PZL top-view PNG: μύτη = 0°/North. Περιστροφή ίδια με HUD heading.
+        el.style.transform = `rotate(${deg}deg)`;
       }
     }
 
@@ -3164,21 +3579,24 @@ const base = bases[selectedBaseName];
           tk = getStoredOrPromptTakeoffTimeForNewFire(true, false);
         }
         if (!tk) {
-          setNewFireWithWaterStatus("Νέα φωτιά με νερό: ακυρώθηκε. Χρειάζεται πραγματική ώρα Α/Γ, όχι ώρα εντολής +15'.");
+          setNewFireWithWaterStatus("Airborne Full Tank: ακυρώθηκε. Χρειάζεται πραγματική ώρα Α/Γ.");
           return;
         }
 
-        // Κρατάμε την αρχική ώρα Α/Γ, αλλά μηδενίζουμε τα στοιχεία της προηγούμενης φωτιάς.
-        newFireActualTakeoffTime = tk;
+        // D69/D33 logic: κρατάμε Α/Γ και την αντίστοιχη εντολή, αλλά μηδενίζουμε μόνο τη φωτιά/route.
+        newFireActualTakeoffTime = new Date(tk.getTime());
+        window.manualActualTakeoffTimeForNewFire = new Date(tk.getTime());
+        if (!commandTime) commandTime = new Date(tk.getTime() - getInitialTakeoffDelayMin() * 60000);
+
         newFireCalcStartTime = pzlGetScenarioNowForNewFire();
-        if (!commandTime) commandTime = new Date(newFireCalcStartTime.getTime());
         newFireWithWaterMode = true;
         newFireStartPoint = {lat: currentGps.lat, lon: currentGps.lon};
 
         resetMissionForNewFireWithWater();
 
-        setNewFireWithWaterStatus("Ενεργό: έγινε reset αποστολής, κρατήθηκε η ώρα Α/Γ " + fmtTime(tk) + ". Πάτησε στον χάρτη για τη νέα φωτιά.");
-        alert("Νέα φωτιά με νερό: έγινε reset αλλά κρατήθηκε η ώρα Α/Γ. Πάτησε στον χάρτη για το νέο σημείο φωτιάς.");
+        setNewFireWithWaterStatus("Ενεργό: κρατήθηκε η ώρα Α/Γ " + fmtTime(tk) + ". Πάτησε στον χάρτη για τη νέα φωτιά.");
+        try { calculate(); } catch(e) {}
+        alert("Airborne Full Tank: κρατήθηκε η ώρα Α/Γ. Πάτησε στον χάρτη για το νέο σημείο φωτιάς.");
       });
     }
 
@@ -3653,7 +4071,7 @@ const base = bases[selectedBaseName];
       ensureGpsPlaneInnerSymbol();
       const aircraftEl = document.querySelector(".gps-plane-symbol");
       if (aircraftEl && headingDeg !== null && !isNaN(headingDeg)) {
-        aircraftEl.style.transform = `rotate(${headingDeg - 45}deg)`;
+        aircraftEl.style.transform = `rotate(${headingDeg}deg)`;
       }
 
       const gpsResult = document.getElementById("gpsResult");
@@ -3954,8 +4372,11 @@ const base = bases[selectedBaseName];
           modeBeforeReturnWp = null;
         }
 
-        const btn = document.getElementById("returnWpBtn");
-        if (btn) btn.classList.toggle("return-wp-active", returnWpMode);
+        setReturnWptArmed(returnWpMode);
+        if (returnWpMode) {
+          mode = "return";
+          setViaWptArmed(false);
+        }
 
         const st = document.getElementById("returnWpStatus");
         if (st) {
@@ -3966,19 +4387,9 @@ const base = bases[selectedBaseName];
     }
 
 
-try {
-  map.on("click", function(e){
-      if (typeof mapLocked !== "undefined" && mapLocked) { return; }
-      if (typeof returnWpMode !== "undefined" && returnWpMode) {
-        addReturnWaypoint(e.latlng.lat, e.latlng.lng);
-        return;
-      } // RETURN_WP_ONLY_GUARD
-
-      if (returnWpMode) { addReturnWaypoint(e.latlng.lat, e.latlng.lng); return; } // RETURN_WP_FIRST_CLICK_GUARD
-    if (!returnWpMode) return;
-    addReturnWaypoint(e.latlng.lat, e.latlng.lng);
-  });
-} catch(err) {}
+/* FIX37D64: αφαιρέθηκε duplicate map click handler για WPT RTB.
+   Η εισαγωγή WPT/RTB γίνεται μόνο από τον κύριο handler:
+   κουμπί πράσινο -> 1 tap στον χάρτη -> κουμπί γκρι. */
 
 
 
@@ -4000,7 +4411,7 @@ try {
       try { gpsDebugUpdate("periodic"); } catch(e) {}
     }, 1000); // GPS_DEBUG_PERIODIC
 
-    // FIX37D333: Manual time field - don't block typing on Android. Normalize only on blur/click.
+    // FIX37D413: Manual time field - don't block typing on Android. Normalize only on blur/click.
     function pzlNormalizeManualTime(raw) {
       raw = String(raw || '').trim();
       if (!raw) return '';
@@ -4203,7 +4614,7 @@ try {
 
 
 <script>
-/* FIX37D333: Fallback ΤΦ με ημερομηνία δεδομένων + manual εισαγωγή. */
+/* FIX37D413: Fallback ΤΦ με ημερομηνία δεδομένων + manual εισαγωγή. */
 (function(){
   function pzlPad2(n){ return String(n).padStart(2,'0'); }
   function pzlDateKey(d){ return d.getFullYear() + '-' + pzlPad2(d.getMonth()+1) + '-' + pzlPad2(d.getDate()); }
@@ -4293,7 +4704,7 @@ try {
 
 
 <script>
-/* FIX37D33: Γενικό Reset - σαν πρώτο άνοιγμα εφαρμογής */
+/* FIX37D41: Γενικό Reset - σαν πρώτο άνοιγμα εφαρμογής */
 (function(){
   function pzlGeneralReset(){
     const ok = confirm("Γενικό Reset;\nΘα καθαρίσει την τρέχουσα αποστολή και θα ανοίξει σαν πρώτη φορά.");
@@ -4347,7 +4758,7 @@ try {
 
 
 <script>
-/* FIX37D33: PZL moving marker nose follows heading/course */
+/* FIX37D41: PZL moving marker nose follows heading/course */
 (function(){
   function normDeg(v){
     v = Number(v);
@@ -4382,13 +4793,22 @@ try {
     return null;
   }
 
+  // FIX37D51: rotate the PZL marker only once.
+  // The PNG nose is already aligned to 0°/North, so the map marker must use the same heading as the HUD.
+  // Previous selector also rotated the child <img>, causing double rotation.
+  var PZL_MARKER_HEADING_OFFSET_DEG = 0;
   function rotateMarker(){
     var hdg = getHeadingDeg();
     if (hdg === null) return;
-    var els = document.querySelectorAll(".gps-aircraft-marker .gps-plane-symbol, .gps-aircraft-marker img, .pzl-moving-marker-img");
+    var markerDeg = normDeg(hdg + PZL_MARKER_HEADING_OFFSET_DEG);
+    var els = document.querySelectorAll(".gps-aircraft-marker .gps-plane-symbol, .pzl-moving-marker-img");
     els.forEach(function(el){
       el.style.transformOrigin = "50% 50%";
-      el.style.transform = "rotate(" + hdg + "deg)";
+      el.style.transform = "rotate(" + markerDeg + "deg)";
+    });
+    // Keep the inner PNG unrotated so parent + child do not add up.
+    document.querySelectorAll(".gps-aircraft-marker .gps-plane-symbol img").forEach(function(img){
+      img.style.transform = "none";
     });
   }
 
@@ -4717,5 +5137,835 @@ try {
 })();
 </script>
 
+
+<script id="fix37d35-checkwx-metar-js">
+/* FIX37D46: single green/red METAR wind arrows; gust included; labels smaller and offset from arrow. */
+(function(){
+  const CHECKWX_KEY = "a8122bb537b640e5ae6de8cc11a07267";
+  const XW_LIMIT = 13, WIND_LIMIT = 29.5;
+  const ICAO = {"ΚΕΡΚΥΡΑ":"LGKR","ΑΚΤΙΟ":"LGPZ","ΚΑΒΑΛΑ":"LGKV","ΑΛΕΞΑΝΔΡΟΥΠΟΛΗ":"LGAL","ΚΕΦΑΛΛΟΝΙΑ":"LGKF","ΑΝΔΡΑΒΙΔΑ":"LGAD","ΤΡΙΠΟΛΗ":"LGTP","ΚΑΛΑΜΑΤΑ":"LGKL","ΛΑΜΙΑ":"LGLM","ΒΟΛΟΣ":"LGBL","ΜΥΤΙΛΗΝΗ":"LGMT","ΧΙΟΣ":"LGHI","ΤΑΤΟΪ":"LGTT","ΕΛΕΥΣΙΝΑ":"LGEL"};
+
+  const FULLSTOP_ALT_METAR = {
+    "ΚΕΡΚΥΡΑ":"ΑΚΤΙΟ",
+    "ΑΚΤΙΟ":"ΚΕΡΚΥΡΑ",
+    "ΚΑΒΑΛΑ":"ΑΛΕΞΑΝΔΡΟΥΠΟΛΗ",
+    "ΑΛΕΞΑΝΔΡΟΥΠΟΛΗ":"ΚΑΒΑΛΑ",
+    "ΚΕΦΑΛΛΟΝΙΑ":"ΑΝΔΡΑΒΙΔΑ",
+    "ΑΝΔΡΑΒΙΔΑ":"ΚΕΦΑΛΛΟΝΙΑ",
+    "ΤΡΙΠΟΛΗ":"ΚΑΛΑΜΑΤΑ",
+    "ΚΑΛΑΜΑΤΑ":"ΤΡΙΠΟΛΗ",
+    "ΛΑΜΙΑ":"ΒΟΛΟΣ",
+    "ΒΟΛΟΣ":"ΛΑΜΙΑ",
+    "ΜΥΤΙΛΗΝΗ":"ΧΙΟΣ",
+    "ΧΙΟΣ":"ΜΥΤΙΛΗΝΗ",
+    "ΤΑΤΟΪ":"ΕΛΕΥΣΙΝΑ",
+    "ΕΛΕΥΣΙΝΑ":"ΤΑΤΟΪ"
+  };
+
+  const RWY = {"ΚΕΡΚΥΡΑ":170,"ΑΚΤΙΟ":30,"ΚΑΒΑΛΑ":50,"ΑΛΕΞΑΝΔΡΟΥΠΟΛΗ":70,"ΚΕΦΑΛΛΟΝΙΑ":140,"ΑΝΔΡΑΒΙΔΑ":160,"ΤΡΙΠΟΛΗ":20,"ΚΑΛΑΜΑΤΑ":170,"ΛΑΜΙΑ":130,"ΒΟΛΟΣ":80,"ΜΥΤΙΛΗΝΗ":140,"ΧΙΟΣ":10,"ΤΑΤΟΪ":30,"ΕΛΕΥΣΙΝΑ":180};
+  let layers = [];
+  window.pzlGetMetarLayers=function(){return layers;};
+
+  function st(msg, show){ const e=document.getElementById("metarWindStatus"); if(!e)return; e.innerHTML=msg||""; e.style.display=show?"block":"none"; }
+  function clear(){ layers.forEach(l=>{try{map.removeLayer(l)}catch(e){}}); layers=[]; window.pzlGetMetarLayers=function(){return layers;}; }
+  function diff(a,b){ return Math.abs((Number(a)-Number(b)+540)%360-180); }
+  function comp(dir, spd, rwy){ if(dir==null||spd==null||isNaN(dir)||isNaN(spd)) return {xw:null,hw:null}; const a=diff(dir,rwy)*Math.PI/180; return {xw:Math.abs(spd*Math.sin(a)),hw:spd*Math.cos(a)}; }
+  function rawParse(raw){
+    const o={raw:raw||"",windDir:null,windSpeed:null,windGust:null,varFrom:null,varTo:null,timeZ:null};
+    if(!raw)return o;
+    const t=raw.match(/\b(\d{6})Z\b/); if(t){const mo=String(new Date().getUTCMonth()+1).padStart(2,"0");o.timeZ=t[1].slice(0,2)+"/"+mo+" "+t[1].slice(2,4)+":"+t[1].slice(4,6)+"Z";}
+    const w=raw.match(/\b(VRB|\d{3})(\d{2,3})(?:G(\d{2,3}))?KT\b/);
+    if(w){o.windDir=w[1]=="VRB"?null:Number(w[1]);o.windSpeed=Number(w[2]);o.windGust=w[3]?Number(w[3]):null}
+    const v=raw.match(/\b(\d{3})V(\d{3})\b/); if(v){o.varFrom=Number(v[1]);o.varTo=Number(v[2])}
+    return o;
+  }
+  function norm(item){
+    const raw=item.raw_text||item.raw||item.rawOb||item.metar||"";
+    const p=rawParse(raw), wind=item.wind||{};
+    let d=wind.degrees??wind.direction??wind.dir??item.wind_degrees??item.wdir??p.windDir;
+    let s=wind.speed_kts??wind.speed_kt??wind.speed??item.wind_speed_kts??item.wspd??p.windSpeed;
+    let g=wind.gust_kts??wind.gust_kt??wind.gust??item.wind_gust_kts??item.wgst??p.windGust;
+    d=(String(d).toUpperCase()=="VRB"||d==null||d===""||isNaN(Number(d)))?p.windDir:Number(d);
+    s=(s==null||s===""||isNaN(Number(s)))?p.windSpeed:Number(s);
+    g=(g==null||g===""||isNaN(Number(g)))?p.windGust:Number(g);
+    let time=p.timeZ||"";
+    const obs=item.observed||item.observation_time||item.time||item.timestamp||"";
+    if(!time && obs){ const dt=new Date(obs); if(!isNaN(dt)) time=String(dt.getUTCHours()).padStart(2,"0")+String(dt.getUTCMinutes()).padStart(2,"0")+"Z"; }
+    return {raw,windDir:d,windSpeed:s,windGust:g,varFrom:p.varFrom,varTo:p.varTo,timeZ:time};
+  }
+  function names(){
+    const s=(typeof selectedBaseName!="undefined"&&selectedBaseName)?selectedBaseName:null;
+    let refill=null, full=null;
+    try{ if(typeof selectedRefillBaseName!="undefined"&&selectedRefillBaseName) refill=selectedRefillBaseName; }catch(e){}
+    try{ const el=document.getElementById("refillBaseSelect")||document.getElementById("refillSelect")||document.querySelector("select[id*='refill' i]"); if(el&&el.value) refill=el.value; }catch(e){}
+    if(!refill&&s){try{refill=(bases[s]&&bases[s].alt)?bases[s].alt:s}catch(e){refill=s}}
+    try{ if(typeof selectedFullStopBaseName!="undefined"&&selectedFullStopBaseName) full=selectedFullStopBaseName; }catch(e){}
+    try{ const el=document.getElementById("fullStopBaseSelect")||document.getElementById("fullStopSelect")||document.querySelector("select[id*='full' i]"); if(el&&el.value) full=el.value; }catch(e){}
+    if(!full) full=s;
+    const fullAlt = full && FULLSTOP_ALT_METAR[full] ? FULLSTOP_ALT_METAR[full] : null;
+    return Array.from(new Set([s,refill,full,fullAlt].filter(Boolean)));
+  }
+  function ll(n){ try{if(typeof bases!="undefined"&&bases[n])return{lat:bases[n].lat,lon:bases[n].lon}}catch(e){} try{if(typeof airports!="undefined"&&airports[n])return{lat:airports[n].lat,lon:airports[n].lon}}catch(e){} return null; }
+  function rwy(n){ try{if(typeof bases!="undefined"&&bases[n]&&bases[n].rwy)return Number(bases[n].rwy)}catch(e){} return RWY[n]||0; }
+  function label(n,m,x,gx,warn){
+    const dir=m.windDir==null?"VRB":String(Math.round(m.windDir)).padStart(3,"0");
+    const sp=m.windSpeed==null?"--":String(Math.round(m.windSpeed));
+    const gu=m.windGust?"G"+Math.round(m.windGust):"";
+    const xs=x==null?"XW --":"XW "+Math.round(x);
+    const gxs=gx==null?"":" / GXW "+Math.round(gx);
+    return `${n}<br><span style="opacity:.9">${m.timeZ||"----Z"}</span><br><span class="metarWindLine">${dir}°/${sp}${gu} KT</span><span class="metarXwLine">${xs}${gxs}</span>`;
+  }
+  function sector(llp,m,warn){ const start=m.varFrom!=null?m.varFrom:0, end=m.varTo!=null?m.varTo:360; let span=(end-start+360)%360; if(span===0)span=360; const pts=[[llp.lat,llp.lon]], km=4.5; for(let a=0;a<=span;a+=10){const dg=(start+a)%360,rad=dg*Math.PI/180; pts.push([llp.lat+Math.cos(rad)*km/111,llp.lon+Math.sin(rad)*km/(111*Math.cos(llp.lat*Math.PI/180))])} pts.push([llp.lat,llp.lon]); layers.push(L.polygon(pts,{color:warn?"#ff0000":"#00e676",fillColor:warn?"#ff0000":"#00e676",fillOpacity:.18,weight:2,className:"metarSector"}).addTo(map)); }
+  function add(n,m){
+    const pos=ll(n); if(!pos||!window.L||!window.map)return false;
+    const rw=rwy(n), c=comp(m.windDir,m.windSpeed,rw), gc=m.windGust?comp(m.windDir,m.windGust,rw):{xw:null,hw:null};
+    let maxVar=null; if(m.varFrom!=null&&m.varTo!=null){maxVar=0; [m.varFrom,m.varTo].forEach(d=>[m.windSpeed,m.windGust].filter(v=>v!=null&&!isNaN(v)).forEach(s=>{const cc=comp(d,s,rw); if(cc.xw!=null)maxVar=Math.max(maxVar,cc.xw)}))}
+    const effWind=Math.max(Number(m.windSpeed)||0, Number(m.windGust)||0);
+    const warn=(effWind>=WIND_LIMIT)||(c.xw!=null&&c.xw>=XW_LIMIT)||(gc.xw!=null&&gc.xw>=XW_LIMIT)||(maxVar!=null&&maxVar>=XW_LIMIT);const arrowDeg=m.windDir==null?0:((Number(m.windDir)+90+360)%360);
+    const windIcon=L.divIcon({className:"",html:`<div class="metarWindIcon ${warn?'warn':'ok'}" style="transform:rotate(${arrowDeg}deg)"></div>`,iconSize:[78,22],iconAnchor:[9,11]});
+    layers.push(L.marker([pos.lat,pos.lon],{icon:windIcon}).addTo(map));
+    
+    const li=L.divIcon({className:"",html:`<div class="metarWindLabel ${warn?'warn':''}">${label(n,m,c.xw,gc.xw,warn)}</div>`,iconSize:[124,38],iconAnchor:[62,-44]});
+    layers.push(L.marker([pos.lat,pos.lon],{icon:li}).addTo(map));
+    if((m.varFrom!=null&&m.varTo!=null)||m.windDir==null) sector(pos,m,warn);
+    return warn;
+  }
+  async function fetchCW(ids){
+    const url="https://api.checkwx.com/v2/metar/"+ids.join(",")+"/decoded";
+    const r=await fetch(url,{
+      cache:"no-store",
+      headers:{"X-API-Key":CHECKWX_KEY}
+    });
+    if(!r.ok)throw new Error("CheckWX HTTP "+r.status);
+    return await r.json();
+  }
+  window.pzlRefreshCheckwxMetars=async function(){
+    const btn=document.getElementById("metarWindBtn");
+    try{
+      if(btn){btn.className="metar-loading";btn.textContent="METAR..."}
+      clear();
+      const ns=names(), idMap={}; ns.forEach(n=>{if(ICAO[n])idMap[ICAO[n]]=n});
+      const ids=Object.keys(idMap); if(!ids.length)throw new Error("Δεν βρέθηκαν ICAO");
+      const json=await fetchCW(ids), data=Array.isArray(json.data)?json.data:[];
+      let any=false, shown=0;
+      data.forEach(item=>{ let raw=item.raw_text||item.raw||""; let id=item.icao||item.icao_id||item.station?.icao||item.station?.icao_code||item.station_id||item.station||""; if(!id&&raw){const m=raw.match(/^([A-Z]{4})\s+/); if(m)id=m[1]} if (typeof id === "object" && id) id = id.icao || id.icao_code || id.id || ""; id=String(id).toUpperCase(); const n=idMap[id]; if(n){any=add(n,norm(item))||any; shown++;} });
+      if(btn){btn.textContent=window.pzlMetarVisible===false?"METAR ⛔":"METAR 👁";btn.className=any?"metar-warn":"metar-on"}; if(typeof window.pzlApplyMetarVisibility==="function") window.pzlApplyMetarVisibility();
+      st(shown?`METAR: ${shown}/${ids.length} Α/Δ`:`METAR: δεν βρέθηκαν δεδομένα για ${ids.join(",")}`,true); setTimeout(()=>st("",false),6000);
+    }catch(e){ console.warn("CheckWX METAR",e); if(btn){btn.textContent=window.pzlMetarVisible===false?"METAR ⛔":"METAR 👁";btn.className="metar-off"} st("METAR ERROR: "+(e.message||e),true); }
+  };
+  window.addEventListener("load",()=>setTimeout(()=>{try{window.pzlRefreshCheckwxMetars()}catch(e){}},1500));
+})();
+</script>
+
+
+
+<script id="fix37d40-metar-toggle-hardfix-js">
+(function(){
+  function getLayers(){
+    try{
+      if(typeof window.pzlGetMetarLayers==="function") return window.pzlGetMetarLayers() || [];
+    }catch(e){}
+    return [];
+  }
+  window.pzlMetarVisible = localStorage.getItem("pzlMetarVisibleD39") !== "0";
+  window.pzlApplyMetarVisibility=function(){
+    const arr=getLayers();
+    arr.forEach(l=>{
+      try{
+        if(window.pzlMetarVisible){ if(!map.hasLayer(l)) map.addLayer(l); }
+        else { if(map.hasLayer(l)) map.removeLayer(l); }
+      }catch(e){}
+    });
+    const b=document.getElementById("metarWindBtn");
+    if(b){
+      b.classList.toggle("metar-hidden", !window.pzlMetarVisible);
+      b.textContent = window.pzlMetarVisible ? "METAR 👁" : "METAR ⛔";
+    }
+  };
+  window.pzlToggleMetarVisibility=function(){
+    window.pzlMetarVisible=!window.pzlMetarVisible;
+    localStorage.setItem("pzlMetarVisibleD39", window.pzlMetarVisible?"1":"0");
+    if(window.pzlMetarVisible && typeof window.pzlRefreshCheckwxMetars==="function"){
+      window.pzlRefreshCheckwxMetars();
+      setTimeout(window.pzlApplyMetarVisibility,700);
+    }else{
+      window.pzlApplyMetarVisibility();
+    }
+  };
+  function install(){
+    const b=document.getElementById("metarWindBtn");
+    if(b) b.onclick=function(){window.pzlToggleMetarVisibility();};
+    window.pzlApplyMetarVisibility();
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", install); else install();
+  setTimeout(install,600);
+})();
+</script>
+
+
+
+<!-- FIX37D50: HUD D33-style outer cardinals only. Hide/remove old fixed inner N/E/S/W. -->
+<style id="fix37d50-hud-no-inner-cardinals">
+#hsiHud .hsiNorth,
+#hsiHud .hsiE,
+#hsiHud .hsiS,
+#hsiHud .hsiW{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+#hsiHud .hsiRoseLabel.cardinal{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  color:#fff !important;
+  font-weight:900 !important;
+  text-shadow:0 3px 7px rgba(0,0,0,.98),0 0 4px #000 !important;
+}
+</style>
+<script id="fix37d50-remove-inner-cardinals">
+(function(){
+  function removeInnerCardinals(){
+    try{
+      document.querySelectorAll('#hsiHud .hsiNorth,#hsiHud .hsiE,#hsiHud .hsiS,#hsiHud .hsiW').forEach(function(el){ el.remove(); });
+    }catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', removeInnerCardinals);
+  else removeInnerCardinals();
+  setTimeout(removeInnerCardinals, 500);
+  setTimeout(removeInnerCardinals, 1500);
+})();
+</script>
+
+
+<script>
+/* FIX37D54/D61: x2 guard - 2 taps within 0.8 sec */
+(function(){
+  const WINDOW_MS = 800;
+  const labels = {
+    clearViaBtn: "CLR x2",
+    clearReturnWpBtn: "CLR RTB x2",
+    generalResetBtn: "Reset x2",
+    takeoffBtn: "Εντολή x2",
+    setManualTimeBtn: "Manual Practice x2",
+    newFireWithWaterBtn: "Airborne Full Tank x2"
+  };
+  const lastTap = Object.create(null);
+
+  function installX2Guard(){
+    ["clearViaBtn","clearReturnWpBtn","generalResetBtn","takeoffBtn","setManualTimeBtn","newFireWithWaterBtn"].forEach(function(id){
+      const btn = document.getElementById(id);
+      if(!btn || btn.dataset.pzlX2Guard === "1") return;
+      btn.dataset.pzlX2Guard = "1";
+      btn.title = (btn.title ? btn.title + " - " : "") + "Θέλει 2 πατήματα μέσα σε 0,8 δευτ.";
+      btn.addEventListener("click", function(ev){
+        // FIX37D59: Manual Practice works like old ENTER when a manual time is already typed.
+        // Δηλαδή μετά την εισαγωγή ώρας, ένα απλό πάτημα επιβεβαιώνει/ενεργοποιεί.
+        if(id === "setManualTimeBtn"){
+          const inp = document.getElementById("manualTime");
+          if(inp && inp.value && inp.value.trim()){
+            lastTap[id] = 0;
+            btn.classList.remove("x2-pending");
+            return;
+          }
+        }
+        const now = Date.now();
+        const prev = lastTap[id] || 0;
+        if(now - prev <= WINDOW_MS){
+          lastTap[id] = 0;
+          btn.classList.remove("x2-pending");
+          return; // αφήνει το υπάρχον handler να εκτελέσει την εντολή
+        }
+        lastTap[id] = now;
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        btn.classList.add("x2-pending");
+        setTimeout(function(){
+          if(Date.now() - (lastTap[id] || 0) >= WINDOW_MS){
+            lastTap[id] = 0;
+            btn.classList.remove("x2-pending");
+          }
+        }, WINDOW_MS + 40);
+      }, true);
+    });
+  }
+  function applyD59Labels(){
+    const a=document.getElementById("newFireWithWaterBtn");
+    if(a && !a.querySelector(".x2-mark")){ a.innerHTML='Airborne Full Tank <span class="x2-mark">x2</span>'; }
+    const g=document.querySelector("#topMapGpsBar .topGpsSplit");
+    if(g){ g.style.display='inline-flex'; g.style.gap='0'; }
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", function(){installX2Guard(); applyD59Labels();});
+  else { installX2Guard(); applyD59Labels(); }
+
+  // FIX37D58: while typing manual time, Enter/OK on keyboard applies Manual Practice.
+  function installManualEnter(){
+    const input = document.getElementById("manualTime");
+    const btn = document.getElementById("setManualTimeBtn");
+    if(!input || !btn || input.dataset.pzlManualEnter === "1") return;
+    input.dataset.pzlManualEnter = "1";
+    input.addEventListener("keydown", function(ev){
+      if(ev.key === "Enter"){
+        ev.preventDefault();
+        if(typeof setManualCommandTimeFromInput === "function"){
+          setTakeoffModeButtons("manual");
+          setManualCommandTimeFromInput();
+        } else {
+          btn.click();
+          setTimeout(function(){ btn.click(); }, 80);
+        }
+      }
+    });
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", installManualEnter);
+  else installManualEnter();
+})();
+</script>
+
+
+<style id="pzl-d60-final-fixes">
+/* FIX37D60: force GPS+Αφετηρία as one true 50/50 field and Airborne x2 visibility */
+#topMapGpsBar{gap:6px!important;align-items:stretch!important;}
+#topMapGpsBar .topGpsSplit{
+  display:inline-flex!important; flex-direction:row!important; gap:0!important;
+  overflow:hidden!important; border-radius:8px!important; flex:0 0 178px!important; width:178px!important;
+  box-shadow:0 1px 5px rgba(0,0,0,.24)!important;
+}
+#topMapGpsBar .topGpsSplit #gpsBtn,
+#topMapGpsBar .topGpsSplit #useGpsAsStartBtn{
+  flex:1 1 50%!important; width:50%!important; min-width:0!important; max-width:none!important;
+  margin:0!important; height:32px!important; border-radius:0!important; padding:4px 2px!important;
+  font-size:11px!important; line-height:1.05!important; white-space:normal!important;
+}
+#topMapGpsBar .topGpsSplit #gpsBtn{border-radius:8px 0 0 8px!important;border-right:1px solid rgba(255,255,255,.35)!important;}
+#topMapGpsBar .topGpsSplit #useGpsAsStartBtn{border-radius:0 8px 8px 0!important;}
+#newFireWithWaterBtn{font-weight:800!important;}
+#newFireWithWaterBtn .x2-mark{display:inline!important;font-size:.82em!important;font-weight:900!important;margin-left:3px!important;}
+#newFireWithWaterBtn.x2-pending,#takeoffBtn.x2-pending,#setManualTimeBtn.x2-pending,#clearViaBtn.x2-pending,#clearReturnWpBtn.x2-pending,#generalResetBtn.x2-pending{filter:brightness(1.28)!important;box-shadow:0 0 0 2px #ffd24a,0 1px 6px rgba(0,0,0,.3)!important;}
+@media(max-width:700px){
+  #topMapGpsBar{gap:4px!important;left:70px!important;}
+  #topMapGpsBar .topGpsSplit{flex-basis:160px!important;width:160px!important;}
+  #topMapGpsBar .topGpsSplit #gpsBtn,#topMapGpsBar .topGpsSplit #useGpsAsStartBtn{height:28px!important;font-size:10px!important;padding:2px 1px!important;}
+  #newFireWithWaterBtn{font-size:8.5px!important;line-height:1.05!important;}
+}
+@media(max-width:390px){
+  #topMapGpsBar .topGpsSplit{flex-basis:146px!important;width:146px!important;}
+  #topMapGpsBar .topGpsSplit #gpsBtn,#topMapGpsBar .topGpsSplit #useGpsAsStartBtn{font-size:9px!important;}
+}
+</style>
+<script id="pzl-d60-final-js">
+/* FIX37D60 final: x2 Airborne + Manual Practice enter behavior */
+(function(){
+  const WINDOW_MS=500;
+  const ids=["clearViaBtn","clearReturnWpBtn","generalResetBtn","takeoffBtn","newFireWithWaterBtn"];
+  const last=Object.create(null);
+  function markAirborne(){
+    const b=document.getElementById('newFireWithWaterBtn');
+    if(b){ b.innerHTML='Airborne Full Tank <span class="x2-mark">x2</span>'; b.title='Θέλει 2 πατήματα μέσα σε 0,8 δευτ.'; }
+  }
+  function forceGpsSplit(){
+    const gps=document.getElementById('gpsBtn'), start=document.getElementById('useGpsAsStartBtn'), bar=document.getElementById('topMapGpsBar');
+    if(!gps||!start||!bar) return;
+    let wrap=bar.querySelector('.topGpsSplit');
+    if(!wrap || gps.parentElement!==wrap || start.parentElement!==wrap){
+      wrap=document.createElement('div'); wrap.className='splitControl topGpsSplit';
+      bar.insertBefore(wrap,gps); wrap.appendChild(gps); wrap.appendChild(start);
+    }
+  }
+  function installX2(id){
+    const btn=document.getElementById(id); if(!btn || btn.dataset.d60x2==='1') return;
+    btn.dataset.d60x2='1';
+    btn.addEventListener('click',function(ev){
+      const now=Date.now(), prev=last[id]||0;
+      if(now-prev<=WINDOW_MS){ last[id]=0; btn.classList.remove('x2-pending'); return; }
+      last[id]=now; ev.preventDefault(); ev.stopImmediatePropagation(); btn.classList.add('x2-pending');
+      setTimeout(function(){ if(Date.now()-(last[id]||0)>=WINDOW_MS){ last[id]=0; btn.classList.remove('x2-pending'); }}, WINDOW_MS+40);
+    },true);
+  }
+  function installManual(){
+    const btn=document.getElementById('setManualTimeBtn');
+    const inp=document.getElementById('manualTime');
+    if(!btn || btn.dataset.d60manual==='1') return; btn.dataset.d60manual='1';
+    btn.innerHTML='Manual Practice <span class="x2-mark">x2</span>';
+    btn.title='Με άδειο πεδίο: 2 πατήματα. Με ώρα γραμμένη: λειτουργεί σαν Enter.';
+    btn.addEventListener('click',function(ev){
+      // If a time is already typed, allow the original handler to run immediately (old Enter behavior).
+      if(inp && inp.value && inp.value.trim()) return;
+      const id='setManualTimeBtn', now=Date.now(), prev=last[id]||0;
+      if(now-prev<=WINDOW_MS){ last[id]=0; btn.classList.remove('x2-pending'); return; }
+      last[id]=now; ev.preventDefault(); ev.stopImmediatePropagation(); btn.classList.add('x2-pending');
+      setTimeout(function(){ if(Date.now()-(last[id]||0)>=WINDOW_MS){ last[id]=0; btn.classList.remove('x2-pending'); }}, WINDOW_MS+40);
+    },true);
+    if(inp && inp.dataset.d60enter!=='1'){
+      inp.dataset.d60enter='1';
+      inp.addEventListener('keydown',function(ev){
+        if(ev.key==='Enter'){
+          ev.preventDefault();
+          if(typeof setTakeoffModeButtons==='function') setTakeoffModeButtons('manual');
+          if(typeof setManualCommandTimeFromInput==='function') { setManualCommandTimeFromInput(); try{calculate();}catch(e){} }
+          else btn.click();
+        }
+      });
+    }
+  }
+  function init(){ markAirborne(); forceGpsSplit(); /* D61: duplicate D60 x2/manual capture disabled; D54 guard is the single source of truth */ }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  setTimeout(init,500); setTimeout(init,1500);
+})();
+</script>
+
+
+<style id="pzl-d65-action-panel-drag-pinch">
+/* FIX37D65: δεξί πάνελ μετακινείται με 1 δάχτυλο, αλλάζει μέγεθος με pinch, και κρύβεται με PNL */
+#toggleActionsBtn.pnl-on{background:#157347!important;color:#fff!important;}
+#toggleActionsBtn.pnl-off{background:#6b7280!important;color:#fff!important;}
+.map-actions{
+  --pzl-actions-scale:1;
+  transform:scale(var(--pzl-actions-scale))!important;
+  transform-origin:top right!important;
+  touch-action:none!important;
+  will-change:transform,left,top!important;
+}
+body.pzl-actions-hidden .map-actions{display:none!important;}
+.map-actions.pzl-moving{filter:drop-shadow(0 0 7px rgba(255,210,74,.9));}
+@media(max-width:700px){
+  #toggleActionsBtn{font-size:0!important; min-width:44px!important;}
+  #toggleActionsBtn::after{content:'PNL';font-size:11px!important;}
+}
+</style>
+<script id="pzl-d65-action-panel-drag-pinch-js">
+(function(){
+  const KEY_POS='pzlD65ActionsPanelPos';
+  const KEY_SCALE='pzlD65ActionsPanelScale';
+  const KEY_VISIBLE='pzlD65ActionsPanelVisible';
+  const MIN_SCALE=0.72, MAX_SCALE=1.35;
+  let panel, wrap, toggleBtn;
+  let state={mode:null,startX:0,startY:0,baseLeft:0,baseTop:0,startDist:0,baseScale:1,moved:false,suppressClick:false};
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function dist(t1,t2){ const dx=t1.clientX-t2.clientX, dy=t1.clientY-t2.clientY; return Math.hypot(dx,dy); }
+  function getScale(){ const v=parseFloat(panel?.style.getPropertyValue('--pzl-actions-scale')||localStorage.getItem(KEY_SCALE)||'1'); return isFinite(v)?v:1; }
+  function setScale(v, save){
+    if(!panel) return;
+    v=clamp(v,MIN_SCALE,MAX_SCALE);
+    panel.style.setProperty('--pzl-actions-scale', String(v));
+    if(save) localStorage.setItem(KEY_SCALE, String(v));
+    constrainAndSave(false);
+  }
+  function rects(){ return {p:panel.getBoundingClientRect(), w:wrap.getBoundingClientRect()}; }
+  function ensureAbsolutePosition(){
+    if(!panel||!wrap) return;
+    const saved=localStorage.getItem(KEY_POS);
+    const wr=wrap.getBoundingClientRect();
+    if(saved){
+      try{ const o=JSON.parse(saved); if(Number.isFinite(o.left)&&Number.isFinite(o.top)){ panel.style.left=o.left+'px'; panel.style.top=o.top+'px'; panel.style.right='auto'; return; } }catch(e){}
+    }
+    const pr=panel.getBoundingClientRect();
+    panel.style.left=Math.max(0, pr.left-wr.left)+'px';
+    panel.style.top=Math.max(0, pr.top-wr.top)+'px';
+    panel.style.right='auto';
+  }
+  function constrainAndSave(save=true){
+    if(!panel||!wrap) return;
+    const scale=getScale();
+    const panelW=(panel.offsetWidth||160)*scale;
+    const panelH=(panel.offsetHeight||260)*scale;
+    const maxL=Math.max(0, wrap.clientWidth-panelW-2);
+    const maxT=Math.max(42, wrap.clientHeight-panelH-2);
+    let l=parseFloat(panel.style.left||'0'), t=parseFloat(panel.style.top||'54');
+    if(!isFinite(l)) l=0; if(!isFinite(t)) t=54;
+    l=clamp(l,0,maxL); t=clamp(t,42,maxT);
+    panel.style.left=l+'px'; panel.style.top=t+'px'; panel.style.right='auto';
+    if(save) localStorage.setItem(KEY_POS, JSON.stringify({left:l, top:t}));
+  }
+  function setVisible(visible){
+    document.body.classList.toggle('pzl-actions-hidden', !visible);
+    if(toggleBtn){ toggleBtn.classList.toggle('pnl-on', visible); toggleBtn.classList.toggle('pnl-off', !visible); toggleBtn.textContent=visible?'PNL':'PNL'; }
+    localStorage.setItem(KEY_VISIBLE, visible?'1':'0');
+  }
+  function onTouchStart(ev){
+    if(!panel) return;
+    if(ev.touches.length===2){
+      state.mode='pinch'; state.startDist=dist(ev.touches[0],ev.touches[1]); state.baseScale=getScale(); state.moved=true; panel.classList.add('pzl-moving'); ev.preventDefault(); return;
+    }
+    if(ev.touches.length===1){
+      const t=ev.touches[0];
+      state.mode='drag'; state.startX=t.clientX; state.startY=t.clientY;
+      state.baseLeft=parseFloat(panel.style.left||'0')||0; state.baseTop=parseFloat(panel.style.top||'54')||54;
+      state.moved=false; state.suppressClick=false;
+    }
+  }
+  function onTouchMove(ev){
+    if(!panel||!state.mode) return;
+    if(state.mode==='pinch' && ev.touches.length>=2){
+      const ratio=dist(ev.touches[0],ev.touches[1])/(state.startDist||1);
+      setScale(state.baseScale*ratio,false);
+      state.suppressClick=true; ev.preventDefault(); return;
+    }
+    if(state.mode==='drag' && ev.touches.length===1){
+      const t=ev.touches[0], dx=t.clientX-state.startX, dy=t.clientY-state.startY;
+      if(Math.hypot(dx,dy)>10){
+        state.moved=true; state.suppressClick=true; panel.classList.add('pzl-moving');
+        panel.style.left=(state.baseLeft+dx)+'px'; panel.style.top=(state.baseTop+dy)+'px'; panel.style.right='auto';
+        constrainAndSave(false); ev.preventDefault();
+      }
+    }
+  }
+  function onTouchEnd(ev){
+    if(!panel) return;
+    if(state.mode==='pinch'){ localStorage.setItem(KEY_SCALE,String(getScale())); constrainAndSave(true); }
+    if(state.mode==='drag' && state.moved){ constrainAndSave(true); }
+    if(ev.touches.length===0){
+      panel.classList.remove('pzl-moving');
+      if(state.suppressClick){ setTimeout(()=>{ state.suppressClick=false; },180); }
+      state.mode=null;
+    }
+  }
+  function onClickCapture(ev){
+    if(state.suppressClick){ ev.preventDefault(); ev.stopImmediatePropagation(); state.suppressClick=false; }
+  }
+  function init(){
+    panel=document.querySelector('.map-actions'); wrap=document.getElementById('mapWrap'); toggleBtn=document.getElementById('toggleActionsBtn');
+    if(!panel||!wrap) return;
+    ensureAbsolutePosition();
+    const savedScale=parseFloat(localStorage.getItem(KEY_SCALE)||'1'); setScale(isFinite(savedScale)?savedScale:1,false);
+    setVisible(localStorage.getItem(KEY_VISIBLE)!=='0');
+    if(toggleBtn && toggleBtn.dataset.d65!=='1'){ toggleBtn.dataset.d65='1'; toggleBtn.addEventListener('click',()=>setVisible(document.body.classList.contains('pzl-actions-hidden'))); }
+    if(panel.dataset.d65!=='1'){
+      panel.dataset.d65='1';
+      /* D68 disabled old d65 touchstart */
+      /* D68 disabled old d65 touchmove */
+      /* D68 disabled old d65 touchend */
+      /* D68 disabled old d65 touchcancel */
+      /* D68 disabled old d65 click suppress */
+      window.addEventListener('resize',()=>setTimeout(()=>constrainAndSave(true),100));
+    }
+    setTimeout(()=>constrainAndSave(true),250);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  setTimeout(init,600);
+})();
+</script>
+
+
+<style id="pzl-d66-action-panel-free-drag-fix">
+/* FIX37D66: δεξί panel ελεύθερη μετακίνηση εντός οθόνης, όχι μόνο δεξιά-αριστερά */
+.map-actions{
+  position:absolute!important;
+  right:auto!important;
+  bottom:auto!important;
+  transform:scale(var(--pzl-actions-scale,1))!important;
+  transform-origin:top left!important;
+}
+</style>
+<script id="pzl-d66-action-panel-free-drag-js">
+(function(){
+  const KEY_POS='pzlD65ActionsPanelPos';
+  const KEY_SCALE='pzlD65ActionsPanelScale';
+  const MIN_SCALE=0.72, MAX_SCALE=1.35;
+  let panel, wrap;
+  let active=false, pinching=false, sx=0, sy=0, baseL=0, baseT=0, startDist=0, baseScale=1, moved=false, suppress=false;
+  function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+  function dist(a,b){return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);}
+  function scale(){const v=parseFloat(panel?.style.getPropertyValue('--pzl-actions-scale')||localStorage.getItem(KEY_SCALE)||'1'); return isFinite(v)?v:1;}
+  function setImp(name,val){ panel.style.setProperty(name,val,'important'); }
+  function setPos(l,t,save){
+    if(!panel||!wrap) return;
+    const sc=scale();
+    const maxL=Math.max(0, wrap.clientWidth-(panel.offsetWidth||160)*sc-2);
+    const maxT=Math.max(0, wrap.clientHeight-(panel.offsetHeight||260)*sc-2);
+    l=clamp(l,0,maxL); t=clamp(t,0,maxT);
+    setImp('left',l+'px'); setImp('top',t+'px'); setImp('right','auto'); setImp('bottom','auto');
+    if(save) localStorage.setItem(KEY_POS,JSON.stringify({left:l,top:t}));
+  }
+  function setScale(v,save){
+    v=clamp(v,MIN_SCALE,MAX_SCALE);
+    panel.style.setProperty('--pzl-actions-scale',String(v));
+    if(save) localStorage.setItem(KEY_SCALE,String(v));
+    const l=parseFloat(panel.style.left||'0')||0, t=parseFloat(panel.style.top||'0')||0;
+    setPos(l,t,false);
+  }
+  function loadPos(){
+    let l=null,t=null;
+    try{const o=JSON.parse(localStorage.getItem(KEY_POS)||'{}'); if(Number.isFinite(o.left)&&Number.isFinite(o.top)){l=o.left;t=o.top;}}catch(e){}
+    if(l===null){ const wr=wrap.getBoundingClientRect(), pr=panel.getBoundingClientRect(); l=Math.max(0,pr.left-wr.left); t=Math.max(0,pr.top-wr.top); }
+    setPos(l,t,false);
+  }
+  function start(ev){
+    if(!panel) return;
+    if(ev.touches && ev.touches.length===2){ pinching=true; active=false; startDist=dist(ev.touches[0],ev.touches[1]); baseScale=scale(); moved=true; suppress=true; panel.classList.add('pzl-moving'); ev.preventDefault(); ev.stopImmediatePropagation(); return; }
+    if(ev.touches && ev.touches.length===1){ const q=ev.touches[0]; active=true; pinching=false; sx=q.clientX; sy=q.clientY; baseL=parseFloat(panel.style.left||'0')||0; baseT=parseFloat(panel.style.top||'0')||0; moved=false; }
+  }
+  function move(ev){
+    if(!panel) return;
+    if(pinching && ev.touches && ev.touches.length>=2){ setScale(baseScale*dist(ev.touches[0],ev.touches[1])/(startDist||1),false); suppress=true; ev.preventDefault(); ev.stopImmediatePropagation(); return; }
+    if(active && ev.touches && ev.touches.length===1){ const q=ev.touches[0], dx=q.clientX-sx, dy=q.clientY-sy; if(Math.hypot(dx,dy)>6){ moved=true; suppress=true; panel.classList.add('pzl-moving'); setPos(baseL+dx,baseT+dy,false); ev.preventDefault(); ev.stopImmediatePropagation(); } }
+  }
+  function end(ev){
+    if(!panel) return;
+    if(pinching){ localStorage.setItem(KEY_SCALE,String(scale())); }
+    if(active||pinching){ const l=parseFloat(panel.style.left||'0')||0, t=parseFloat(panel.style.top||'0')||0; setPos(l,t,true); }
+    if(!ev.touches || ev.touches.length===0){ active=false; pinching=false; panel.classList.remove('pzl-moving'); if(suppress) setTimeout(()=>{suppress=false;},220); }
+  }
+  function click(ev){ if(suppress){ ev.preventDefault(); ev.stopImmediatePropagation(); suppress=false; } }
+  function init(){
+    panel=document.querySelector('.map-actions'); wrap=document.getElementById('mapWrap'); if(!panel||!wrap) return;
+    panel.dataset.d66='1';
+    setImp('right','auto'); setImp('bottom','auto');
+    setScale(parseFloat(localStorage.getItem(KEY_SCALE)||'1')||1,false); loadPos();
+    if(panel.dataset.d66Listeners!=='1'){
+      panel.dataset.d66Listeners='1';
+      /* D68 disabled older touchstart */
+      /* D68 disabled older touchmove */
+      /* D68 disabled older touchend */
+      /* D68 disabled older touchcancel */
+      /* D68 disabled older click suppress */
+      window.addEventListener('resize',()=>setTimeout(()=>{const l=parseFloat(panel.style.left||'0')||0,t=parseFloat(panel.style.top||'0')||0;setPos(l,t,true);},120));
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  setTimeout(init,700); setTimeout(init,1800);
+})();
+</script>
+
+
+<style id="pzl-d67-action-panel-viewport-drag-fix">
+/* FIX37D67: action panel σαν HUD — ελεύθερη μετακίνηση παντού στην οθόνη, όχι μόνο X άξονας */
+.map-actions{
+  position:fixed!important;
+  right:auto!important;
+  bottom:auto!important;
+  transform:scale(var(--pzl-actions-scale,1))!important;
+  transform-origin:top left!important;
+  touch-action:none!important;
+  z-index:1200!important;
+}
+</style>
+<script id="pzl-d67-action-panel-viewport-drag-js">
+(function(){
+  const KEY_POS='pzlD67ActionsPanelViewportPos';
+  const KEY_SCALE='pzlD65ActionsPanelScale';
+  const MIN_SCALE=0.72, MAX_SCALE=1.35;
+  let panel=null;
+  let dragging=false, pinching=false, sx=0, sy=0, baseL=0, baseT=0, startDist=0, baseScale=1, moved=false, suppress=false;
+  function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+  function dist(a,b){return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);}
+  function getScale(){const v=parseFloat(panel?.style.getPropertyValue('--pzl-actions-scale')||localStorage.getItem(KEY_SCALE)||'1');return isFinite(v)?v:1;}
+  function setImp(n,v){panel.style.setProperty(n,v,'important');}
+  function bounds(){
+    const sc=getScale();
+    const w=(panel.offsetWidth||160)*sc;
+    const h=(panel.offsetHeight||260)*sc;
+    return {maxL:Math.max(0,window.innerWidth-w-2), maxT:Math.max(0,window.innerHeight-h-2)};
+  }
+  function setPos(l,t,save){
+    if(!panel) return;
+    const b=bounds();
+    l=clamp(l,0,b.maxL); t=clamp(t,0,b.maxT);
+    setImp('position','fixed'); setImp('left',l+'px'); setImp('top',t+'px'); setImp('right','auto'); setImp('bottom','auto');
+    if(save) localStorage.setItem(KEY_POS,JSON.stringify({left:l,top:t}));
+  }
+  function setScale(v,save){
+    if(!panel) return;
+    v=clamp(v,MIN_SCALE,MAX_SCALE);
+    panel.style.setProperty('--pzl-actions-scale',String(v));
+    if(save) localStorage.setItem(KEY_SCALE,String(v));
+    const r=panel.getBoundingClientRect();
+    setPos(r.left,r.top,false);
+  }
+  function loadInitialPos(){
+    let l=null,t=null;
+    try{const o=JSON.parse(localStorage.getItem(KEY_POS)||'{}'); if(Number.isFinite(o.left)&&Number.isFinite(o.top)){l=o.left;t=o.top;}}catch(e){}
+    if(l===null){
+      const r=panel.getBoundingClientRect();
+      l=Number.isFinite(r.left)?r.left:window.innerWidth-(panel.offsetWidth||160)-8;
+      t=Number.isFinite(r.top)?r.top:90;
+    }
+    setPos(l,t,false);
+  }
+  function start(ev){
+    if(!panel || !ev.touches) return;
+    if(ev.touches.length===2){
+      pinching=true; dragging=false; startDist=dist(ev.touches[0],ev.touches[1]); baseScale=getScale(); moved=true; suppress=true;
+      panel.classList.add('pzl-moving'); ev.preventDefault(); ev.stopPropagation(); return;
+    }
+    if(ev.touches.length===1){
+      const q=ev.touches[0], r=panel.getBoundingClientRect();
+      dragging=true; pinching=false; sx=q.clientX; sy=q.clientY; baseL=r.left; baseT=r.top; moved=false;
+    }
+  }
+  function move(ev){
+    if(!panel || !ev.touches) return;
+    if(pinching && ev.touches.length>=2){
+      setScale(baseScale*dist(ev.touches[0],ev.touches[1])/(startDist||1),false);
+      suppress=true; ev.preventDefault(); ev.stopPropagation(); return;
+    }
+    if(dragging && ev.touches.length===1){
+      const q=ev.touches[0], dx=q.clientX-sx, dy=q.clientY-sy;
+      if(Math.hypot(dx,dy)>5){
+        moved=true; suppress=true; panel.classList.add('pzl-moving');
+        setPos(baseL+dx,baseT+dy,false);
+        ev.preventDefault(); ev.stopPropagation();
+      }
+    }
+  }
+  function end(ev){
+    if(!panel) return;
+    if(pinching){localStorage.setItem(KEY_SCALE,String(getScale()));}
+    if(dragging||pinching){const r=panel.getBoundingClientRect(); setPos(r.left,r.top,true);}
+    if(!ev.touches || ev.touches.length===0){dragging=false; pinching=false; panel.classList.remove('pzl-moving'); if(suppress) setTimeout(()=>{suppress=false;},220);}
+  }
+  function click(ev){if(suppress){ev.preventDefault(); ev.stopImmediatePropagation(); suppress=false;}}
+  function init(){
+    panel=document.querySelector('.map-actions'); if(!panel) return;
+    setImp('position','fixed'); setImp('right','auto'); setImp('bottom','auto');
+    setScale(parseFloat(localStorage.getItem(KEY_SCALE)||'1')||1,false);
+    loadInitialPos();
+    if(panel.dataset.d67!=='1'){
+      panel.dataset.d67='1';
+      /* D68 disabled older touchstart */
+      /* D68 disabled older touchmove */
+      /* D68 disabled older touchend */
+      /* D68 disabled older touchcancel */
+      /* D68 disabled older click suppress */
+      window.addEventListener('resize',()=>setTimeout(()=>{const r=panel.getBoundingClientRect(); setPos(r.left,r.top,true);},120));
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  setTimeout(init,500); setTimeout(init,1500);
+})();
+</script>
+
+
+
+<style id="pzl-d68-action-panel-low-stable-pinch">
+/* FIX37D68: panel σαν HUD — κατεβαίνει χαμηλότερα και σταθερό pinch χωρίς άλμα */
+.map-actions{
+  position:fixed!important;
+  right:auto!important;
+  bottom:auto!important;
+  transform:scale(var(--pzl-actions-scale,1))!important;
+  transform-origin:top left!important;
+  touch-action:none!important;
+  z-index:1200!important;
+  will-change:left,top,transform!important;
+}
+.map-actions.pzl-moving{filter:drop-shadow(0 0 7px rgba(255,210,74,.9));}
+</style>
+<script id="pzl-d68-action-panel-low-stable-pinch-js">
+(function(){
+  const KEY_POS='pzlD68ActionsPanelPos';
+  const OLD_KEY_POS='pzlD67ActionsPanelViewportPos';
+  const KEY_SCALE='pzlD65ActionsPanelScale';
+  const MIN_SCALE=0.72, MAX_SCALE=1.35;
+  const MIN_VISIBLE_X=74, MIN_VISIBLE_Y=74;
+  let panel=null;
+  let mode=null, sx=0, sy=0, baseL=0, baseT=0, baseScale=1, startDist=0, startMidX=0, startMidY=0;
+  let moved=false, suppress=false;
+  function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+  function dist(a,b){return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);}
+  function mid(a,b){return {x:(a.clientX+b.clientX)/2,y:(a.clientY+b.clientY)/2};}
+  function getScale(){const v=parseFloat(panel?.style.getPropertyValue('--pzl-actions-scale')||localStorage.getItem(KEY_SCALE)||'1');return isFinite(v)?v:1;}
+  function setImp(n,v){panel.style.setProperty(n,v,'important');}
+  function panelSize(scale=getScale()){
+    return {w:(panel.offsetWidth||160)*scale,h:(panel.offsetHeight||260)*scale};
+  }
+  function bounds(scale=getScale()){
+    const sz=panelSize(scale);
+    return {
+      minL:0,
+      minT:0,
+      // Επιτρέπουμε να κατέβει χαμηλά όπως το HUD, αλλά αφήνουμε πάντα ορατό κομμάτι για να μη χαθεί.
+      maxL:Math.max(0, window.innerWidth - Math.min(MIN_VISIBLE_X, sz.w)),
+      maxT:Math.max(0, window.innerHeight - Math.min(MIN_VISIBLE_Y, sz.h))
+    };
+  }
+  function setPos(l,t,save){
+    if(!panel) return;
+    const b=bounds();
+    l=clamp(l,b.minL,b.maxL); t=clamp(t,b.minT,b.maxT);
+    setImp('position','fixed'); setImp('left',l+'px'); setImp('top',t+'px'); setImp('right','auto'); setImp('bottom','auto');
+    if(save) localStorage.setItem(KEY_POS,JSON.stringify({left:l,top:t}));
+  }
+  function setScale(v,save){
+    v=clamp(v,MIN_SCALE,MAX_SCALE);
+    panel.style.setProperty('--pzl-actions-scale',String(v));
+    if(save) localStorage.setItem(KEY_SCALE,String(v));
+  }
+  function loadInitial(){
+    setImp('position','fixed'); setImp('right','auto'); setImp('bottom','auto');
+    setScale(parseFloat(localStorage.getItem(KEY_SCALE)||'1')||1,false);
+    let obj=null;
+    try{obj=JSON.parse(localStorage.getItem(KEY_POS)||localStorage.getItem(OLD_KEY_POS)||'{}');}catch(e){}
+    if(obj && Number.isFinite(obj.left) && Number.isFinite(obj.top)){ setPos(obj.left,obj.top,false); return; }
+    const r=panel.getBoundingClientRect();
+    const l=Number.isFinite(r.left)?r.left:window.innerWidth-(panel.offsetWidth||160)-8;
+    const t=Number.isFinite(r.top)?r.top:90;
+    setPos(l,t,false);
+  }
+  function start(ev){
+    if(!panel || !ev.touches) return;
+    if(ev.touches.length===2){
+      const a=ev.touches[0], b=ev.touches[1], m=mid(a,b), r=panel.getBoundingClientRect();
+      mode='pinch'; startDist=dist(a,b)||1; baseScale=getScale(); baseL=r.left; baseT=r.top; startMidX=m.x; startMidY=m.y;
+      moved=true; suppress=true; panel.classList.add('pzl-moving');
+      ev.preventDefault(); ev.stopPropagation(); return;
+    }
+    if(ev.touches.length===1){
+      const q=ev.touches[0], r=panel.getBoundingClientRect();
+      mode='drag'; sx=q.clientX; sy=q.clientY; baseL=r.left; baseT=r.top; moved=false;
+    }
+  }
+  function move(ev){
+    if(!panel || !ev.touches || !mode) return;
+    if(mode==='pinch' && ev.touches.length>=2){
+      const a=ev.touches[0], b=ev.touches[1], m=mid(a,b);
+      const newScale=clamp(baseScale*(dist(a,b)/(startDist||1)), MIN_SCALE, MAX_SCALE);
+      // Κρατάμε σταθερό το σημείο ανάμεσα στα δύο δάχτυλα, για να μη «πηδάει» όταν αφήνεις.
+      const ratio=newScale/(baseScale||1);
+      const newL=m.x - (startMidX-baseL)*ratio;
+      const newT=m.y - (startMidY-baseT)*ratio;
+      setScale(newScale,false);
+      setPos(newL,newT,false);
+      suppress=true; ev.preventDefault(); ev.stopPropagation(); return;
+    }
+    if(mode==='drag' && ev.touches.length===1){
+      const q=ev.touches[0], dx=q.clientX-sx, dy=q.clientY-sy;
+      if(Math.hypot(dx,dy)>4){
+        moved=true; suppress=true; panel.classList.add('pzl-moving');
+        setPos(baseL+dx,baseT+dy,false);
+        ev.preventDefault(); ev.stopPropagation();
+      }
+    }
+  }
+  function end(ev){
+    if(!panel) return;
+    if(mode==='pinch') localStorage.setItem(KEY_SCALE,String(getScale()));
+    if(mode){ const r=panel.getBoundingClientRect(); setPos(r.left,r.top,true); }
+    if(!ev.touches || ev.touches.length===0){
+      mode=null; panel.classList.remove('pzl-moving');
+      if(suppress) setTimeout(()=>{suppress=false;},260);
+    }
+  }
+  function click(ev){ if(suppress){ ev.preventDefault(); ev.stopImmediatePropagation(); suppress=false; } }
+  function init(){
+    panel=document.querySelector('.map-actions'); if(!panel) return;
+    loadInitial();
+    if(panel.dataset.d68==='1') return;
+    panel.dataset.d68='1';
+    panel.addEventListener('touchstart',start,{passive:false,capture:true});
+    panel.addEventListener('touchmove',move,{passive:false,capture:true});
+    panel.addEventListener('touchend',end,{passive:false,capture:true});
+    panel.addEventListener('touchcancel',end,{passive:false,capture:true});
+    panel.addEventListener('click',click,true);
+    window.addEventListener('resize',()=>setTimeout(()=>{const r=panel.getBoundingClientRect(); setPos(r.left,r.top,true);},120));
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  setTimeout(init,600); setTimeout(init,1600);
+})();
+</script>
+
+
+<!-- FIX37D69_D33_DROP_LOGIC_ON_D68_UI -->
 </body>
 </html>

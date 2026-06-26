@@ -1,4 +1,1 @@
-FIX37D33_D23_ZOOM_D29_CARDINALS
-- βάση D23 για να κρατηθεί το λειτουργικό HUD pinch zoom
-- αλλαγή μόνο στον renderer της HSI rose για N/E/S/W εξωτερικά και περιστρεφόμενα
-- 030/060 έγιναν 30/60
+PZL_FIX37D69_D33_DROP_LOGIC_ON_D68_UI
