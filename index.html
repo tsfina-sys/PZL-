@@ -5644,11 +5644,11 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     if(toggleBtn && toggleBtn.dataset.d65!=='1'){ toggleBtn.dataset.d65='1'; toggleBtn.addEventListener('click',()=>setVisible(document.body.classList.contains('pzl-actions-hidden'))); }
     if(panel.dataset.d65!=='1'){
       panel.dataset.d65='1';
-      panel.addEventListener('touchstart',onTouchStart,{passive:false});
-      panel.addEventListener('touchmove',onTouchMove,{passive:false});
-      panel.addEventListener('touchend',onTouchEnd,{passive:false});
-      panel.addEventListener('touchcancel',onTouchEnd,{passive:false});
-      panel.addEventListener('click',onClickCapture,true);
+      /* D68 disabled old d65 touchstart */
+      /* D68 disabled old d65 touchmove */
+      /* D68 disabled old d65 touchend */
+      /* D68 disabled old d65 touchcancel */
+      /* D68 disabled old d65 click suppress */
       window.addEventListener('resize',()=>setTimeout(()=>constrainAndSave(true),100));
     }
     setTimeout(()=>constrainAndSave(true),250);
@@ -5726,11 +5726,11 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     setScale(parseFloat(localStorage.getItem(KEY_SCALE)||'1')||1,false); loadPos();
     if(panel.dataset.d66Listeners!=='1'){
       panel.dataset.d66Listeners='1';
-      panel.addEventListener('touchstart',start,{passive:false,capture:true});
-      panel.addEventListener('touchmove',move,{passive:false,capture:true});
-      panel.addEventListener('touchend',end,{passive:false,capture:true});
-      panel.addEventListener('touchcancel',end,{passive:false,capture:true});
-      panel.addEventListener('click',click,true);
+      /* D68 disabled older touchstart */
+      /* D68 disabled older touchmove */
+      /* D68 disabled older touchend */
+      /* D68 disabled older touchcancel */
+      /* D68 disabled older click suppress */
       window.addEventListener('resize',()=>setTimeout(()=>{const l=parseFloat(panel.style.left||'0')||0,t=parseFloat(panel.style.top||'0')||0;setPos(l,t,true);},120));
     }
   }
@@ -5834,16 +5834,145 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     loadInitialPos();
     if(panel.dataset.d67!=='1'){
       panel.dataset.d67='1';
-      panel.addEventListener('touchstart',start,{passive:false,capture:true});
-      panel.addEventListener('touchmove',move,{passive:false,capture:true});
-      panel.addEventListener('touchend',end,{passive:false,capture:true});
-      panel.addEventListener('touchcancel',end,{passive:false,capture:true});
-      panel.addEventListener('click',click,true);
+      /* D68 disabled older touchstart */
+      /* D68 disabled older touchmove */
+      /* D68 disabled older touchend */
+      /* D68 disabled older touchcancel */
+      /* D68 disabled older click suppress */
       window.addEventListener('resize',()=>setTimeout(()=>{const r=panel.getBoundingClientRect(); setPos(r.left,r.top,true);},120));
     }
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
   setTimeout(init,500); setTimeout(init,1500);
+})();
+</script>
+
+
+
+<style id="pzl-d68-action-panel-low-stable-pinch">
+/* FIX37D68: panel σαν HUD — κατεβαίνει χαμηλότερα και σταθερό pinch χωρίς άλμα */
+.map-actions{
+  position:fixed!important;
+  right:auto!important;
+  bottom:auto!important;
+  transform:scale(var(--pzl-actions-scale,1))!important;
+  transform-origin:top left!important;
+  touch-action:none!important;
+  z-index:1200!important;
+  will-change:left,top,transform!important;
+}
+.map-actions.pzl-moving{filter:drop-shadow(0 0 7px rgba(255,210,74,.9));}
+</style>
+<script id="pzl-d68-action-panel-low-stable-pinch-js">
+(function(){
+  const KEY_POS='pzlD68ActionsPanelPos';
+  const OLD_KEY_POS='pzlD67ActionsPanelViewportPos';
+  const KEY_SCALE='pzlD65ActionsPanelScale';
+  const MIN_SCALE=0.72, MAX_SCALE=1.35;
+  const MIN_VISIBLE_X=74, MIN_VISIBLE_Y=74;
+  let panel=null;
+  let mode=null, sx=0, sy=0, baseL=0, baseT=0, baseScale=1, startDist=0, startMidX=0, startMidY=0;
+  let moved=false, suppress=false;
+  function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+  function dist(a,b){return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);}
+  function mid(a,b){return {x:(a.clientX+b.clientX)/2,y:(a.clientY+b.clientY)/2};}
+  function getScale(){const v=parseFloat(panel?.style.getPropertyValue('--pzl-actions-scale')||localStorage.getItem(KEY_SCALE)||'1');return isFinite(v)?v:1;}
+  function setImp(n,v){panel.style.setProperty(n,v,'important');}
+  function panelSize(scale=getScale()){
+    return {w:(panel.offsetWidth||160)*scale,h:(panel.offsetHeight||260)*scale};
+  }
+  function bounds(scale=getScale()){
+    const sz=panelSize(scale);
+    return {
+      minL:0,
+      minT:0,
+      // Επιτρέπουμε να κατέβει χαμηλά όπως το HUD, αλλά αφήνουμε πάντα ορατό κομμάτι για να μη χαθεί.
+      maxL:Math.max(0, window.innerWidth - Math.min(MIN_VISIBLE_X, sz.w)),
+      maxT:Math.max(0, window.innerHeight - Math.min(MIN_VISIBLE_Y, sz.h))
+    };
+  }
+  function setPos(l,t,save){
+    if(!panel) return;
+    const b=bounds();
+    l=clamp(l,b.minL,b.maxL); t=clamp(t,b.minT,b.maxT);
+    setImp('position','fixed'); setImp('left',l+'px'); setImp('top',t+'px'); setImp('right','auto'); setImp('bottom','auto');
+    if(save) localStorage.setItem(KEY_POS,JSON.stringify({left:l,top:t}));
+  }
+  function setScale(v,save){
+    v=clamp(v,MIN_SCALE,MAX_SCALE);
+    panel.style.setProperty('--pzl-actions-scale',String(v));
+    if(save) localStorage.setItem(KEY_SCALE,String(v));
+  }
+  function loadInitial(){
+    setImp('position','fixed'); setImp('right','auto'); setImp('bottom','auto');
+    setScale(parseFloat(localStorage.getItem(KEY_SCALE)||'1')||1,false);
+    let obj=null;
+    try{obj=JSON.parse(localStorage.getItem(KEY_POS)||localStorage.getItem(OLD_KEY_POS)||'{}');}catch(e){}
+    if(obj && Number.isFinite(obj.left) && Number.isFinite(obj.top)){ setPos(obj.left,obj.top,false); return; }
+    const r=panel.getBoundingClientRect();
+    const l=Number.isFinite(r.left)?r.left:window.innerWidth-(panel.offsetWidth||160)-8;
+    const t=Number.isFinite(r.top)?r.top:90;
+    setPos(l,t,false);
+  }
+  function start(ev){
+    if(!panel || !ev.touches) return;
+    if(ev.touches.length===2){
+      const a=ev.touches[0], b=ev.touches[1], m=mid(a,b), r=panel.getBoundingClientRect();
+      mode='pinch'; startDist=dist(a,b)||1; baseScale=getScale(); baseL=r.left; baseT=r.top; startMidX=m.x; startMidY=m.y;
+      moved=true; suppress=true; panel.classList.add('pzl-moving');
+      ev.preventDefault(); ev.stopPropagation(); return;
+    }
+    if(ev.touches.length===1){
+      const q=ev.touches[0], r=panel.getBoundingClientRect();
+      mode='drag'; sx=q.clientX; sy=q.clientY; baseL=r.left; baseT=r.top; moved=false;
+    }
+  }
+  function move(ev){
+    if(!panel || !ev.touches || !mode) return;
+    if(mode==='pinch' && ev.touches.length>=2){
+      const a=ev.touches[0], b=ev.touches[1], m=mid(a,b);
+      const newScale=clamp(baseScale*(dist(a,b)/(startDist||1)), MIN_SCALE, MAX_SCALE);
+      // Κρατάμε σταθερό το σημείο ανάμεσα στα δύο δάχτυλα, για να μη «πηδάει» όταν αφήνεις.
+      const ratio=newScale/(baseScale||1);
+      const newL=m.x - (startMidX-baseL)*ratio;
+      const newT=m.y - (startMidY-baseT)*ratio;
+      setScale(newScale,false);
+      setPos(newL,newT,false);
+      suppress=true; ev.preventDefault(); ev.stopPropagation(); return;
+    }
+    if(mode==='drag' && ev.touches.length===1){
+      const q=ev.touches[0], dx=q.clientX-sx, dy=q.clientY-sy;
+      if(Math.hypot(dx,dy)>4){
+        moved=true; suppress=true; panel.classList.add('pzl-moving');
+        setPos(baseL+dx,baseT+dy,false);
+        ev.preventDefault(); ev.stopPropagation();
+      }
+    }
+  }
+  function end(ev){
+    if(!panel) return;
+    if(mode==='pinch') localStorage.setItem(KEY_SCALE,String(getScale()));
+    if(mode){ const r=panel.getBoundingClientRect(); setPos(r.left,r.top,true); }
+    if(!ev.touches || ev.touches.length===0){
+      mode=null; panel.classList.remove('pzl-moving');
+      if(suppress) setTimeout(()=>{suppress=false;},260);
+    }
+  }
+  function click(ev){ if(suppress){ ev.preventDefault(); ev.stopImmediatePropagation(); suppress=false; } }
+  function init(){
+    panel=document.querySelector('.map-actions'); if(!panel) return;
+    loadInitial();
+    if(panel.dataset.d68==='1') return;
+    panel.dataset.d68='1';
+    panel.addEventListener('touchstart',start,{passive:false,capture:true});
+    panel.addEventListener('touchmove',move,{passive:false,capture:true});
+    panel.addEventListener('touchend',end,{passive:false,capture:true});
+    panel.addEventListener('touchcancel',end,{passive:false,capture:true});
+    panel.addEventListener('click',click,true);
+    window.addEventListener('resize',()=>setTimeout(()=>{const r=panel.getBoundingClientRect(); setPos(r.left,r.top,true);},120));
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  setTimeout(init,600); setTimeout(init,1600);
 })();
 </script>
 
