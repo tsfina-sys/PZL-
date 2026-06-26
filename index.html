@@ -1663,7 +1663,7 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
     let lastAirborneTick = null;
     let calculatedFuelBurnedL = 0;
     let lastHeavyCalcTime = 0;
-    const heavyCalcIntervalMs = 10000; // βαριοί υπολογισμοί ανά 10''
+    const heavyCalcIntervalMs = 10000; // βαριοί υπολογισμοί ανά 10'' μετά την Α/Γ
     const airborneStartSpeedKmh = 100;
     const airborneStopSpeedKmh = 30;
     let viaMarkers = [];
@@ -2531,16 +2531,6 @@ function setFireMarker() {
           try { if (window.pzlWindEstFeed) window.pzlWindEstFeed(now, speedKmh, currentGps.heading); } catch(e) {}
 
           handleAutoTakeoffFullStop(speedKmh, now);
-
-          // D78: μόλις διαβαστεί GS > 100, κλειδώνουμε την πραγματική Α/Γ
-          // και ξαναϋπολογίζουμε με πραγματική GS. Μετά ανανέωση ανά 10''.
-          try {
-            if (commandTime && speedKmh && speedKmh > airborneStartSpeedKmh && !autoActualTakeoffTime) {
-              setAutoActualTakeoff(now);
-              lastHeavyCalcTime = 0;
-            }
-          } catch(e) {}
-
           updateAirborneAndFuel(now, speedKmh);
 
           // Compact Live GPS panel: GS and coordinates are already visible in the HUD.
@@ -2575,8 +2565,9 @@ function setFireMarker() {
           // Ελαφρύ update σε κάθε GPS fix: μόνο status/gauges.
           updateFlightStatus();
 
-          // Βαρύς υπολογισμός/refresh οθόνης μόνο ανά 30'', για να μη τρεμοπαίζει.
-          if (now.getTime() - lastHeavyCalcTime > heavyCalcIntervalMs) {
+          // D80: βαρύς υπολογισμός/refresh μόνο μετά την πραγματική Α/Γ (GS>100) και ανά 10''.
+          // Δεν ξανατρέχει στην αρχική Εντολή, ώστε να μη μένει η οθόνη στο "Υπολογισμός...".
+          if (commandTime && autoActualTakeoffTime && now.getTime() - lastHeavyCalcTime > heavyCalcIntervalMs) {
             lastHeavyCalcTime = now.getTime();
             drawAll();
             calculate();
@@ -2661,6 +2652,8 @@ function setFireMarker() {
       return haversineKm({lat:b.lat,lon:b.lon}, alt);
     }
 
+    let pzlLastCutoffInfoCache = null;
+
     async function getCutoffTime() {
       // Ο περιορισμός ΤΦ/Cutoff υπολογίζεται με βάση το Α/Δ Full Stop.
       // Π.χ. Κλιμάκιο ΤΑΤΟΪ, επαναπλήρωση ΛΑΜΙΑ, Full Stop ΤΑΤΟΪ => ΤΦ ΕΛΕΥΣΙΝΑΣ - 15'.
@@ -2671,13 +2664,20 @@ function setFireMarker() {
       const base = bases[fullStopName] || bases[selectedBaseName];
       const ref = airports[base.ref];
       const url = `https://api.sunrise-sunset.org/json?lat=${ref.lat}&lng=${ref.lon}&formatted=0`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.status !== "OK") throw new Error("Sunset API error");
-      const sunset = new Date(data.results.sunset);
-      const twilight = new Date(sunset.getTime() + twilightAfterSunsetMin*60000);
-      const cutoff = new Date(twilight.getTime() - base.offset*60000);
-      return {sunset, twilight, cutoff, refName:base.ref, offset:base.offset, fullStopName};
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      try {
+        const res = await fetch(url, {signal: controller.signal});
+        const data = await res.json();
+        if (data.status !== "OK") throw new Error("Sunset API error");
+        const sunset = new Date(data.results.sunset);
+        const twilight = new Date(sunset.getTime() + twilightAfterSunsetMin*60000);
+        const cutoff = new Date(twilight.getTime() - base.offset*60000);
+        pzlLastCutoffInfoCache = {sunset, twilight, cutoff, refName:base.ref, offset:base.offset, fullStopName};
+        return pzlLastCutoffInfoCache;
+      } finally {
+        clearTimeout(timeoutId);
+      }
     }
 
     let lastCalcId = 0;
@@ -3193,9 +3193,9 @@ function setFireMarker() {
       const calcCommandTime = (newFireWithWaterMode && newFireCalcStartTime) ? newFireCalcStartTime : commandTime;
       const fmtUntilFromCalcCommand = (targetTime) => pzlFormatDropCountdownPair(targetTime, calcCommandTime);
 
-      // D78: δυναμικός υπολογισμός GS.
-      // Στο έδαφος: 15' μέχρι Α/Γ και 180 km/h.
-      // Μετά την πρώτη πραγματική Α/Γ (GS>100): πραγματικός χρόνος Α/Γ και πραγματική GS.
+      // D80 dynamic GS logic:
+      // - πριν την πραγματική Α/Γ: 15' και 180 km/h
+      // - μετά από GS>100: πραγματική ώρα Α/Γ + τρέχουσα GS για τους μελλοντικούς υπολογισμούς
       const liveGsKmhForCalc = (currentGps && currentGps.speedMps !== null && currentGps.speedMps !== undefined && !isNaN(currentGps.speedMps))
         ? Number(currentGps.speedMps) * 3.6
         : null;
@@ -3343,7 +3343,8 @@ const base = bases[selectedBaseName];
         updateFuel(maxDrops, D, altD, missionDurationMin);
 
       } catch(err) {
-        result.textContent = "Δεν μπόρεσα να πάρω αυτόματα ΤΦ από διαδίκτυο.\nΣφάλμα: " + err.message;
+        // Δεν αφήνουμε ποτέ την εφαρμογή κολλημένη στο "Υπολογισμός...".
+        result.textContent = "Δεν ολοκληρώθηκε ο υπολογισμός. Πάτησε ξανά Εντολή ή έλεγξε σύνδεση για ΤΦ.\nΣφάλμα: " + (err && err.message ? err.message : err);
       }
     }
 
@@ -4728,7 +4729,10 @@ const base = bases[selectedBaseName];
     const todayKey = pzlDateKey(new Date());
     try {
       const url = `https://api.sunrise-sunset.org/json?lat=${ref.lat}&lng=${ref.lon}&formatted=0`;
-      const res = await fetch(url, {cache:'no-store'});
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const res = await fetch(url, {cache:'no-store', signal: controller.signal});
+      clearTimeout(timeoutId);
       const data = await res.json();
       if (data.status !== 'OK') throw new Error('Sunset API error');
       const sunset = new Date(data.results.sunset);
