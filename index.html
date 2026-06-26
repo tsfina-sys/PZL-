@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool v8.2 D60 Cockpit FIX37D413</title>
+  <title>PZL Mission Tool v8.2 D65 Cockpit FIX37D413</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -1156,7 +1156,7 @@ body.pzl-screen-locked #lockMapBtn {
 <div id="app">
   <div id="mapWrap">
     <header><span>PZL Mission Tool v8.2 D60</span><span>Cockpit</span></header>
-    <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><div class="splitControl topGpsSplit"><button id="gpsBtn">GPS</button><button id="useGpsAsStartBtn" class="secondary">Αφετηρία</button></div><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button></div>
+    <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><div class="splitControl topGpsSplit"><button id="gpsBtn">GPS</button><button id="useGpsAsStartBtn" class="secondary">Αφετηρία</button></div><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="toggleActionsBtn" class="secondary" title="Εμφάνιση/απόκρυψη δεξιού πάνελ">PNL</button><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button></div>
 <div id="map"></div><div id="metarWindStatus"></div>
     <div id="hsiHud" aria-label="HSI HUD">
       <div class="hsiDial" id="hsiDial">
@@ -5523,6 +5523,138 @@ const base = bases[selectedBaseName];
   function init(){ markAirborne(); forceGpsSplit(); /* D61: duplicate D60 x2/manual capture disabled; D54 guard is the single source of truth */ }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
   setTimeout(init,500); setTimeout(init,1500);
+})();
+</script>
+
+
+<style id="pzl-d65-action-panel-drag-pinch">
+/* FIX37D65: δεξί πάνελ μετακινείται με 1 δάχτυλο, αλλάζει μέγεθος με pinch, και κρύβεται με PNL */
+#toggleActionsBtn.pnl-on{background:#157347!important;color:#fff!important;}
+#toggleActionsBtn.pnl-off{background:#6b7280!important;color:#fff!important;}
+.map-actions{
+  --pzl-actions-scale:1;
+  transform:scale(var(--pzl-actions-scale))!important;
+  transform-origin:top right!important;
+  touch-action:none!important;
+  will-change:transform,left,top!important;
+}
+body.pzl-actions-hidden .map-actions{display:none!important;}
+.map-actions.pzl-moving{filter:drop-shadow(0 0 7px rgba(255,210,74,.9));}
+@media(max-width:700px){
+  #toggleActionsBtn{font-size:0!important; min-width:44px!important;}
+  #toggleActionsBtn::after{content:'PNL';font-size:11px!important;}
+}
+</style>
+<script id="pzl-d65-action-panel-drag-pinch-js">
+(function(){
+  const KEY_POS='pzlD65ActionsPanelPos';
+  const KEY_SCALE='pzlD65ActionsPanelScale';
+  const KEY_VISIBLE='pzlD65ActionsPanelVisible';
+  const MIN_SCALE=0.72, MAX_SCALE=1.35;
+  let panel, wrap, toggleBtn;
+  let state={mode:null,startX:0,startY:0,baseLeft:0,baseTop:0,startDist:0,baseScale:1,moved:false,suppressClick:false};
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function dist(t1,t2){ const dx=t1.clientX-t2.clientX, dy=t1.clientY-t2.clientY; return Math.hypot(dx,dy); }
+  function getScale(){ const v=parseFloat(panel?.style.getPropertyValue('--pzl-actions-scale')||localStorage.getItem(KEY_SCALE)||'1'); return isFinite(v)?v:1; }
+  function setScale(v, save){
+    if(!panel) return;
+    v=clamp(v,MIN_SCALE,MAX_SCALE);
+    panel.style.setProperty('--pzl-actions-scale', String(v));
+    if(save) localStorage.setItem(KEY_SCALE, String(v));
+    constrainAndSave(false);
+  }
+  function rects(){ return {p:panel.getBoundingClientRect(), w:wrap.getBoundingClientRect()}; }
+  function ensureAbsolutePosition(){
+    if(!panel||!wrap) return;
+    const saved=localStorage.getItem(KEY_POS);
+    const wr=wrap.getBoundingClientRect();
+    if(saved){
+      try{ const o=JSON.parse(saved); if(Number.isFinite(o.left)&&Number.isFinite(o.top)){ panel.style.left=o.left+'px'; panel.style.top=o.top+'px'; panel.style.right='auto'; return; } }catch(e){}
+    }
+    const pr=panel.getBoundingClientRect();
+    panel.style.left=Math.max(0, pr.left-wr.left)+'px';
+    panel.style.top=Math.max(0, pr.top-wr.top)+'px';
+    panel.style.right='auto';
+  }
+  function constrainAndSave(save=true){
+    if(!panel||!wrap) return;
+    const scale=getScale();
+    const panelW=(panel.offsetWidth||160)*scale;
+    const panelH=(panel.offsetHeight||260)*scale;
+    const maxL=Math.max(0, wrap.clientWidth-panelW-2);
+    const maxT=Math.max(42, wrap.clientHeight-panelH-2);
+    let l=parseFloat(panel.style.left||'0'), t=parseFloat(panel.style.top||'54');
+    if(!isFinite(l)) l=0; if(!isFinite(t)) t=54;
+    l=clamp(l,0,maxL); t=clamp(t,42,maxT);
+    panel.style.left=l+'px'; panel.style.top=t+'px'; panel.style.right='auto';
+    if(save) localStorage.setItem(KEY_POS, JSON.stringify({left:l, top:t}));
+  }
+  function setVisible(visible){
+    document.body.classList.toggle('pzl-actions-hidden', !visible);
+    if(toggleBtn){ toggleBtn.classList.toggle('pnl-on', visible); toggleBtn.classList.toggle('pnl-off', !visible); toggleBtn.textContent=visible?'PNL':'PNL'; }
+    localStorage.setItem(KEY_VISIBLE, visible?'1':'0');
+  }
+  function onTouchStart(ev){
+    if(!panel) return;
+    if(ev.touches.length===2){
+      state.mode='pinch'; state.startDist=dist(ev.touches[0],ev.touches[1]); state.baseScale=getScale(); state.moved=true; panel.classList.add('pzl-moving'); ev.preventDefault(); return;
+    }
+    if(ev.touches.length===1){
+      const t=ev.touches[0];
+      state.mode='drag'; state.startX=t.clientX; state.startY=t.clientY;
+      state.baseLeft=parseFloat(panel.style.left||'0')||0; state.baseTop=parseFloat(panel.style.top||'54')||54;
+      state.moved=false; state.suppressClick=false;
+    }
+  }
+  function onTouchMove(ev){
+    if(!panel||!state.mode) return;
+    if(state.mode==='pinch' && ev.touches.length>=2){
+      const ratio=dist(ev.touches[0],ev.touches[1])/(state.startDist||1);
+      setScale(state.baseScale*ratio,false);
+      state.suppressClick=true; ev.preventDefault(); return;
+    }
+    if(state.mode==='drag' && ev.touches.length===1){
+      const t=ev.touches[0], dx=t.clientX-state.startX, dy=t.clientY-state.startY;
+      if(Math.hypot(dx,dy)>10){
+        state.moved=true; state.suppressClick=true; panel.classList.add('pzl-moving');
+        panel.style.left=(state.baseLeft+dx)+'px'; panel.style.top=(state.baseTop+dy)+'px'; panel.style.right='auto';
+        constrainAndSave(false); ev.preventDefault();
+      }
+    }
+  }
+  function onTouchEnd(ev){
+    if(!panel) return;
+    if(state.mode==='pinch'){ localStorage.setItem(KEY_SCALE,String(getScale())); constrainAndSave(true); }
+    if(state.mode==='drag' && state.moved){ constrainAndSave(true); }
+    if(ev.touches.length===0){
+      panel.classList.remove('pzl-moving');
+      if(state.suppressClick){ setTimeout(()=>{ state.suppressClick=false; },180); }
+      state.mode=null;
+    }
+  }
+  function onClickCapture(ev){
+    if(state.suppressClick){ ev.preventDefault(); ev.stopImmediatePropagation(); state.suppressClick=false; }
+  }
+  function init(){
+    panel=document.querySelector('.map-actions'); wrap=document.getElementById('mapWrap'); toggleBtn=document.getElementById('toggleActionsBtn');
+    if(!panel||!wrap) return;
+    ensureAbsolutePosition();
+    const savedScale=parseFloat(localStorage.getItem(KEY_SCALE)||'1'); setScale(isFinite(savedScale)?savedScale:1,false);
+    setVisible(localStorage.getItem(KEY_VISIBLE)!=='0');
+    if(toggleBtn && toggleBtn.dataset.d65!=='1'){ toggleBtn.dataset.d65='1'; toggleBtn.addEventListener('click',()=>setVisible(document.body.classList.contains('pzl-actions-hidden'))); }
+    if(panel.dataset.d65!=='1'){
+      panel.dataset.d65='1';
+      panel.addEventListener('touchstart',onTouchStart,{passive:false});
+      panel.addEventListener('touchmove',onTouchMove,{passive:false});
+      panel.addEventListener('touchend',onTouchEnd,{passive:false});
+      panel.addEventListener('touchcancel',onTouchEnd,{passive:false});
+      panel.addEventListener('click',onClickCapture,true);
+      window.addEventListener('resize',()=>setTimeout(()=>constrainAndSave(true),100));
+    }
+    setTimeout(()=>constrainAndSave(true),250);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  setTimeout(init,600);
 })();
 </script>
 
