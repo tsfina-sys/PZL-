@@ -1647,6 +1647,7 @@ function getRemainingAirborneMinutesForNewFire() {
     let firePoint = null;
     let viaPoints = [];
     let mode = "fire";
+    let fireSelectionArmed = true; // Fire πράσινο μόνο όταν επιτρέπεται επιλογή/αλλαγή φωτιάς στον χάρτη
     let fireCircleLayers = [];
     let fireCirclesVisible = true;
 let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, altLine = null, rwyLine = null, windLine = null, fireWindLine = null;
@@ -1814,8 +1815,15 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
         return;
       }
       if (mode === "fire") {
+        if (!fireSelectionArmed) {
+          const result = document.getElementById("result");
+          if (result) result.textContent = "Fire ανενεργό: πάτησε πρώτα το κουμπί Fire για αλλαγή θέσης φωτιάς.";
+          return;
+        }
         firePoint = {lat:e.latlng.lat, lon:e.latlng.lng, label:"Φωτιά"};
         setFireMarker();
+        fireSelectionArmed = false;
+        updateFireModeButtonState();
       } else {
         viaPoints.push({lat:e.latlng.lat, lon:e.latlng.lng});
         addViaMarker(e.latlng, viaPoints.length);
@@ -2352,23 +2360,38 @@ function setFireMarker() {
       } catch(e) {}
     }
 
+    function updateFireModeButtonState() {
+      const fireBtn = document.getElementById("fireModeBtn");
+      if (!fireBtn) return;
+      if (mode === "fire" && fireSelectionArmed) {
+        fireBtn.className = "active";
+        fireBtn.title = "Fire: ενεργό — πάτησε στον χάρτη για σημείο φωτιάς";
+      } else {
+        fireBtn.className = "secondary";
+        fireBtn.title = "Fire: πατημένο για ενεργοποίηση επιλογής φωτιάς";
+      }
+    }
+
     const toggleFireCirclesBtn = document.getElementById("toggleFireCirclesBtn");
     if (toggleFireCirclesBtn) {
       toggleFireCirclesBtn.addEventListener("click", toggleFireCircles);
       updateFireCirclesButton();
     }
+    updateFireModeButtonState();
 
     document.getElementById("fireModeBtn").addEventListener("click", () => {
       exitReturnWpModeForNormalMode();
       mode="fire";
-      fireModeBtn.className="active";
+      fireSelectionArmed = true;
+      updateFireModeButtonState();
       viaModeBtn.className="secondary";
     });
     document.getElementById("viaModeBtn").addEventListener("click", () => {
       exitReturnWpModeForNormalMode();
       mode="via";
+      fireSelectionArmed = false;
       viaModeBtn.className="active";
-      fireModeBtn.className="secondary";
+      updateFireModeButtonState();
     });
     document.getElementById("clearViaBtn").addEventListener("click", clearViaMarkers);
 
@@ -2665,9 +2688,10 @@ function setFireMarker() {
         if (dropsDiv) dropsDiv.innerHTML = "";
 
         mode = "fire";
+        fireSelectionArmed = true;
         const fireBtn = document.getElementById("fireModeBtn");
         const viaBtn = document.getElementById("viaModeBtn");
-        if (fireBtn) fireBtn.className = "active";
+        updateFireModeButtonState();
         if (viaBtn) viaBtn.className = "secondary";
         const modeLabel = document.getElementById("modeLabel");
         if (modeLabel) modeLabel.textContent = "Φωτιά";
@@ -3079,7 +3103,7 @@ function setFireMarker() {
         const cutoffInfo = await getCutoffTime();
         if (calcId !== lastCalcId) return;
 
-        // FIX37D61: Align TF/Cutoff date with the active command/scenario date.
+        // FIX37D62: Align TF/Cutoff date with the active command/scenario date.
         // This prevents stale/previous-day TF cache or UTC date shifts from giving
         // "Μέγιστες ρίψεις: 0 / ΑΝΕΠΑΡΚΗΣ ΧΡΟΝΟΣ" during morning Manual Practice
         // or Airborne Full Tank scenarios while the displayed first drop is valid.
