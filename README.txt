@@ -1,1 +1,1 @@
-D73: Live drop countdown pair in Από τώρα/εντολή (remaining/original), and SRCH disarms Fire selection to prevent accidental map tap changes.
+D74: Ζωντανό Από τώρα/εντολή ως countdown/αρχικός χρόνος και αφοπλισμός Fire μετά από SRCH.

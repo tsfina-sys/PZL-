@@ -3309,7 +3309,7 @@ const base = bases[selectedBaseName];
           html += "<table class=\"drop-table\"><tr><th>#</th><th>Ώρα</th><th>Από τώρα/εντολή</th></tr>";
           for (let i=1; i<=maxDrops; i++) {
             const dropTime = addMinutes(firstDrop, (i-1)*cycleMin);
-            html += `<tr><td>${i}</td><td>${fmtTime(dropTime)}</td><td class="drop-countdown-cell" data-drop-ms="${dropTime.getTime()}" data-base-ms="${calcCommandTime.getTime()}">${fmtUntilFromCalcCommand(dropTime)}</td></tr>`;
+            html += `<tr><td>${i}</td><td>${fmtTime(dropTime)}</td><td class="drop-countdown-cell" data-drop-ms="${dropTime.getTime()}" data-base-ms="${calcCommandTime.getTime()}">${pzlFormatDropCountdownPair(dropTime, calcCommandTime)}</td></tr>`;
           }
           html += "</table>";
         }
@@ -6156,5 +6156,90 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <!-- FIX37D70_WIND_EST_IAS_GPS_VECTORS_ON_D69 -->
+
+
+<!-- FIX37D74: robust live Από τώρα/εντολή countdown + SRCH disarms Fire -->
+<style id="fix37d74-fire-disarm-css">
+  #fireModeBtn.fire-disarmed,
+  .fireSplit #fireModeBtn.fire-disarmed{
+    background:#6b7280 !important;
+    background-color:#6b7280 !important;
+    color:#fff !important;
+  }
+  #fireModeBtn.fire-armed,
+  .fireSplit #fireModeBtn.fire-armed{
+    background:#157347 !important;
+    background-color:#157347 !important;
+    color:#fff !important;
+  }
+</style>
+<script id="fix37d74-live-countdown-fire-disarm">
+(function(){
+  function fmtM(mins){
+    if(!isFinite(mins)) return '-';
+    mins=Math.max(0, Math.round(mins));
+    var h=Math.floor(mins/60), m=mins%60;
+    return h>0 ? (h+'ω '+m+"'") : (m+"'");
+  }
+  function updateDropPairs(){
+    var now=Date.now();
+    document.querySelectorAll('td.drop-countdown-cell[data-drop-ms][data-base-ms]').forEach(function(td){
+      var drop=Number(td.getAttribute('data-drop-ms'));
+      var base=Number(td.getAttribute('data-base-ms'));
+      if(!isFinite(drop)||!isFinite(base)) return;
+      var left=(drop-now)/60000;
+      var right=(drop-base)/60000;
+      td.textContent=fmtM(left)+'/'+fmtM(right);
+    });
+  }
+  window.pzlD74UpdateDropPairs=updateDropPairs;
+  if(window.__pzlD74DropTimer) clearInterval(window.__pzlD74DropTimer);
+  window.__pzlD74DropTimer=setInterval(updateDropPairs, 1000);
+  document.addEventListener('DOMContentLoaded', function(){
+    updateDropPairs();
+    var drops=document.getElementById('drops') || document.body;
+    try{
+      new MutationObserver(updateDropPairs).observe(drops,{childList:true,subtree:true,characterData:true});
+    }catch(e){}
+  });
+  setTimeout(updateDropPairs,300);
+  setTimeout(updateDropPairs,1200);
+
+  function forceFireDisarmed(){
+    try{ window.fireSelectionArmed=false; }catch(e){}
+    try{ window.mode='none'; }catch(e){}
+    var btn=document.getElementById('fireModeBtn');
+    if(btn){
+      btn.classList.remove('active','fire-armed');
+      btn.classList.add('secondary','fire-disarmed');
+      btn.style.backgroundColor='#6b7280';
+      btn.title='Fire ανενεργό μετά το SRCH — πάτησε Fire για αλλαγή φωτιάς';
+    }
+  }
+  function forceFireArmed(){
+    var btn=document.getElementById('fireModeBtn');
+    if(btn){
+      btn.classList.remove('secondary','fire-disarmed');
+      btn.classList.add('active','fire-armed');
+      btn.style.backgroundColor='';
+    }
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    var search=document.getElementById('searchBtn');
+    if(search){
+      search.addEventListener('click', function(){
+        setTimeout(forceFireDisarmed, 300);
+        setTimeout(forceFireDisarmed, 1200);
+        setTimeout(forceFireDisarmed, 2500);
+      }, true);
+    }
+    var fire=document.getElementById('fireModeBtn');
+    if(fire){
+      fire.addEventListener('click', function(){ setTimeout(forceFireArmed, 0); }, true);
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
