@@ -5658,5 +5658,86 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 })();
 </script>
 
+
+<style id="pzl-d66-action-panel-free-drag-fix">
+/* FIX37D66: δεξί panel ελεύθερη μετακίνηση εντός οθόνης, όχι μόνο δεξιά-αριστερά */
+.map-actions{
+  position:absolute!important;
+  right:auto!important;
+  bottom:auto!important;
+  transform:scale(var(--pzl-actions-scale,1))!important;
+  transform-origin:top left!important;
+}
+</style>
+<script id="pzl-d66-action-panel-free-drag-js">
+(function(){
+  const KEY_POS='pzlD65ActionsPanelPos';
+  const KEY_SCALE='pzlD65ActionsPanelScale';
+  const MIN_SCALE=0.72, MAX_SCALE=1.35;
+  let panel, wrap;
+  let active=false, pinching=false, sx=0, sy=0, baseL=0, baseT=0, startDist=0, baseScale=1, moved=false, suppress=false;
+  function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+  function dist(a,b){return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);}
+  function scale(){const v=parseFloat(panel?.style.getPropertyValue('--pzl-actions-scale')||localStorage.getItem(KEY_SCALE)||'1'); return isFinite(v)?v:1;}
+  function setImp(name,val){ panel.style.setProperty(name,val,'important'); }
+  function setPos(l,t,save){
+    if(!panel||!wrap) return;
+    const sc=scale();
+    const maxL=Math.max(0, wrap.clientWidth-(panel.offsetWidth||160)*sc-2);
+    const maxT=Math.max(0, wrap.clientHeight-(panel.offsetHeight||260)*sc-2);
+    l=clamp(l,0,maxL); t=clamp(t,0,maxT);
+    setImp('left',l+'px'); setImp('top',t+'px'); setImp('right','auto'); setImp('bottom','auto');
+    if(save) localStorage.setItem(KEY_POS,JSON.stringify({left:l,top:t}));
+  }
+  function setScale(v,save){
+    v=clamp(v,MIN_SCALE,MAX_SCALE);
+    panel.style.setProperty('--pzl-actions-scale',String(v));
+    if(save) localStorage.setItem(KEY_SCALE,String(v));
+    const l=parseFloat(panel.style.left||'0')||0, t=parseFloat(panel.style.top||'0')||0;
+    setPos(l,t,false);
+  }
+  function loadPos(){
+    let l=null,t=null;
+    try{const o=JSON.parse(localStorage.getItem(KEY_POS)||'{}'); if(Number.isFinite(o.left)&&Number.isFinite(o.top)){l=o.left;t=o.top;}}catch(e){}
+    if(l===null){ const wr=wrap.getBoundingClientRect(), pr=panel.getBoundingClientRect(); l=Math.max(0,pr.left-wr.left); t=Math.max(0,pr.top-wr.top); }
+    setPos(l,t,false);
+  }
+  function start(ev){
+    if(!panel) return;
+    if(ev.touches && ev.touches.length===2){ pinching=true; active=false; startDist=dist(ev.touches[0],ev.touches[1]); baseScale=scale(); moved=true; suppress=true; panel.classList.add('pzl-moving'); ev.preventDefault(); ev.stopImmediatePropagation(); return; }
+    if(ev.touches && ev.touches.length===1){ const q=ev.touches[0]; active=true; pinching=false; sx=q.clientX; sy=q.clientY; baseL=parseFloat(panel.style.left||'0')||0; baseT=parseFloat(panel.style.top||'0')||0; moved=false; }
+  }
+  function move(ev){
+    if(!panel) return;
+    if(pinching && ev.touches && ev.touches.length>=2){ setScale(baseScale*dist(ev.touches[0],ev.touches[1])/(startDist||1),false); suppress=true; ev.preventDefault(); ev.stopImmediatePropagation(); return; }
+    if(active && ev.touches && ev.touches.length===1){ const q=ev.touches[0], dx=q.clientX-sx, dy=q.clientY-sy; if(Math.hypot(dx,dy)>6){ moved=true; suppress=true; panel.classList.add('pzl-moving'); setPos(baseL+dx,baseT+dy,false); ev.preventDefault(); ev.stopImmediatePropagation(); } }
+  }
+  function end(ev){
+    if(!panel) return;
+    if(pinching){ localStorage.setItem(KEY_SCALE,String(scale())); }
+    if(active||pinching){ const l=parseFloat(panel.style.left||'0')||0, t=parseFloat(panel.style.top||'0')||0; setPos(l,t,true); }
+    if(!ev.touches || ev.touches.length===0){ active=false; pinching=false; panel.classList.remove('pzl-moving'); if(suppress) setTimeout(()=>{suppress=false;},220); }
+  }
+  function click(ev){ if(suppress){ ev.preventDefault(); ev.stopImmediatePropagation(); suppress=false; } }
+  function init(){
+    panel=document.querySelector('.map-actions'); wrap=document.getElementById('mapWrap'); if(!panel||!wrap) return;
+    panel.dataset.d66='1';
+    setImp('right','auto'); setImp('bottom','auto');
+    setScale(parseFloat(localStorage.getItem(KEY_SCALE)||'1')||1,false); loadPos();
+    if(panel.dataset.d66Listeners!=='1'){
+      panel.dataset.d66Listeners='1';
+      panel.addEventListener('touchstart',start,{passive:false,capture:true});
+      panel.addEventListener('touchmove',move,{passive:false,capture:true});
+      panel.addEventListener('touchend',end,{passive:false,capture:true});
+      panel.addEventListener('touchcancel',end,{passive:false,capture:true});
+      panel.addEventListener('click',click,true);
+      window.addEventListener('resize',()=>setTimeout(()=>{const l=parseFloat(panel.style.left||'0')||0,t=parseFloat(panel.style.top||'0')||0;setPos(l,t,true);},120));
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  setTimeout(init,700); setTimeout(init,1800);
+})();
+</script>
+
 </body>
 </html>
