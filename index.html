@@ -1830,11 +1830,7 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
         // FIX37D63: μετά από κάθε WPT μετάβασης, αφοπλίζει αυτόματα.
         // Για επόμενο WPT πρέπει να ξαναπατηθεί το WPT ώστε να γίνει πράσινο.
         mode = "none";
-        const viaBtn = document.getElementById("viaModeBtn");
-        if (viaBtn) {
-          viaBtn.className = "secondary";
-          viaBtn.title = "WPT μετάβασης: πάτησε για ενεργοποίηση πριν βάλεις σημείο στον χάρτη";
-        }
+        setViaWptArmed(false);
       } else {
         const result = document.getElementById("result");
         if (result) result.textContent = "Επιλογή WPT ανενεργή: πάτησε πρώτα WPT ή WPT RTB.";
@@ -2384,6 +2380,26 @@ function setFireMarker() {
       }
     }
 
+    function setViaWptArmed(active) {
+      const viaBtn = document.getElementById("viaModeBtn");
+      if (!viaBtn) return;
+      if (active) {
+        viaBtn.className = "active";
+        viaBtn.title = "WPT μετάβασης ενεργό — πάτησε στον χάρτη για 1 σημείο";
+      } else {
+        viaBtn.className = "secondary";
+        viaBtn.title = "WPT μετάβασης: πάτησε για ενεργοποίηση πριν βάλεις σημείο στον χάρτη";
+      }
+    }
+
+    function setReturnWptArmed(active) {
+      const btn = document.getElementById("returnWpBtn");
+      if (!btn) return;
+      btn.classList.toggle("return-wp-active", !!active);
+      btn.className = active ? "active return-wp-active" : "secondary";
+      btn.title = active ? "WPT RTB ενεργό — πάτησε στον χάρτη για 1 σημείο επιστροφής" : "WPT RTB: πάτησε για ενεργοποίηση πριν βάλεις σημείο στον χάρτη";
+    }
+
     const toggleFireCirclesBtn = document.getElementById("toggleFireCirclesBtn");
     if (toggleFireCirclesBtn) {
       toggleFireCirclesBtn.addEventListener("click", toggleFireCircles);
@@ -2396,21 +2412,21 @@ function setFireMarker() {
       mode="fire";
       fireSelectionArmed = true;
       updateFireModeButtonState();
-      viaModeBtn.className="secondary";
+      setViaWptArmed(false);
     });
     document.getElementById("viaModeBtn").addEventListener("click", () => {
       exitReturnWpModeForNormalMode();
       mode="via";
       fireSelectionArmed = false;
-      viaModeBtn.className="active";
-      viaModeBtn.title = "WPT μετάβασης ενεργό — πάτησε στον χάρτη για 1 σημείο";
+      setViaWptArmed(true);
+      returnWpMode = false;
+      setReturnWptArmed(false);
       updateFireModeButtonState();
     });
     document.getElementById("clearViaBtn").addEventListener("click", () => {
       clearViaMarkers();
       mode = "none";
-      const viaBtn = document.getElementById("viaModeBtn");
-      if (viaBtn) viaBtn.className = "secondary";
+      setViaWptArmed(false);
     });
 
     document.getElementById("lockMapBtn").addEventListener("click", () => {
@@ -2811,12 +2827,7 @@ function setFireMarker() {
         returnWpMode = false;
         if (modeBeforeReturnWp && typeof mode !== "undefined") mode = modeBeforeReturnWp;
         modeBeforeReturnWp = null;
-        const btn = document.getElementById("returnWpBtn");
-        if (btn) {
-          btn.classList.remove("return-wp-active");
-          btn.className = "secondary";
-          btn.title = "WPT RTB: πάτησε για ενεργοποίηση πριν βάλεις σημείο στον χάρτη";
-        }
+        setReturnWptArmed(false);
         updateReturnWpStatus();
       } catch(e) {}
       calculate();
@@ -4372,11 +4383,10 @@ const base = bases[selectedBaseName];
           modeBeforeReturnWp = null;
         }
 
-        const btn = document.getElementById("returnWpBtn");
-        if (btn) {
-          btn.classList.toggle("return-wp-active", returnWpMode);
-          btn.className = returnWpMode ? "active return-wp-active" : "secondary";
-          btn.title = returnWpMode ? "WPT RTB ενεργό — πάτησε στον χάρτη για 1 σημείο επιστροφής" : "WPT RTB: πάτησε για ενεργοποίηση πριν βάλεις σημείο στον χάρτη";
+        setReturnWptArmed(returnWpMode);
+        if (returnWpMode) {
+          mode = "return";
+          setViaWptArmed(false);
         }
 
         const st = document.getElementById("returnWpStatus");
@@ -4388,19 +4398,9 @@ const base = bases[selectedBaseName];
     }
 
 
-try {
-  map.on("click", function(e){
-      if (typeof mapLocked !== "undefined" && mapLocked) { return; }
-      if (typeof returnWpMode !== "undefined" && returnWpMode) {
-        addReturnWaypoint(e.latlng.lat, e.latlng.lng);
-        return;
-      } // RETURN_WP_ONLY_GUARD
-
-      if (returnWpMode) { addReturnWaypoint(e.latlng.lat, e.latlng.lng); return; } // RETURN_WP_FIRST_CLICK_GUARD
-    if (!returnWpMode) return;
-    addReturnWaypoint(e.latlng.lat, e.latlng.lng);
-  });
-} catch(err) {}
+/* FIX37D64: αφαιρέθηκε duplicate map click handler για WPT RTB.
+   Η εισαγωγή WPT/RTB γίνεται μόνο από τον κύριο handler:
+   κουμπί πράσινο -> 1 tap στον χάρτη -> κουμπί γκρι. */
 
 
 
