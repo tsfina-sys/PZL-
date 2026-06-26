@@ -2522,6 +2522,7 @@ function setFireMarker() {
 
           const speedKmh = speedMps && !isNaN(speedMps) ? speedMps * 3.6 : null;
           const speedKt = speedKmh ? speedKmh / 1.852 : null;
+          try { if (window.pzlWindEstFeed) window.pzlWindEstFeed(now, speedKmh, currentGps.heading); } catch(e) {}
 
           handleAutoTakeoffFullStop(speedKmh, now);
           updateAirborneAndFuel(now, speedKmh);
@@ -5966,6 +5967,153 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 </script>
 
 
-<!-- FIX37D69_D33_DROP_LOGIC_ON_D68_UI -->
+<script>
+/* FIX37D70: WIND EST from IAS + GPS vectors, UI only added to D69 base */
+(function(){
+  const LS_ON='pzlWindEstOnD70', LS_IAS='pzlWindEstIasKmhD70';
+  let enabled = localStorage.getItem(LS_ON)==='1';
+  let iasKmh = Number(localStorage.getItem(LS_IAS) || 180);
+  if(!isFinite(iasKmh) || iasKmh < 60 || iasKmh > 350) iasKmh = 180;
+  let samples=[];
+  let lastAccepted=null;
+  let lastResult=null;
+
+  function deg2radLocal(d){ return d*Math.PI/180; }
+  function fmt3(d){ return String(Math.round((d+360)%360)).padStart(3,'0'); }
+  function kt(kmh){ return kmh/1.852; }
+  function circularSpan(degs){
+    if(!degs || degs.length<2) return 0;
+    const arr=degs.map(d=>((d%360)+360)%360).sort((a,b)=>a-b);
+    let maxGap=0;
+    for(let i=0;i<arr.length;i++){
+      const a=arr[i], b=arr[(i+1)%arr.length] + (i===arr.length-1 ? 360 : 0);
+      maxGap=Math.max(maxGap,b-a);
+    }
+    return 360-maxGap;
+  }
+  function solveWind(){
+    if(samples.length<3) return null;
+    const g0=samples[0];
+    let ata00=0, ata01=0, ata11=0, atb0=0, atb1=0;
+    for(let i=1;i<samples.length;i++){
+      const gi=samples[i];
+      const ax=2*(gi.x-g0.x), ay=2*(gi.y-g0.y);
+      const b=(gi.x*gi.x+gi.y*gi.y) - (g0.x*g0.x+g0.y*g0.y);
+      ata00 += ax*ax; ata01 += ax*ay; ata11 += ay*ay;
+      atb0 += ax*b; atb1 += ay*b;
+    }
+    const det=ata00*ata11-ata01*ata01;
+    if(Math.abs(det)<1e-6) return null;
+    const wx=(atb0*ata11-ata01*atb1)/det;
+    const wy=(ata00*atb1-ata01*atb0)/det;
+    const speedKmh=Math.sqrt(wx*wx+wy*wy);
+    const toDir=(Math.atan2(wx,wy)*180/Math.PI+360)%360;
+    const fromDir=(toDir+180)%360;
+    let err=0;
+    for(const g of samples){
+      const air=Math.sqrt((g.x-wx)*(g.x-wx)+(g.y-wy)*(g.y-wy));
+      err += Math.abs(air-iasKmh);
+    }
+    err/=samples.length;
+    const span=circularSpan(samples.map(s=>s.trk));
+    let quality='LOW';
+    if(samples.length>=8 && span>=60 && err<18) quality='GOOD';
+    else if(samples.length>=5 && span>=35 && err<28) quality='EST';
+    return {fromDir,speedKmh,speedKt:kt(speedKmh), err, span, n:samples.length, quality};
+  }
+  function btn(id){return document.getElementById(id);}
+  function updateUi(){
+    const b=btn('windEstBtn'), i=btn('windIasBtn'), s=btn('windEstStatus');
+    if(i) i.textContent = 'IAS ' + Math.round(iasKmh);
+    if(b){
+      b.classList.toggle('active', enabled);
+      if(lastResult && enabled) b.textContent = 'WIND ' + fmt3(lastResult.fromDir) + '/' + Math.round(lastResult.speedKt);
+      else b.textContent = enabled ? 'WIND ON' : 'WIND';
+    }
+    if(s){
+      if(!enabled) s.textContent='WIND EST: OFF';
+      else if(lastResult) s.textContent=`WIND ${fmt3(lastResult.fromDir)}/${Math.round(lastResult.speedKt)} kt ${lastResult.quality} | IAS ${Math.round(iasKmh)} | ${lastResult.n} δείγματα`;
+      else s.textContent=`WIND EST: περιμένει σταθερή κίνηση / αλλαγές πορείας | IAS ${Math.round(iasKmh)}`;
+    }
+  }
+  function setIas(){
+    const v=prompt('IAS σε km/h για υπολογισμό ανέμου', String(Math.round(iasKmh)));
+    if(v===null) return;
+    const n=Number(String(v).replace(',','.'));
+    if(!isFinite(n) || n<60 || n>350){ alert('Βάλε IAS 60-350 km/h.'); return; }
+    iasKmh=n; localStorage.setItem(LS_IAS,String(iasKmh));
+    samples=[]; lastAccepted=null; lastResult=null;
+    updateUi();
+  }
+  function toggleWind(){
+    if(!enabled){
+      const v=prompt('IAS σε km/h για WIND EST', String(Math.round(iasKmh)));
+      if(v===null) return;
+      const n=Number(String(v).replace(',','.'));
+      if(!isFinite(n) || n<60 || n>350){ alert('Βάλε IAS 60-350 km/h.'); return; }
+      iasKmh=n; localStorage.setItem(LS_IAS,String(iasKmh));
+      samples=[]; lastAccepted=null; lastResult=null;
+      enabled=true;
+    } else {
+      enabled=false;
+    }
+    localStorage.setItem(LS_ON, enabled?'1':'0');
+    updateUi();
+  }
+  function initWindUi(){
+    if(document.getElementById('windEstBtn')) { updateUi(); return; }
+    const style=document.createElement('style');
+    style.textContent=`
+      .windSplit{display:flex!important;gap:0!important;overflow:hidden!important;border-radius:10px!important;}
+      .windSplit button{width:50%!important;margin:0!important;border-radius:0!important;min-width:0!important;}
+      .windSplit button:first-child{border-radius:10px 0 0 10px!important;}
+      .windSplit button:last-child{border-radius:0 10px 10px 0!important;}
+      #windEstStatus{font-size:11px;line-height:1.1;color:#dfffe0;background:rgba(0,0,0,.45);border-radius:8px;padding:4px 6px;text-align:center;white-space:pre-line;}
+      @media(max-width:700px){#windEstStatus{font-size:9px;padding:3px 4px}.windSplit button{font-size:9px!important;}}
+    `;
+    document.head.appendChild(style);
+    const panel=document.querySelector('.map-actions');
+    if(!panel) return;
+    const box=document.createElement('div');
+    box.className='splitControl windSplit';
+    box.innerHTML='<button id="windEstBtn" class="secondary" type="button">WIND</button><button id="windIasBtn" class="secondary" type="button">IAS 180</button>';
+    const status=document.createElement('div');
+    status.id='windEstStatus';
+    const search=panel.querySelector('.searchCombo');
+    if(search && search.nextSibling){ panel.insertBefore(status, search.nextSibling); panel.insertBefore(box, status); }
+    else { panel.appendChild(box); panel.appendChild(status); }
+    btn('windEstBtn').addEventListener('click', toggleWind);
+    btn('windIasBtn').addEventListener('click', setIas);
+    updateUi();
+  }
+  window.pzlWindEstFeed=function(now, speedKmh, trackDeg){
+    if(!enabled) return;
+    if(!speedKmh || !isFinite(speedKmh) || speedKmh<80 || !isFinite(trackDeg)) { updateUi(); return; }
+    const t=now instanceof Date ? now.getTime() : Date.now();
+    if(lastAccepted && t-lastAccepted.t<1800) return;
+    if(lastAccepted){
+      const dt=(t-lastAccepted.t)/1000;
+      const ds=Math.abs(speedKmh-lastAccepted.speed)/Math.max(dt,1);
+      const dh=Math.abs((((trackDeg-lastAccepted.trk+540)%360)-180))/Math.max(dt,1);
+      // κόβουμε έντονες επιταχύνσεις/στροφές, για πιο καθαρά δείγματα
+      if(ds>8 || dh>12) { lastAccepted={t, speed:speedKmh, trk:trackDeg}; updateUi(); return; }
+    }
+    const r=deg2radLocal(trackDeg);
+    const x=speedKmh*Math.sin(r); // East component
+    const y=speedKmh*Math.cos(r); // North component
+    samples.push({t, speed:speedKmh, trk:((trackDeg%360)+360)%360, x, y});
+    if(samples.length>28) samples=samples.slice(samples.length-28);
+    lastAccepted={t, speed:speedKmh, trk:trackDeg};
+    lastResult=solveWind();
+    updateUi();
+  };
+  window.pzlWindEstReset=function(){ samples=[]; lastAccepted=null; lastResult=null; updateUi(); };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initWindUi); else initWindUi();
+  setTimeout(initWindUi,700); setTimeout(initWindUi,1800);
+})();
+</script>
+
+
+<!-- FIX37D70_WIND_EST_IAS_GPS_VECTORS_ON_D69 -->
 </body>
 </html>

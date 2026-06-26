@@ -1,4 +1,1 @@
-FIX37D68: action panel can move lower like HUD and pinch zoom is stabilized.
-
-
-FIX37D69: Μεταφορά λογικής D33 για υπολογισμό ρίψεων/περιορισμών, Manual Practice και Airborne Full Tank πάνω στο UI της D68.
+FIX37D70: D69 base kept. Added WIND EST mode: input IAS, estimate wind from GPS ground-vector samples across different tracks. UI/aesthetic D69 preserved.
