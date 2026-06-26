@@ -1,1 +1,1 @@
-D77: stable D74 + dynamic GS recalculation every 10 seconds after GS>100. Fixed command button hang by avoiding overlapping calculations.
+D74: Ζωντανό Από τώρα/εντολή ως countdown/αρχικός χρόνος και αφοπλισμός Fire μετά από SRCH.
