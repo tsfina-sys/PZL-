@@ -1,1 +1,1 @@
-D72: Διορθώνει τη στήλη «Από τώρα/εντολή» ώστε να δείχνει ζωντανά υπόλοιπο/αρχικός χρόνος, π.χ. 29'/30', με αυτόματη ανανέωση. Βάση: D70.
+D73: Live drop countdown pair in Από τώρα/εντολή (remaining/original), and SRCH disarms Fire selection to prevent accidental map tap changes.
