@@ -1663,7 +1663,7 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
     let lastAirborneTick = null;
     let calculatedFuelBurnedL = 0;
     let lastHeavyCalcTime = 0;
-    const heavyCalcIntervalMs = 10000; // βαριοί υπολογισμοί ανά 10''
+    const heavyCalcIntervalMs = 30000; // βαριοί υπολογισμοί ανά 30''
     const airborneStartSpeedKmh = 100;
     const airborneStopSpeedKmh = 30;
     let viaMarkers = [];
@@ -2332,6 +2332,7 @@ function setFireMarker() {
       updateBaseMarker(); calculate(); try { updateHsiHud(); } catch(e) {} });
     document.getElementById("takeoffBtn").addEventListener("click", () => {
       commandTime = new Date();
+      try { pzlD77LastDynamicRecalcMs = 0; } catch(e) {}
       window.pzlManualCommandTimeActive = false;
       window.manualNewFireCommandTime = null;
       gpsTestModeASimNow = new Date(commandTime.getTime());
@@ -2531,6 +2532,7 @@ function setFireMarker() {
           try { if (window.pzlWindEstFeed) window.pzlWindEstFeed(now, speedKmh, currentGps.heading); } catch(e) {}
 
           handleAutoTakeoffFullStop(speedKmh, now);
+          try { pzlD77MaybeRecalculateFromGs(speedKmh, now); } catch(e) {}
           updateAirborneAndFuel(now, speedKmh);
 
           // Compact Live GPS panel: GS and coordinates are already visible in the HUD.
@@ -3053,28 +3055,51 @@ function setFireMarker() {
       try {
         if (typeof newFireWithWaterMode !== "undefined" && newFireWithWaterMode) return 0;
       } catch(e) {}
-      try {
-        // D76: Στο έδαφος: εντολή + 15'. Μετά την πρώτη πραγματική Α/Γ (GS > 100):
-        // χρησιμοποιείται η πραγματική διαφορά Α/Γ - εντολής.
-        if (typeof autoActualTakeoffTime !== "undefined" && autoActualTakeoffTime && typeof commandTime !== "undefined" && commandTime) {
-          const m = (autoActualTakeoffTime.getTime() - commandTime.getTime()) / 60000;
-          if (isFinite(m) && m >= 0) return m;
-        }
-      } catch(e) {}
       return (typeof getInitialTakeoffDelayMin === "function") ? getInitialTakeoffDelayMin() : 15;
     }
 
-    function getOperationalSpeedKmPerMin() {
+
+    // FIX37D77: δυναμικός υπολογισμός μετά την πραγματική Α/Γ.
+    // Στο έδαφος: Εντολή + 15' και GS 180 km/h.
+    // Μόλις GPS GS > 100: κρατά πραγματική ώρα Α/Γ και μετά οι χρόνοι
+    // ρίψεων επανυπολογίζονται με την πραγματική GS ανά 10''.
+    let pzlD77LastDynamicRecalcMs = 0;
+    let pzlD77CalcRunning = false;
+
+    function pzlD77CurrentGsKmhForCalc() {
       try {
-        const gps = (typeof currentGps !== "undefined" && currentGps) ? currentGps : null;
-        const speedKmh = gps && gps.speedMps !== null && gps.speedMps !== undefined && !isNaN(gps.speedMps)
-          ? Number(gps.speedMps) * 3.6
-          : null;
-        const hasRealTakeoff = (typeof autoActualTakeoffTime !== "undefined" && autoActualTakeoffTime);
-        // Στο έδαφος κρατάει 180. Στον αέρα χρησιμοποιεί πραγματική GS όταν είναι αξιόπιστη.
-        if (hasRealTakeoff && speedKmh && isFinite(speedKmh) && speedKmh > 30) return speedKmh / 60;
+        if (currentGps && currentGps.speedMps !== null && !isNaN(currentGps.speedMps)) {
+          const kmh = currentGps.speedMps * 3.6;
+          if (kmh > 30) return kmh;
+        }
       } catch(e) {}
-      return (typeof speedKmPerMin !== "undefined" && speedKmPerMin) ? speedKmPerMin : 3;
+      return 180;
+    }
+
+    function pzlD77CalcSpeedKmPerMin() {
+      return Math.max(0.5, pzlD77CurrentGsKmhForCalc() / 60);
+    }
+
+    function pzlD77EffectiveInitialDelayMin(calcCmd) {
+      try {
+        if (typeof newFireWithWaterMode !== "undefined" && newFireWithWaterMode) return 0;
+        const tk = autoActualTakeoffTime || actualTakeoffTime || takeoffTime || window.manualActualTakeoffTimeForNewFire || null;
+        if (tk && calcCmd) return Math.max(0, (tk.getTime() - calcCmd.getTime()) / 60000);
+      } catch(e) {}
+      return getInitialTakeoffDelayMin();
+    }
+
+    function pzlD77MaybeRecalculateFromGs(speedKmh, now) {
+      try {
+        if (!commandTime || !firePoint) return;
+        if (speedKmh === null || isNaN(speedKmh) || speedKmh <= 100) return;
+        const t = now ? now.getTime() : Date.now();
+        if (t - pzlD77LastDynamicRecalcMs < 10000) return;
+        pzlD77LastDynamicRecalcMs = t;
+        if (pzlD77CalcRunning) return;
+        pzlD77CalcRunning = true;
+        Promise.resolve(calculate()).catch(function(e){ console.warn('D77 dynamic calculate', e); }).finally(function(){ pzlD77CalcRunning = false; });
+      } catch(e) { try { pzlD77CalcRunning = false; } catch(_) {} }
     }
 
 
@@ -3203,6 +3228,8 @@ function setFireMarker() {
       const D = (newFireWithWaterMode && firstLegDistanceKm !== null) ? firstLegDistanceKm : normalD;
       const calcCommandTime = (newFireWithWaterMode && newFireCalcStartTime) ? newFireCalcStartTime : commandTime;
       const fmtUntilFromCalcCommand = (targetTime) => pzlFormatDropCountdownPair(targetTime, calcCommandTime);
+      const calcSpeedKmPerMin = (typeof pzlD77CalcSpeedKmPerMin === "function") ? pzlD77CalcSpeedKmPerMin() : speedKmPerMin;
+      const calcInitialDelayMin = (typeof pzlD77EffectiveInitialDelayMin === "function") ? pzlD77EffectiveInitialDelayMin(calcCommandTime) : getEffectiveInitialDelayMin();
 
       updateWindResult();
       updateFireWindResult();
@@ -3224,12 +3251,11 @@ function setFireMarker() {
         const approachLegD = (approachRouteD !== null) ? approachRouteD : ((newFireWithWaterMode && normalD !== null) ? normalD : D);
         const finalReturnLegD = (finalReturnRouteD !== null) ? finalReturnRouteD : returnLegD;
         const cycleDistanceKm = returnLegD + approachLegD;
-        const opSpeedKmPerMin = getOperationalSpeedKmPerMin();
-        const cycleMin = returnLegD/opSpeedKmPerMin + getRefillTakeoffDelayMin() + approachLegD/opSpeedKmPerMin;
-        const firstLegMin = D/opSpeedKmPerMin + attackCircuitMin;
-        const finalReturnMin = finalReturnLegD/opSpeedKmPerMin;
-        const firstDrop = addMinutes(calcCommandTime, getEffectiveInitialDelayMin() + D/opSpeedKmPerMin + attackCircuitMin);
-        const firstTakeoff = addMinutes(calcCommandTime, getEffectiveInitialDelayMin());
+        const cycleMin = returnLegD/calcSpeedKmPerMin + getRefillTakeoffDelayMin() + approachLegD/calcSpeedKmPerMin;
+        const firstLegMin = D/calcSpeedKmPerMin + attackCircuitMin;
+        const finalReturnMin = finalReturnLegD/calcSpeedKmPerMin;
+        const firstDrop = addMinutes(calcCommandTime, calcInitialDelayMin + D/calcSpeedKmPerMin + attackCircuitMin);
+        const firstTakeoff = addMinutes(calcCommandTime, calcInitialDelayMin);
 
         // FIX37D333:
         // Το maxDrops πρέπει να ελέγχεται από την πραγματική ώρα Α/Γ έως την τελική Π/Γ.
@@ -3277,7 +3303,7 @@ const base = bases[selectedBaseName];
         const fullStopForTf = bases[fullStopForTfName] || base;
         const fullStopAlt = airports[fullStopForTf.alt || fullStopForTf.ref];
         const altD = fullStopAlt ? haversineKm({lat: fullStopForTf.lat, lon: fullStopForTf.lon}, fullStopAlt) : 0;
-        const altTimeMin = altD / opSpeedKmPerMin;
+        const altTimeMin = altD / speedKmPerMin;
 
         let limiting = "ΚΑΙ ΤΑ ΔΥΟ";
         if (maxBy3Hours < maxByCutoff) limiting = "3 ΩΡΕΣ";
@@ -3376,8 +3402,7 @@ const base = bases[selectedBaseName];
       autoActualTakeoffTime = dt;
       const el = document.getElementById("actualTakeoffClock");
       if (el) el.textContent = "Ώρα Α/Γ: " + fmtTime(dt);
-      // D76: μόλις ανιχνευθεί πραγματική Α/Γ (GS > 100), ενημέρωσε άμεσα τους υπολογισμούς.
-      try { setTimeout(function(){ if (typeof calculate === "function") calculate(); }, 0); } catch(e) {}
+      try { pzlD77LastDynamicRecalcMs = 0; } catch(e) {}
     }
 
     function setAutoFullStop(dt) {

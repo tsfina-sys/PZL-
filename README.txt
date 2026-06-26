@@ -1,1 +1,1 @@
-D76: βάση D74. Δυναμική ενημέρωση ρίψεων κάθε 10 sec στον αέρα με πραγματική GS και πραγματική ώρα Α/Γ, χωρίς το κόλλημα του D75.
+D77: stable D74 + dynamic GS recalculation every 10 seconds after GS>100. Fixed command button hang by avoiding overlapping calculations.
