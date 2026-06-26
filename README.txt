@@ -1,1 +1,1 @@
-FIX37D66: δεξί panel με ελεύθερη μετακίνηση σε όλη την οθόνη και pinch zoom.
+FIX37D67: Action panel free drag in both axes within viewport; pinch zoom kept.
