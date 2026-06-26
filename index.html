@@ -1366,7 +1366,7 @@ function getStoredOrPromptTakeoffTimeForNewFire(allowPrompt = true, useCommandFa
 
     if (!allowPrompt) return null;
 
-    // FIX37D33:
+    // FIX37D41:
     // Αν ανοίξουμε την εφαρμογή ενώ είμαστε ήδη airborne και δεν έχει πατηθεί
     // Εντολή/Manual Εντολή, το Airborne Full Tank ζητά ώρα πραγματικής Α/Γ.
     // Αυτή αποθηκεύεται ως Α/Γ, ενώ στο πεδίο/λογική της εντολής μπαίνει Α/Γ - 15'.
@@ -1416,7 +1416,7 @@ function getStoredOrPromptTakeoffTimeForNewFire(allowPrompt = true, useCommandFa
 
 function pzlGetScenarioNowForNewFire() {
   try {
-    // FIX37D3332: σε manual mode η χειροκίνητη ώρα υπερισχύει τυχόν παλιάς gpsTestModeASimNow.
+    // FIX37D4132: σε manual mode η χειροκίνητη ώρα υπερισχύει τυχόν παλιάς gpsTestModeASimNow.
     if (window.pzlManualCommandTimeActive && typeof commandTime !== "undefined" && commandTime) {
       return new Date(commandTime.getTime());
     }
@@ -2722,9 +2722,10 @@ function setFireMarker() {
         if (dropsDiv) dropsDiv.innerHTML = "";
 
         mode = "fire";
+        fireSelectionArmed = true;
         const fireBtn = document.getElementById("fireModeBtn");
         const viaBtn = document.getElementById("viaModeBtn");
-        if (fireBtn) fireBtn.className = "active";
+        updateFireModeButtonState();
         if (viaBtn) viaBtn.className = "secondary";
         const modeLabel = document.getElementById("modeLabel");
         if (modeLabel) modeLabel.textContent = "Φωτιά";
@@ -2957,41 +2958,28 @@ function setFireMarker() {
 
         resetAutoTakeoffFullStopDisplays();
 
-        const fixedManualTime = (typeof pzlNormalizeManualTime === "function") ? pzlNormalizeManualTime(input.value) : String(input.value || "").trim();
+        const fixedManualTime = pzlNormalizeManualTime(input.value);
         if (!fixedManualTime) { alert("Βάλε ώρα σε μορφή HH:MM ή 1000."); return false; }
         input.value = fixedManualTime;
-
-        const scenarioNow = (typeof gpsTestModeASimNow !== "undefined" && gpsTestModeASimNow) ? new Date(gpsTestModeASimNow.getTime()) : new Date();
         const [hh, mm] = fixedManualTime.split(":").map(Number);
-        const d = new Date(scenarioNow.getFullYear(), scenarioNow.getMonth(), scenarioNow.getDate(), hh, mm, 0, 0);
+        const d = new Date();
+        d.setHours(hh, mm, 0, 0);
 
-        // Η χειροκίνητη ώρα είναι ΩΡΑ ΕΝΤΟΛΗΣ Α/Γ.
-        // Η πραγματική Α/Γ για τους υπολογισμούς είναι εντολή + 15'.
+        // Σημαντικό: η χειροκίνητη ώρα είναι ΕΝΤΟΛΗ Α/Γ.
+        // Η πραγματική Α/Γ υπολογίζεται μετά με +15'.
         commandTime = d;
         window.pzlManualCommandTimeActive = true;
         window.manualNewFireCommandTime = null;
 
         try {
           const manualActual = new Date(commandTime.getTime() + getInitialTakeoffDelayMin() * 60000);
-
-          // Κρίσιμο: συγχρονίζουμε ΟΛΕΣ τις εσωτερικές ώρες, όπως στη D33,
-          // ώστε Manual Practice να μπορεί να χρησιμοποιηθεί μετά και από Airborne Full Tank.
-          if (typeof gpsTestModeASimNow !== "undefined") gpsTestModeASimNow = new Date(commandTime.getTime());
-          if (typeof gpsTestModeATakeoffSimTime !== "undefined") gpsTestModeATakeoffSimTime = new Date(manualActual.getTime());
-          if (typeof newFireActualTakeoffTime !== "undefined") newFireActualTakeoffTime = new Date(manualActual.getTime());
-          if (typeof actualTakeoffTime !== "undefined") actualTakeoffTime = new Date(manualActual.getTime());
-          if (typeof autoActualTakeoffTime !== "undefined") autoActualTakeoffTime = new Date(manualActual.getTime());
-          if (typeof takeoffTime !== "undefined") takeoffTime = new Date(manualActual.getTime());
-          window.manualActualTakeoffTimeForNewFire = new Date(manualActual.getTime());
-
-          const tko = document.getElementById("actualTakeoffClock");
-          if (tko) tko.textContent = "Ώρα Α/Γ: " + fmtTime(manualActual);
+          if (typeof gpsTestModeATakeoffSimTime !== "undefined") gpsTestModeATakeoffSimTime = manualActual;
+          if (typeof newFireActualTakeoffTime !== "undefined") newFireActualTakeoffTime = manualActual;
         } catch(e) {}
 
         const cmdEl = document.getElementById("commandClock");
         if (cmdEl) cmdEl.textContent = "Ώρα Εντολής Α/Γ: " + fmtTime(commandTime);
 
-        if (typeof setTakeoffModeButtons === "function") setTakeoffModeButtons("manual");
         calculate();
         return true;
       } catch(e) {
@@ -3158,6 +3146,32 @@ function setFireMarker() {
         const cutoffInfo = await getCutoffTime();
         if (calcId !== lastCalcId) return;
 
+        // FIX37D62: Align TF/Cutoff date with the active command/scenario date.
+        // This prevents stale/previous-day TF cache or UTC date shifts from giving
+        // "Μέγιστες ρίψεις: 0 / ΑΝΕΠΑΡΚΗΣ ΧΡΟΝΟΣ" during morning Manual Practice
+        // or Airborne Full Tank scenarios while the displayed first drop is valid.
+        try {
+          if (calcCommandTime && cutoffInfo && cutoffInfo.cutoff) {
+            const y = calcCommandTime.getFullYear(), m = calcCommandTime.getMonth(), d = calcCommandTime.getDate();
+            const alignDate = (dt) => {
+              if (!dt) return dt;
+              const x = new Date(dt.getTime());
+              x.setFullYear(y, m, d);
+              return x;
+            };
+            cutoffInfo.sunset = alignDate(cutoffInfo.sunset);
+            cutoffInfo.twilight = alignDate(cutoffInfo.twilight);
+            cutoffInfo.cutoff = alignDate(cutoffInfo.cutoff);
+            // If the scenario is a morning test and an old/UTC-shifted cutoff still falls before it,
+            // move TF/Cutoff to the next evening. Do not mask real evening-after-cutoff cases.
+            if (cutoffInfo.cutoff.getTime() <= calcCommandTime.getTime() && calcCommandTime.getHours() < 12) {
+              cutoffInfo.sunset.setDate(cutoffInfo.sunset.getDate() + 1);
+              cutoffInfo.twilight.setDate(cutoffInfo.twilight.getDate() + 1);
+              cutoffInfo.cutoff.setDate(cutoffInfo.cutoff.getDate() + 1);
+            }
+          }
+        } catch(e) {}
+
         const returnLegD = (returnRouteD !== null) ? returnRouteD : ((refillCycleD !== null) ? refillCycleD : D);
         const approachLegD = (approachRouteD !== null) ? approachRouteD : ((newFireWithWaterMode && normalD !== null) ? normalD : D);
         const finalReturnLegD = (finalReturnRouteD !== null) ? finalReturnRouteD : returnLegD;
@@ -3168,7 +3182,7 @@ function setFireMarker() {
         const firstDrop = addMinutes(calcCommandTime, getEffectiveInitialDelayMin() + D/speedKmPerMin + attackCircuitMin);
         const firstTakeoff = addMinutes(calcCommandTime, getEffectiveInitialDelayMin());
 
-        // FIX37D333:
+        // FIX37D413:
         // Το maxDrops πρέπει να ελέγχεται από την πραγματική ώρα Α/Γ έως την τελική Π/Γ.
         // Πριν, στο newFireWithWaterMode χρησιμοποιούσε "remaining airborne" από άλλη εσωτερική ώρα
         // και μπορούσε να βγάζει: "Ώρα πρώτης ρίψης" αλλά "Μέγιστες ρίψεις: 0".
@@ -3187,7 +3201,7 @@ function setFireMarker() {
           else break;
         }
 
-        // FIX37D33: hard stop στο Cutoff = ΤΦ - χρόνος full stop/εναλλακτικού.
+        // FIX37D41: hard stop στο Cutoff = ΤΦ - χρόνος full stop/εναλλακτικού.
         // Αν η εντολή είναι ήδη μετά το cutoff, ή αν η τελική Π/Γ μετά από ρίψη
         // βγει μετά το cutoff, τότε δεν επιτρέπεται ρίψη.
         let availableToCutoffMin = (cutoffInfo.cutoff.getTime()-calcCommandTime.getTime())/60000;
@@ -3579,24 +3593,21 @@ const base = bases[selectedBaseName];
           tk = getStoredOrPromptTakeoffTimeForNewFire(true, false);
         }
         if (!tk) {
-          setNewFireWithWaterStatus("Airborne Full Tank: ακυρώθηκε. Χρειάζεται πραγματική ώρα Α/Γ.");
+          setNewFireWithWaterStatus("Νέα φωτιά με νερό: ακυρώθηκε. Χρειάζεται πραγματική ώρα Α/Γ, όχι ώρα εντολής +15'.");
           return;
         }
 
-        // D69/D33 logic: κρατάμε Α/Γ και την αντίστοιχη εντολή, αλλά μηδενίζουμε μόνο τη φωτιά/route.
-        newFireActualTakeoffTime = new Date(tk.getTime());
-        window.manualActualTakeoffTimeForNewFire = new Date(tk.getTime());
-        if (!commandTime) commandTime = new Date(tk.getTime() - getInitialTakeoffDelayMin() * 60000);
-
+        // Κρατάμε την αρχική ώρα Α/Γ, αλλά μηδενίζουμε τα στοιχεία της προηγούμενης φωτιάς.
+        newFireActualTakeoffTime = tk;
         newFireCalcStartTime = pzlGetScenarioNowForNewFire();
+        if (!commandTime) commandTime = new Date(newFireCalcStartTime.getTime());
         newFireWithWaterMode = true;
         newFireStartPoint = {lat: currentGps.lat, lon: currentGps.lon};
 
         resetMissionForNewFireWithWater();
 
-        setNewFireWithWaterStatus("Ενεργό: κρατήθηκε η ώρα Α/Γ " + fmtTime(tk) + ". Πάτησε στον χάρτη για τη νέα φωτιά.");
-        try { calculate(); } catch(e) {}
-        alert("Airborne Full Tank: κρατήθηκε η ώρα Α/Γ. Πάτησε στον χάρτη για το νέο σημείο φωτιάς.");
+        setNewFireWithWaterStatus("Ενεργό: έγινε reset αποστολής, κρατήθηκε η ώρα Α/Γ " + fmtTime(tk) + ". Πάτησε στον χάρτη για τη νέα φωτιά.");
+        alert("Νέα φωτιά με νερό: έγινε reset αλλά κρατήθηκε η ώρα Α/Γ. Πάτησε στον χάρτη για το νέο σημείο φωτιάς.");
       });
     }
 
@@ -5965,7 +5976,5 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 })();
 </script>
 
-
-<!-- FIX37D69_D33_DROP_LOGIC_ON_D68_UI -->
 </body>
 </html>
