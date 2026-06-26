@@ -1824,9 +1824,21 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
         setFireMarker();
         fireSelectionArmed = false;
         updateFireModeButtonState();
-      } else {
+      } else if (mode === "via") {
         viaPoints.push({lat:e.latlng.lat, lon:e.latlng.lng});
         addViaMarker(e.latlng, viaPoints.length);
+        // FIX37D63: μετά από κάθε WPT μετάβασης, αφοπλίζει αυτόματα.
+        // Για επόμενο WPT πρέπει να ξαναπατηθεί το WPT ώστε να γίνει πράσινο.
+        mode = "none";
+        const viaBtn = document.getElementById("viaModeBtn");
+        if (viaBtn) {
+          viaBtn.className = "secondary";
+          viaBtn.title = "WPT μετάβασης: πάτησε για ενεργοποίηση πριν βάλεις σημείο στον χάρτη";
+        }
+      } else {
+        const result = document.getElementById("result");
+        if (result) result.textContent = "Επιλογή WPT ανενεργή: πάτησε πρώτα WPT ή WPT RTB.";
+        return;
       }
       calculate();
     });
@@ -2391,9 +2403,15 @@ function setFireMarker() {
       mode="via";
       fireSelectionArmed = false;
       viaModeBtn.className="active";
+      viaModeBtn.title = "WPT μετάβασης ενεργό — πάτησε στον χάρτη για 1 σημείο";
       updateFireModeButtonState();
     });
-    document.getElementById("clearViaBtn").addEventListener("click", clearViaMarkers);
+    document.getElementById("clearViaBtn").addEventListener("click", () => {
+      clearViaMarkers();
+      mode = "none";
+      const viaBtn = document.getElementById("viaModeBtn");
+      if (viaBtn) viaBtn.className = "secondary";
+    });
 
     document.getElementById("lockMapBtn").addEventListener("click", () => {
       mapLocked = !mapLocked;
@@ -2787,6 +2805,20 @@ function setFireMarker() {
       updateReturnWpStatus();
       updateReturnWpLine();
       try { updateReturnToGpsDistanceBox(); } catch(e) {} // UPDATE_RETURN_DISTANCE_AFTER_RETURN_WP_CHANGE
+      // FIX37D63: μετά από κάθε WPT RTB, αφοπλίζει αυτόματα.
+      // Για επόμενο WPT RTB πρέπει να ξαναπατηθεί το WPT RTB ώστε να γίνει πράσινο.
+      try {
+        returnWpMode = false;
+        if (modeBeforeReturnWp && typeof mode !== "undefined") mode = modeBeforeReturnWp;
+        modeBeforeReturnWp = null;
+        const btn = document.getElementById("returnWpBtn");
+        if (btn) {
+          btn.classList.remove("return-wp-active");
+          btn.className = "secondary";
+          btn.title = "WPT RTB: πάτησε για ενεργοποίηση πριν βάλεις σημείο στον χάρτη";
+        }
+        updateReturnWpStatus();
+      } catch(e) {}
       calculate();
     }
 
@@ -4341,7 +4373,11 @@ const base = bases[selectedBaseName];
         }
 
         const btn = document.getElementById("returnWpBtn");
-        if (btn) btn.classList.toggle("return-wp-active", returnWpMode);
+        if (btn) {
+          btn.classList.toggle("return-wp-active", returnWpMode);
+          btn.className = returnWpMode ? "active return-wp-active" : "secondary";
+          btn.title = returnWpMode ? "WPT RTB ενεργό — πάτησε στον χάρτη για 1 σημείο επιστροφής" : "WPT RTB: πάτησε για ενεργοποίηση πριν βάλεις σημείο στον χάρτη";
+        }
 
         const st = document.getElementById("returnWpStatus");
         if (st) {
