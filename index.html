@@ -2454,13 +2454,7 @@ function setFireMarker() {
         const data = await res.json();
         if (!data.length) return alert("Δεν βρέθηκε περιοχή.");
         firePoint = {lat:parseFloat(data[0].lat), lon:parseFloat(data[0].lon), label:data[0].display_name};
-        setFireMarker();
-        // Μετά το SRCH η φωτιά θεωρείται επιλεγμένη και το Fire αφοπλίζει,
-        // ώστε να μην αλλάξει κατά λάθος με επόμενο tap στον χάρτη.
-        fireSelectionArmed = false;
-        mode = "none";
-        updateFireModeButtonState();
-        map.setView([firePoint.lat,firePoint.lon],10); calculate();
+        setFireMarker(); map.setView([firePoint.lat,firePoint.lon],10); calculate();
       } catch(e) { alert("Σφάλμα αναζήτησης περιοχής."); }
     });
 
@@ -2671,46 +2665,6 @@ function setFireMarker() {
     }
 
     let lastCalcId = 0;
-
-    function pzlFormatMinutesForDrop(mins) {
-      if (!Number.isFinite(mins)) return "-";
-      mins = Math.max(0, Math.round(mins));
-      const h = Math.floor(mins / 60);
-      const m = mins % 60;
-      return h > 0 ? `${h}ω ${m}'` : `${m}'`;
-    }
-
-    function pzlNowForDropCountdown() {
-      // Πραγματικό τώρα: ο αριστερός χρόνος πρέπει να κατεβαίνει ζωντανά μετά την Εντολή.
-      return new Date();
-    }
-
-    function pzlFormatDropCountdownPair(targetTime, baseTime) {
-      if (!targetTime || !baseTime) return "-";
-      const targetMs = targetTime instanceof Date ? targetTime.getTime() : Number(targetTime);
-      const baseMs = baseTime instanceof Date ? baseTime.getTime() : Number(baseTime);
-      if (!Number.isFinite(targetMs) || !Number.isFinite(baseMs)) return "-";
-      const nowMs = pzlNowForDropCountdown().getTime();
-      const remainingMin = (targetMs - nowMs) / 60000;
-      const initialMin = (targetMs - baseMs) / 60000;
-      return `${pzlFormatMinutesForDrop(remainingMin)}/${pzlFormatMinutesForDrop(initialMin)}`;
-    }
-
-    function pzlUpdateLiveDropCountdownCells() {
-      try {
-        document.querySelectorAll(".drop-countdown-cell").forEach((cell) => {
-          const dropMs = Number(cell.getAttribute("data-drop-ms"));
-          const baseMs = Number(cell.getAttribute("data-base-ms"));
-          if (Number.isFinite(dropMs) && Number.isFinite(baseMs)) {
-            cell.textContent = pzlFormatDropCountdownPair(dropMs, baseMs);
-          }
-        });
-      } catch(e) {}
-    }
-
-    if (!window.__pzlDropCountdownTimer) {
-      window.__pzlDropCountdownTimer = setInterval(pzlUpdateLiveDropCountdownCells, 1000);
-    }
     
     function fmtUntilFromCommand(targetTime) {
       if (!commandTime || !targetTime) return "-";
@@ -3181,7 +3135,13 @@ function setFireMarker() {
       const firstLegDistanceKm = newFireFirstLegDistanceKm();
       const D = (newFireWithWaterMode && firstLegDistanceKm !== null) ? firstLegDistanceKm : normalD;
       const calcCommandTime = (newFireWithWaterMode && newFireCalcStartTime) ? newFireCalcStartTime : commandTime;
-      const fmtUntilFromCalcCommand = (targetTime) => pzlFormatDropCountdownPair(targetTime, calcCommandTime);
+      const fmtUntilFromCalcCommand = (targetTime) => {
+        if (!calcCommandTime || !targetTime) return "-";
+        const mins = Math.max(0, Math.round((targetTime.getTime() - calcCommandTime.getTime()) / 60000));
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return h > 0 ? `${h}ω ${m}'` : `${m}'`;
+      };
 
       updateWindResult();
       updateFireWindResult();
@@ -3309,12 +3269,11 @@ const base = bases[selectedBaseName];
           html += "<table class=\"drop-table\"><tr><th>#</th><th>Ώρα</th><th>Από τώρα/εντολή</th></tr>";
           for (let i=1; i<=maxDrops; i++) {
             const dropTime = addMinutes(firstDrop, (i-1)*cycleMin);
-            html += `<tr><td>${i}</td><td>${fmtTime(dropTime)}</td><td class="drop-countdown-cell" data-drop-ms="${dropTime.getTime()}" data-base-ms="${calcCommandTime.getTime()}">${pzlFormatDropCountdownPair(dropTime, calcCommandTime)}</td></tr>`;
+            html += `<tr><td>${i}</td><td>${fmtTime(dropTime)}</td><td>${fmtUntilFromCalcCommand(dropTime)}</td></tr>`;
           }
           html += "</table>";
         }
         dropsDiv.innerHTML = html;
-        pzlUpdateLiveDropCountdownCells();
 
         updateFuel(maxDrops, D, altD, missionDurationMin);
 
@@ -6156,90 +6115,5 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <!-- FIX37D70_WIND_EST_IAS_GPS_VECTORS_ON_D69 -->
-
-
-<!-- FIX37D74: robust live Από τώρα/εντολή countdown + SRCH disarms Fire -->
-<style id="fix37d74-fire-disarm-css">
-  #fireModeBtn.fire-disarmed,
-  .fireSplit #fireModeBtn.fire-disarmed{
-    background:#6b7280 !important;
-    background-color:#6b7280 !important;
-    color:#fff !important;
-  }
-  #fireModeBtn.fire-armed,
-  .fireSplit #fireModeBtn.fire-armed{
-    background:#157347 !important;
-    background-color:#157347 !important;
-    color:#fff !important;
-  }
-</style>
-<script id="fix37d74-live-countdown-fire-disarm">
-(function(){
-  function fmtM(mins){
-    if(!isFinite(mins)) return '-';
-    mins=Math.max(0, Math.round(mins));
-    var h=Math.floor(mins/60), m=mins%60;
-    return h>0 ? (h+'ω '+m+"'") : (m+"'");
-  }
-  function updateDropPairs(){
-    var now=Date.now();
-    document.querySelectorAll('td.drop-countdown-cell[data-drop-ms][data-base-ms]').forEach(function(td){
-      var drop=Number(td.getAttribute('data-drop-ms'));
-      var base=Number(td.getAttribute('data-base-ms'));
-      if(!isFinite(drop)||!isFinite(base)) return;
-      var left=(drop-now)/60000;
-      var right=(drop-base)/60000;
-      td.textContent=fmtM(left)+'/'+fmtM(right);
-    });
-  }
-  window.pzlD74UpdateDropPairs=updateDropPairs;
-  if(window.__pzlD74DropTimer) clearInterval(window.__pzlD74DropTimer);
-  window.__pzlD74DropTimer=setInterval(updateDropPairs, 1000);
-  document.addEventListener('DOMContentLoaded', function(){
-    updateDropPairs();
-    var drops=document.getElementById('drops') || document.body;
-    try{
-      new MutationObserver(updateDropPairs).observe(drops,{childList:true,subtree:true,characterData:true});
-    }catch(e){}
-  });
-  setTimeout(updateDropPairs,300);
-  setTimeout(updateDropPairs,1200);
-
-  function forceFireDisarmed(){
-    try{ window.fireSelectionArmed=false; }catch(e){}
-    try{ window.mode='none'; }catch(e){}
-    var btn=document.getElementById('fireModeBtn');
-    if(btn){
-      btn.classList.remove('active','fire-armed');
-      btn.classList.add('secondary','fire-disarmed');
-      btn.style.backgroundColor='#6b7280';
-      btn.title='Fire ανενεργό μετά το SRCH — πάτησε Fire για αλλαγή φωτιάς';
-    }
-  }
-  function forceFireArmed(){
-    var btn=document.getElementById('fireModeBtn');
-    if(btn){
-      btn.classList.remove('secondary','fire-disarmed');
-      btn.classList.add('active','fire-armed');
-      btn.style.backgroundColor='';
-    }
-  }
-  document.addEventListener('DOMContentLoaded', function(){
-    var search=document.getElementById('searchBtn');
-    if(search){
-      search.addEventListener('click', function(){
-        setTimeout(forceFireDisarmed, 300);
-        setTimeout(forceFireDisarmed, 1200);
-        setTimeout(forceFireDisarmed, 2500);
-      }, true);
-    }
-    var fire=document.getElementById('fireModeBtn');
-    if(fire){
-      fire.addEventListener('click', function(){ setTimeout(forceFireArmed, 0); }, true);
-    }
-  });
-})();
-</script>
-
 </body>
 </html>

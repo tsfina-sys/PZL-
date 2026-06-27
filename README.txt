@@ -1,1 +1,1 @@
-D74: Ζωντανό Από τώρα/εντολή ως countdown/αρχικός χρόνος και αφοπλισμός Fire μετά από SRCH.
+FIX37D70: D69 base kept. Added WIND EST mode: input IAS, estimate wind from GPS ground-vector samples across different tracks. UI/aesthetic D69 preserved.
