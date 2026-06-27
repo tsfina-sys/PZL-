@@ -1,1 +1,3 @@
-PZL_FIX37D71_FIRE_SRCH_DISARM_FROM_D70
+PZL_FIX37D72_AIRBORNE_FULL_TANK_FIRE_ARMED_FROM_D70
+Base: D71 from D70
+Change: Airborne Full Tank arms Fire map selection immediately.

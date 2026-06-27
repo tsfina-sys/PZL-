@@ -2728,12 +2728,16 @@ function setFireMarker() {
         if (dropsDiv) dropsDiv.innerHTML = "";
 
         mode = "fire";
+        // D72: Airborne Full Tank πρέπει να οπλίζει πραγματικά την επιλογή νέας φωτιάς.
+        // Πριν το κουμπί Fire φαινόταν πράσινο, αλλά fireSelectionArmed έμενε false
+        // από προηγούμενο SRCH/επιλογή και το tap στον χάρτη αγνοούνταν.
+        fireSelectionArmed = true;
         const fireBtn = document.getElementById("fireModeBtn");
         const viaBtn = document.getElementById("viaModeBtn");
-        if (fireBtn) fireBtn.className = "active";
         if (viaBtn) viaBtn.className = "secondary";
         const modeLabel = document.getElementById("modeLabel");
         if (modeLabel) modeLabel.textContent = "Φωτιά";
+        updateFireModeButtonState();
 
         drawAll();
       } catch(e) {
