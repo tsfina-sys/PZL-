@@ -2454,7 +2454,12 @@ function setFireMarker() {
         const data = await res.json();
         if (!data.length) return alert("Δεν βρέθηκε περιοχή.");
         firePoint = {lat:parseFloat(data[0].lat), lon:parseFloat(data[0].lon), label:data[0].display_name};
-        setFireMarker(); map.setView([firePoint.lat,firePoint.lon],10); calculate();
+        setFireMarker();
+        // FIX37D71: μετά από επιτυχημένο SRCH, αφοπλίζει το Fire ώστε να μη μπει κατά λάθος άλλη φωτιά με tap στον χάρτη.
+        mode = "fire";
+        fireSelectionArmed = false;
+        updateFireModeButtonState();
+        map.setView([firePoint.lat,firePoint.lon],10); calculate();
       } catch(e) { alert("Σφάλμα αναζήτησης περιοχής."); }
     });
 

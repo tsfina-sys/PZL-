@@ -1,1 +1,1 @@
-FIX37D70: D69 base kept. Added WIND EST mode: input IAS, estimate wind from GPS ground-vector samples across different tracks. UI/aesthetic D69 preserved.
+D71 από D70: μετά από επιτυχημένο SRCH, το Fire γίνεται γκρι/ανενεργό ώστε να μη μπει κατά λάθος νέο σημείο φωτιάς με tap στον χάρτη.
