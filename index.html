@@ -2529,14 +2529,56 @@ function setFireMarker() {
         .replace(/ς/g,'σ');
     }
 
+    // FIX37D75: Καθάρισμα διπλών αποτελεσμάτων SRCH.
+    // Το Nominatim μπορεί να επιστρέψει το ίδιο χωριό 2-3 φορές με διαφορετικό osm_id.
+    // Κρατάμε μόνο ένα όταν έχει ίδιο εμφανιζόμενο όνομα ή όταν είναι πρακτικά το ίδιο σημείο.
+    function pzlSearchMainName(item) {
+      const a = (item && item.address) || {};
+      return a.village || a.town || a.city || a.hamlet || a.suburb || a.municipality || ((item && item.display_name) || '').split(',')[0] || '';
+    }
+
+    function pzlDistanceMeters(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const toRad = d => d * Math.PI / 180;
+      const p1 = toRad(lat1), p2 = toRad(lat2);
+      const dp = toRad(lat2 - lat1), dl = toRad(lon2 - lon1);
+      const a = Math.sin(dp/2) * Math.sin(dp/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) * Math.sin(dl/2);
+      return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
     function pzlUniqueSearchResults(items) {
-      const seen = new Set();
+      const seenOsm = new Set();
+      const seenLabel = new Set();
+      const seenCoord = new Set();
       const out = [];
       (items || []).forEach(item => {
-        if (!item) return;
-        const key = item.osm_type + ':' + item.osm_id + ':' + item.lat + ':' + item.lon;
-        if (seen.has(key)) return;
-        seen.add(key);
+        if (!item || item.lat == null || item.lon == null) return;
+
+        const lat = parseFloat(item.lat);
+        const lon = parseFloat(item.lon);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+        const osmKey = item.osm_type + ':' + item.osm_id;
+        if (seenOsm.has(osmKey)) return;
+
+        const labelKey = pzlNormalizeSearchText(pzlShortSearchLabel(item)).replace(/\s+/g, ' ').trim();
+        if (labelKey && seenLabel.has(labelKey)) return;
+
+        // Περίπου ίδιο σημείο: 4 δεκαδικά ~= 11 μ.
+        const coordKey = lat.toFixed(4) + ',' + lon.toFixed(4);
+        if (seenCoord.has(coordKey)) return;
+
+        const mainKey = pzlNormalizeSearchText(pzlSearchMainName(item)).replace(/\s+/g, ' ').trim();
+        const isNearDuplicate = out.some(prev => {
+          const plat = parseFloat(prev.lat), plon = parseFloat(prev.lon);
+          const prevMain = pzlNormalizeSearchText(pzlSearchMainName(prev)).replace(/\s+/g, ' ').trim();
+          return mainKey && prevMain === mainKey && pzlDistanceMeters(lat, lon, plat, plon) < 500;
+        });
+        if (isNearDuplicate) return;
+
+        seenOsm.add(osmKey);
+        if (labelKey) seenLabel.add(labelKey);
+        seenCoord.add(coordKey);
         out.push(item);
       });
       return out;
