@@ -2514,13 +2514,64 @@ function setFireMarker() {
       });
     }
 
+    // FIX37D74: πιο πλήρης αναζήτηση SRCH για συνωνυμίες (π.χ. Πέτρα Λέσβου/Μυτιλήνης).
+    async function pzlFetchSearchResults(query, limit) {
+      const url = "https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=" +
+        encodeURIComponent(String(limit || 20)) + "&countrycodes=gr&q=" + encodeURIComponent(query);
+      const res = await fetch(url, {headers:{"Accept":"application/json"}});
+      if (!res.ok) return [];
+      return await res.json();
+    }
+
+    function pzlNormalizeSearchText(v) {
+      return String(v || '').toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+        .replace(/ς/g,'σ');
+    }
+
+    function pzlUniqueSearchResults(items) {
+      const seen = new Set();
+      const out = [];
+      (items || []).forEach(item => {
+        if (!item) return;
+        const key = item.osm_type + ':' + item.osm_id + ':' + item.lat + ':' + item.lon;
+        if (seen.has(key)) return;
+        seen.add(key);
+        out.push(item);
+      });
+      return out;
+    }
+
+    function pzlScoreSearchResult(item, q) {
+      const text = pzlNormalizeSearchText((item.display_name || '') + ' ' + JSON.stringify(item.address || {}));
+      const nq = pzlNormalizeSearchText(q);
+      let score = 0;
+      if (text.includes(nq)) score += 50;
+      if (text.includes('λεσβ') || text.includes('μυτιλην') || text.includes('βορειο αιγαιο')) score += 25;
+      if (text.includes('περιφερεια ελλαδ')) score += 4;
+      if ((item.class || '') === 'place') score += 6;
+      const type = item.type || '';
+      if (['village','town','city','hamlet','municipality'].includes(type)) score += 8;
+      return score;
+    }
+
+    async function pzlSearchGreekPlaces(q) {
+      // Πρώτα γενικά με μεγάλο limit, μετά στοχευμένες αναζητήσεις για γνωστή επιχειρησιακή περιοχή Λέσβου.
+      const queries = [q, q + ' Ελλάδα', q + ' Λέσβος', q + ' Μυτιλήνη', q + ' Βόρειο Αιγαίο'];
+      const batches = [];
+      for (const qq of queries) {
+        try { batches.push(...await pzlFetchSearchResults(qq, 25)); } catch(e) {}
+      }
+      return pzlUniqueSearchResults(batches)
+        .sort((a,b) => pzlScoreSearchResult(b,q) - pzlScoreSearchResult(a,q))
+        .slice(0, 20);
+    }
+
     document.getElementById("searchBtn").addEventListener("click", async () => {
       const q = document.getElementById("searchBox").value.trim();
       if (!q) return;
       try {
-        const url = "https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&countrycodes=gr&q=" + encodeURIComponent(q);
-        const res = await fetch(url, {headers:{"Accept":"application/json"}});
-        const data = await res.json();
+        const data = await pzlSearchGreekPlaces(q);
         if (!data.length) return alert("Δεν βρέθηκε περιοχή.");
         const chosen = await pzlChooseSearchResult(data);
         if (!chosen) return;
