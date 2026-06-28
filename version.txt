@@ -1,3 +1,3 @@
-PZL_FIX37D72_AIRBORNE_FULL_TANK_FIRE_ARMED_FROM_D70
-Base: D71 from D70
-Change: Airborne Full Tank arms Fire map selection immediately.
+PZL_FIX37D73_SEARCH_CHOICES_FROM_D72
+Βάση: D72
+Αλλαγή: SRCH εμφανίζει λίστα επιλογής όταν υπάρχουν πολλαπλά αποτελέσματα/συνωνυμία.

@@ -824,6 +824,28 @@ body.pzl-screen-locked #lockMapBtn {
   .fireSplit button,.commandSplit button{font-size:8.3px!important;}
 }
 
+
+/* FIX37D73: επιλογή αποτελέσματος SRCH όταν υπάρχει συνωνυμία */
+#searchChoicesPanel{
+  position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:min(92vw,520px); max-height:78vh; overflow:auto;
+  background:rgba(15,23,42,.98); color:#f8fafc; z-index:10050;
+  border:1px solid rgba(255,255,255,.25); border-radius:12px; padding:12px;
+  box-shadow:0 12px 36px rgba(0,0,0,.55); font-size:14px;
+}
+#searchChoicesPanel .srchTitle{font-weight:800; margin-bottom:8px;}
+#searchChoicesPanel .srchHint{font-size:12px; opacity:.85; margin-bottom:8px;}
+#searchChoicesPanel button.srchChoice{
+  display:block; width:100%; text-align:left; margin:6px 0; padding:9px 10px;
+  border-radius:9px; border:1px solid rgba(255,255,255,.18);
+  background:#1f2937; color:#fff; font-weight:700; line-height:1.25;
+}
+#searchChoicesPanel button.srchChoice:active{transform:scale(.99);}
+#searchChoicesPanel button.srchCancel{
+  width:100%; margin-top:8px; padding:8px 10px; border-radius:9px;
+  background:#6b7280; color:#fff; border:0; font-weight:800;
+}
+
 </style>
 
 <style id="fix37d9-panel-visible">
@@ -2445,21 +2467,71 @@ function setFireMarker() {
       }
     });
 
+
+    // FIX37D73: SRCH με επιλογή αποτελέσματος όταν υπάρχουν συνωνυμίες.
+    function pzlShortSearchLabel(item) {
+      const a = item.address || {};
+      const main = a.village || a.town || a.city || a.hamlet || a.suburb || a.municipality || (item.display_name || '').split(',')[0] || 'Αποτέλεσμα';
+      const parts = [];
+      const municipality = a.municipality || a.city_district || a.county;
+      const region = a.state || a.region;
+      if (municipality && municipality !== main) parts.push(municipality);
+      if (region && region !== municipality && region !== main) parts.push(region);
+      let label = main + (parts.length ? ' — ' + parts.join(', ') : '');
+      const full = item.display_name || '';
+      if (full && !label.includes(full.split(',')[0])) label += ' — ' + full.split(',').slice(0,3).join(',');
+      return label;
+    }
+
+    function pzlChooseSearchResult(results) {
+      return new Promise((resolve) => {
+        const old = document.getElementById('searchChoicesPanel');
+        if (old) old.remove();
+        if (!results || results.length <= 1) { resolve(results && results[0]); return; }
+
+        const panel = document.createElement('div');
+        panel.id = 'searchChoicesPanel';
+        panel.innerHTML = '<div class="srchTitle">Βρέθηκαν ' + results.length + ' αποτελέσματα</div>' +
+          '<div class="srchHint">Επίλεξε το σωστό σημείο φωτιάς:</div>';
+
+        results.forEach((item, idx) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'srchChoice';
+          b.textContent = (idx + 1) + '. ' + pzlShortSearchLabel(item);
+          b.title = item.display_name || b.textContent;
+          b.addEventListener('click', () => { panel.remove(); resolve(item); });
+          panel.appendChild(b);
+        });
+
+        const cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.className = 'srchCancel';
+        cancel.textContent = 'Άκυρο';
+        cancel.addEventListener('click', () => { panel.remove(); resolve(null); });
+        panel.appendChild(cancel);
+        document.body.appendChild(panel);
+      });
+    }
+
     document.getElementById("searchBtn").addEventListener("click", async () => {
       const q = document.getElementById("searchBox").value.trim();
       if (!q) return;
       try {
-        const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=gr&q=" + encodeURIComponent(q);
+        const url = "https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&countrycodes=gr&q=" + encodeURIComponent(q);
         const res = await fetch(url, {headers:{"Accept":"application/json"}});
         const data = await res.json();
         if (!data.length) return alert("Δεν βρέθηκε περιοχή.");
-        firePoint = {lat:parseFloat(data[0].lat), lon:parseFloat(data[0].lon), label:data[0].display_name};
+        const chosen = await pzlChooseSearchResult(data);
+        if (!chosen) return;
+        firePoint = {lat:parseFloat(chosen.lat), lon:parseFloat(chosen.lon), label:chosen.display_name};
         setFireMarker();
         // FIX37D71: μετά από επιτυχημένο SRCH, αφοπλίζει το Fire ώστε να μη μπει κατά λάθος άλλη φωτιά με tap στον χάρτη.
         mode = "fire";
         fireSelectionArmed = false;
         updateFireModeButtonState();
-        map.setView([firePoint.lat,firePoint.lon],10); calculate();
+        const zoom = data.length > 1 ? 12 : 10;
+        map.setView([firePoint.lat,firePoint.lon], zoom); calculate();
       } catch(e) { alert("Σφάλμα αναζήτησης περιοχής."); }
     });
 
