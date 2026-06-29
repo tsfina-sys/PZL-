@@ -1194,7 +1194,7 @@ body.pzl-screen-locked #lockMapBtn {
         <div id="hudFireArrow" class="hsiArrow hsiFire"></div>
         <div class="hsiLabel refill">REFILL<span id="hudRefillName" class="hsiAirport">-</span><span id="hudRefillBrg">---</span>°<span class="hsiMetric">| <span id="hudRefillKm">-</span> km</span><span class="hsiMetric">| <span id="hudRefillEta">-</span></span></div>
         <div class="hsiLabel full">FULL STOP<span id="hudFullName" class="hsiAirport">-</span><span id="hudFullBrg">---</span>°<span class="hsiMetric">| <span id="hudFullKm">-</span> km</span><span class="hsiMetric">| <span id="hudFullEta">-</span></span></div>
-        <div class="hsiLabel fire">FIRE<span id="hudFireName" class="hsiAirport">-</span><span id="hudFireBrg">---</span>°<span class="hsiMetric">| <span id="hudFireKm">-</span> km</span><span class="hsiMetric">| <span id="hudFireEta">-</span></span></div>
+        <div class="hsiLabel fire"><span id="hudFireBrg">---</span>°<br><span class="hsiMetric"><span id="hudFireKm">-</span> km / <span id="hudFireEta">-</span></span></div>
         <div class="hsiPos"><span id="hudLat">N--°--.--'</span><br><span id="hudLon">E---°--.--'</span></div>
       </div>
       <div class="hsiControls"><button id="hudGpsAltBtn" type="button">GPS</button><button id="hudBaroAltBtn" type="button">BARO</button></div>
@@ -2272,7 +2272,7 @@ function setFireMarker() {
       setHudText("hudRefillEta", refKm !== null ? fmtHudEta((refKm / etaSpeed) * 60) : "-");
       setHudText("hudFullEta", fullKm !== null ? fmtHudEta((fullKm / etaSpeed) * 60) : "-");
       setHudText("hudFireEta", fireKm !== null ? fmtHudEta((fireKm / etaSpeed) * 60) : "-");
-      setHudText("hudFireName", firePt ? "ΦΩΤΙΑ" : "-");
+      
       const refA=document.getElementById("hudRefillArrow");
       const fullA=document.getElementById("hudFullArrow");
       const fireA=document.getElementById("hudFireArrow");
