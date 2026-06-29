@@ -1177,7 +1177,7 @@ body.pzl-screen-locked #lockMapBtn {
 <body><button id="metarWindBtn" class="metar-off" onclick="pzlRefreshCheckwxMetars()" style="position:absolute;z-index:1000;top:52px;left:6px">METAR</button>
 <div id="app">
   <div id="mapWrap">
-    <header><span>PZL Mission Tool v8.2 D76</span><span>Cockpit</span></header>
+    <header><span>PZL Mission Tool v8.2 D60</span><span>Cockpit</span></header>
     <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><div class="splitControl topGpsSplit"><button id="gpsBtn">GPS</button><button id="useGpsAsStartBtn" class="secondary">Αφετηρία</button></div><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="toggleActionsBtn" class="secondary" title="Εμφάνιση/απόκρυψη δεξιού πάνελ">PNL</button><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button></div>
 <div id="map"></div><div id="metarWindStatus"></div>
     <div id="hsiHud" aria-label="HSI HUD">
@@ -1191,10 +1191,8 @@ body.pzl-screen-locked #lockMapBtn {
         
         <div id="hudRefillArrow" class="hsiArrow hsiRefill"></div>
         <div id="hudFullArrow" class="hsiArrow hsiFull"></div>
-        <div id="hudFireArrow" class="hsiArrow hsiFire"></div>
         <div class="hsiLabel refill">REFILL<span id="hudRefillName" class="hsiAirport">-</span><span id="hudRefillBrg">---</span>°<span class="hsiMetric">| <span id="hudRefillKm">-</span> km</span><span class="hsiMetric">| <span id="hudRefillEta">-</span></span></div>
         <div class="hsiLabel full">FULL STOP<span id="hudFullName" class="hsiAirport">-</span><span id="hudFullBrg">---</span>°<span class="hsiMetric">| <span id="hudFullKm">-</span> km</span><span class="hsiMetric">| <span id="hudFullEta">-</span></span></div>
-        <div class="hsiLabel fire">FIRE<span id="hudFireName" class="hsiAirport">-</span><span id="hudFireBrg">---</span>°<span class="hsiMetric">| <span id="hudFireKm">-</span> km</span><span class="hsiMetric">| <span id="hudFireEta">-</span></span></div>
         <div class="hsiPos"><span id="hudLat">N--°--.--'</span><br><span id="hudLon">E---°--.--'</span></div>
       </div>
       <div class="hsiControls"><button id="hudGpsAltBtn" type="button">GPS</button><button id="hudBaroAltBtn" type="button">BARO</button></div>
@@ -2255,38 +2253,27 @@ function setFireMarker() {
       setHudText("hudFullName", fullName || "-");
       const refPt = hudPointForAirport(refillName);
       const fullPt = hudPointForAirport(fullName);
-      const firePt = (typeof firePoint !== "undefined" && firePoint) ? {lat:Number(firePoint.lat), lon:Number(firePoint.lon)} : null;
       const brRef = (pos && refPt) ? bearingDeg(pos, refPt) : null;
       const brFull = (pos && fullPt) ? bearingDeg(pos, fullPt) : null;
-      const brFire = (pos && firePt) ? bearingDeg(pos, firePt) : null;
       setHudText("hudRefillBrg", fmtHudDeg(brRef));
       setHudText("hudFullBrg", fmtHudDeg(brFull));
-      setHudText("hudFireBrg", fmtHudDeg(brFire));
       const refKm = (pos && refPt) ? haversineKm(pos, refPt) : null;
       const fullKm = (pos && fullPt) ? haversineKm(pos, fullPt) : null;
-      const fireKm = (pos && firePt) ? haversineKm(pos, firePt) : null;
       const etaSpeed = (gs !== null && gs > 30) ? gs : 180;
       setHudText("hudRefillKm", fmtHudKm(refKm));
       setHudText("hudFullKm", fmtHudKm(fullKm));
-      setHudText("hudFireKm", fmtHudKm(fireKm));
       setHudText("hudRefillEta", refKm !== null ? fmtHudEta((refKm / etaSpeed) * 60) : "-");
       setHudText("hudFullEta", fullKm !== null ? fmtHudEta((fullKm / etaSpeed) * 60) : "-");
-      setHudText("hudFireEta", fireKm !== null ? fmtHudEta((fireKm / etaSpeed) * 60) : "-");
-      setHudText("hudFireName", firePt ? "ΦΩΤΙΑ" : "-");
       const refA=document.getElementById("hudRefillArrow");
       const fullA=document.getElementById("hudFullArrow");
-      const fireA=document.getElementById("hudFireArrow");
       // Οι DCT γραμμές είναι σωστές. Το συγκεκριμένο CSS arrow δείχνει 180° αντίθετα
       // από την οπτική φορά του HSI, άρα εφαρμόζουμε +180° ΜΟΝΟ στην περιστροφή του γραφικού.
       const relRef=(brRef===null||hdg===null)?brRef:((brRef-hdg+360)%360);
       const relFull=(brFull===null||hdg===null)?brFull:((brFull-hdg+360)%360);
-      const relFire=(brFire===null||hdg===null)?brFire:((brFire-hdg+360)%360);
       const drawRef = relRef===null ? 0 : ((relRef + 180) % 360);
       const drawFull = relFull===null ? 0 : ((relFull + 180) % 360);
-      const drawFire = relFire===null ? 0 : ((relFire + 180) % 360);
       if(refA){ refA.style.transform = `rotate(${drawRef}deg)`; refA.style.opacity = (brRef===null ? ".25" : ".95"); }
       if(fullA){ fullA.style.transform = `rotate(${drawFull}deg)`; fullA.style.opacity = (brFull===null ? ".25" : ".95"); }
-      if(fireA){ fireA.style.transform = `rotate(${drawFire}deg)`; fireA.style.opacity = (brFire===null ? ".18" : ".97"); }
       const baroBtn=document.getElementById("hudBaroAltBtn"), qnh=document.getElementById("hudQnhBox");
       updateGpsLiveUi();
       if(baroBtn){
@@ -6302,18 +6289,5 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <!-- FIX37D70_WIND_EST_IAS_GPS_VECTORS_ON_D69 -->
-
-
-<style id="fix37d76-hud-fire-needle-css">
-/* D76: red HUD needle and FIRE data, matching REFILL/FULL STOP */
-#hsiHud .hsiFire{color:#ff3b30 !important;background:#ff3b30 !important;z-index:4 !important;}
-#hsiHud .hsiLabel.fire{left:50% !important;right:auto !important;transform:translateX(-50%) !important;bottom:38px !important;text-align:center !important;color:#ff4b3e !important;font-weight:900 !important;max-width:60px !important;}
-#hsiHud .hsiLabel.fire .hsiAirport{color:#ff4b3e !important;}
-#hsiHud #hudFireBrg{font-size:10px !important;font-weight:900 !important;}
-@media(max-width:700px){
-  #hsiHud .hsiLabel.fire{bottom:30px !important;max-width:48px !important;font-size:7.2px !important;line-height:.92 !important;}
-  #hsiHud #hudFireBrg{font-size:8px !important;}
-}
-</style>
 </body>
 </html>

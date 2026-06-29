@@ -1,2 +1,8 @@
-Placeholder for HUD FIRE NEEDLE FIXED version.
-(Original file regenerated placeholder)
+PZL Mission Tool - FIX37D75
+
+Βάση: D74_SEARCH_CHOICES_MORE_RESULTS_FROM_D72.
+
+Αλλαγή:
+- Στη λίστα επιλογής SRCH αφαιρούνται διπλές εγγραφές για το ίδιο χωριό/σημείο.
+- Αν το Nominatim επιστρέψει το ίδιο χωριό με διαφορετικό osm_id ή σχεδόν ίδιες συντεταγμένες, εμφανίζεται μόνο μία επιλογή.
+- Διαφορετικά POI, όπως μουσείο ή ξεχωριστό σημείο, παραμένουν στη λίστα όταν είναι χρήσιμα.
