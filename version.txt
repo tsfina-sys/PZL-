@@ -1,8 +1,7 @@
-PZL_COORD_LIVE_FORMAT_PREVIEW_20260630H
+PZL_COORD_GO_SAME_PREVIEW_FIX_20260630I
 Built 2026-06-30
-- The raw LAT/LON digits are interpreted independently as DD, DDM and DMS.
-- Tapping DD, DDM or DMS immediately moves the fire marker and updates HUD needles, route and calculations.
-- Fire stays green during previews.
-- GO commits the selected format and then turns Fire grey.
-- Closing Coord or editing the digits before GO restores the previous fire point.
-- Fire gating and cache clearing remain enabled.
+- GO now commits the exact latitude/longitude currently shown in the preview.
+- DD, DDM and DMS previews remain different interpretations of the raw digits.
+- The selected preview point is passed internally as decimal degrees to avoid the old DDM/DMS parser error.
+- Fire remains green while previewing and turns grey only after GO.
+- Cache identifier updated.

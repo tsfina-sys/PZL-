@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_COORD_LIVE_FORMAT_PREVIEW_20260630H">
+<meta name="pzl-build" content="PZL_COORD_GO_SAME_PREVIEW_FIX_20260630I">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -6611,7 +6611,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_COORD_LIVE_FORMAT_PREVIEW_20260630H */
+/* PZL_COORD_GO_SAME_PREVIEW_FIX_20260630I */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
@@ -7045,14 +7045,24 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
       previewSelected();
     }));
 
-    // Mark GO as a commit before the application's normal handler turns Fire grey.
+    // Commit exactly the same numeric point that is currently previewed.
+    // We pass it to the existing application handler as DD, avoiding the
+    // older DDM/DMS text parser that could reuse the latitude as longitude.
     searchButton.addEventListener('click', function(){
       if(searchButton.disabled) return;
+
+      const candidate = candidates[selected];
+      if(!candidate) return;
+
+      hiddenInput.value =
+        Number(candidate.lat).toFixed(10) + ', ' +
+        Number(candidate.lon).toFixed(10);
+      modeSelect.value = 'dd';
       commitPending = true;
     }, true);
 
     searchButton.addEventListener('click', function(){
-      if(searchButton.disabled) return;
+      if(!commitPending) return;
       previewActive = false;
       originalFirePoint = null;
       commitPending = false;
