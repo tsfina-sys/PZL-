@@ -214,7 +214,7 @@
 #hsiHud .hsiHdg{top:24px;left:69px;color:#a7ff77;}
 #hsiHud .hsiGs{top:68px;left:55px;width:80px;background:transparent;border:0;font-size:12px;}
 #hsiHud .hsiGs strong{display:block;font-size:28px;line-height:26px;}
-#hsiHud .hsiAlt{bottom:66px;left:78px;color:#ffca45;font-size:20px;font-weight:800;text-align:center;}
+#hsiHud .hsiAlt{bottom:76px;left:78px;color:#ffca45;font-size:20px;font-weight:800;text-align:center;}
 #hsiHud .hsiPos{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:11px;font-weight:700;line-height:1.15;}
 #hsiHud .hsiPlane{position:absolute;left:83px;top:91px;font-size:22px;transform:translate(-50%,-50%);}
 #hsiHud .hsiArrow{position:absolute;left:94px;top:94px;width:3px;height:74px;transform-origin:50% 0;opacity:.95;}
@@ -304,7 +304,7 @@
   #hsiHud .hsiHdg{ top:18px !important; left:46px !important; }
   #hsiHud .hsiGs{ top:45px !important; left:35px !important; width:62px !important; }
   #hsiHud .hsiGs strong{ font-size:18px !important; line-height:18px !important; }
-  #hsiHud .hsiAlt{ bottom:31px !important; left:40px !important; }
+  #hsiHud .hsiAlt{ bottom:41px !important; left:40px !important; }
   #hsiHud .hsiPos{ bottom:12px !important; font-size:8px !important; line-height:1.05 !important; }
   #hsiHud .hsiPlane{ left:55px !important; top:64px !important; font-size:18px !important; }
   #hsiHud .hsiArrow{ left:66px !important; top:65px !important; height:48px !important; }
@@ -5167,12 +5167,21 @@ const base = bases[selectedBaseName];
   bottom:22px !important;
   font-weight:900 !important;
 }
+#hsiHud #hudRefillBrg,
+#hsiHud #hudFullBrg,
+#hsiHud .hsiMetric{
+  position:relative !important;
+  top:-7px !important;
+}
 @media(max-width:700px){
   #hsiHud .hsiRoseLabel.cardinal,
   #hsiHud .hsiNorth,
   #hsiHud .hsiE,
   #hsiHud .hsiS,
   #hsiHud .hsiW{font-size:18px !important;}
+  #hsiHud #hudRefillBrg,
+  #hsiHud #hudFullBrg,
+  #hsiHud .hsiMetric{top:-6px !important;}
   #hsiHud .hsiLabel.refill{left:8px !important; bottom:46px !important;}
   #hsiHud .hsiLabel.full{right:8px !important; bottom:46px !important;}
   #hsiHud .hsiPos{bottom:16px !important;}
