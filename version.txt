@@ -1,6 +1,8 @@
-PZL_FIRE_REQUIRED_FIXED_20260630G
+PZL_COORD_LIVE_FORMAT_PREVIEW_20260630H
 Built 2026-06-30
-- Fixed screen-lock code that was re-enabling Area and Coord controls.
-- Area, SRCH, Coord, LAT, LON, DD, DDM, DMS and GO are now blocked unless Fire is green.
-- Added a capture-phase safety guard against accidental re-enabling.
-- Updated cache identifier.
+- The raw LAT/LON digits are interpreted independently as DD, DDM and DMS.
+- Tapping DD, DDM or DMS immediately moves the fire marker and updates HUD needles, route and calculations.
+- Fire stays green during previews.
+- GO commits the selected format and then turns Fire grey.
+- Closing Coord or editing the digits before GO restores the previous fire point.
+- Fire gating and cache clearing remain enabled.

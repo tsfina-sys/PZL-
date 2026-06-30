@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_FIRE_REQUIRED_FIXED_20260630G">
+<meta name="pzl-build" content="PZL_COORD_LIVE_FORMAT_PREVIEW_20260630H">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -6611,7 +6611,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_FIRE_REQUIRED_FIXED_20260630G */
+/* PZL_COORD_LIVE_FORMAT_PREVIEW_20260630H */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
@@ -6758,11 +6758,12 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     if(!toggle || !panel || !latInput || !lonInput || !hiddenInput || !modeSelect || !searchButton) return;
 
     searchButton.textContent = 'GO';
+
     let selected = 'ddm';
-    let formatted = null;
-    let displayParts = null;
-    let currentCoords = null;
-    let previewMarker = null;
+    let candidates = {dd:null, ddm:null, dms:null};
+    let originalFirePoint = null;
+    let previewActive = false;
+    let commitPending = false;
 
     function fireAccessEnabled(){
       return window.pzlFireSearchEnabled === true;
@@ -6771,155 +6772,264 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     function cleanDigits(input){
       const cleaned = String(input.value || '').replace(/\D/g,'');
       if(input.value !== cleaned) input.value = cleaned;
+      return cleaned;
     }
 
-    // Compact DDM without symbols. Examples: LAT 390315 => 39°03.15′, LON 0263626 => 026°36.26′.
-    function parseCompactDDM(raw, isLat){
+    function pad(value, width){
+      return String(value).padStart(width, '0');
+    }
+
+    function decimalText(digits, degreeDigits){
+      const deg = digits.slice(0, degreeDigits);
+      const decimals = digits.slice(degreeDigits);
+      return deg + (decimals ? '.' + decimals : '');
+    }
+
+    // The same raw digits are interpreted independently in all three formats.
+    // Example 392525 / 0232525:
+    // DD  = 39.2525 / 23.2525
+    // DDM = 39°25.25' / 023°25.25'
+    // DMS = 39°25'25" / 023°25'25"
+    function parseDD(raw, isLat){
+      const digits = String(raw || '').replace(/\D/g,'');
+      const degreeDigits = isLat ? 2 : 3;
+      if(digits.length <= degreeDigits) return null;
+
+      const deg = Number(digits.slice(0, degreeDigits));
+      const decimals = digits.slice(degreeDigits);
+      const value = Number(String(deg) + '.' + decimals);
+      const limit = isLat ? 90 : 180;
+      if(!Number.isFinite(value) || value > limit) return null;
+
+      return {
+        latlon:value,
+        display:decimalText(digits, degreeDigits),
+        input:String(value)
+      };
+    }
+
+    function parseDDM(raw, isLat){
       const digits = String(raw || '').replace(/\D/g,'');
       const degreeDigits = isLat ? 2 : 3;
       if(digits.length < degreeDigits + 2) return null;
-      const degrees = Number(digits.slice(0, degreeDigits));
-      const minuteWhole = Number(digits.slice(degreeDigits, degreeDigits + 2));
-      const minuteDecimals = digits.slice(degreeDigits + 2);
-      const fraction = minuteDecimals ? Number('0.' + minuteDecimals) : 0;
-      const minutes = minuteWhole + fraction;
+
+      const degText = digits.slice(0, degreeDigits);
+      const minWholeText = digits.slice(degreeDigits, degreeDigits + 2);
+      const minDecimalText = digits.slice(degreeDigits + 2);
+      const deg = Number(degText);
+      const minutes = Number(minWholeText + (minDecimalText ? '.' + minDecimalText : ''));
       const limit = isLat ? 90 : 180;
-      if(!Number.isFinite(degrees) || !Number.isFinite(minutes) || degrees > limit || minutes >= 60) return null;
-      const value = degrees + minutes / 60;
-      return value <= limit ? value : null;
-    }
+      if(!Number.isFinite(deg) || !Number.isFinite(minutes) || minutes >= 60) return null;
 
-    function pad(value, width){ return String(value).padStart(width, '0'); }
+      const value = deg + minutes / 60;
+      if(value > limit) return null;
 
-    function ddmPart(value, isLat){
       const hemi = isLat ? 'N' : 'E';
-      const width = isLat ? 2 : 3;
-      let deg = Math.floor(value);
-      let minutes = (value - deg) * 60;
-      if(Math.round(minutes * 10000) >= 600000){ deg += 1; minutes = 0; }
-      return hemi + pad(deg, width) + '°' + minutes.toFixed(4).padStart(7, '0') + '′';
+      const shownMinutes = minWholeText + (minDecimalText ? '.' + minDecimalText : '');
+      const display = hemi + pad(degText, degreeDigits) + '°' + shownMinutes + '′';
+      const input = hemi + pad(degText, degreeDigits) + '°' + shownMinutes + "'";
+      return {latlon:value, display:display, input:input};
     }
 
-    function dmsPart(value, isLat){
+    function parseDMS(raw, isLat){
+      const digits = String(raw || '').replace(/\D/g,'');
+      const degreeDigits = isLat ? 2 : 3;
+      if(digits.length < degreeDigits + 4) return null;
+
+      const degText = digits.slice(0, degreeDigits);
+      const minText = digits.slice(degreeDigits, degreeDigits + 2);
+      const secWholeText = digits.slice(degreeDigits + 2, degreeDigits + 4);
+      const secDecimalText = digits.slice(degreeDigits + 4);
+      const deg = Number(degText);
+      const min = Number(minText);
+      const sec = Number(secWholeText + (secDecimalText ? '.' + secDecimalText : ''));
+      const limit = isLat ? 90 : 180;
+      if(!Number.isFinite(deg) || !Number.isFinite(min) || !Number.isFinite(sec) || min >= 60 || sec >= 60) return null;
+
+      const value = deg + min / 60 + sec / 3600;
+      if(value > limit) return null;
+
       const hemi = isLat ? 'N' : 'E';
-      const width = isLat ? 2 : 3;
-      let deg = Math.floor(value);
-      let minutesFull = (value - deg) * 60;
-      let min = Math.floor(minutesFull);
-      let sec = Math.round((minutesFull - min) * 6000) / 100;
-      if(sec >= 60){ sec = 0; min += 1; }
-      if(min >= 60){ min = 0; deg += 1; }
-      return hemi + pad(deg, width) + '°' + pad(min, 2) + '′' + sec.toFixed(2).padStart(5, '0') + '″';
+      const shownSeconds = secWholeText + (secDecimalText ? '.' + secDecimalText : '');
+      const display = hemi + pad(degText, degreeDigits) + '°' + minText + '′' + shownSeconds + '″';
+      const input = hemi + pad(degText, degreeDigits) + '°' + minText + "'" + shownSeconds + '"';
+      return {latlon:value, display:display, input:input};
     }
 
-    function clearPreview(){
-      try {
-        if(previewMarker && typeof map !== 'undefined' && map) map.removeLayer(previewMarker);
-      } catch(e) {}
-      previewMarker = null;
+    function makeCandidate(format, latRaw, lonRaw){
+      const parser = format === 'dd' ? parseDD : (format === 'ddm' ? parseDDM : parseDMS);
+      const lat = parser(latRaw, true);
+      const lon = parser(lonRaw, false);
+      if(!lat || !lon) return null;
+
+      return {
+        format:format,
+        lat:lat.latlon,
+        lon:lon.latlon,
+        latDisplay:lat.display,
+        lonDisplay:lon.display,
+        input:format === 'dd'
+          ? String(lat.latlon) + ', ' + String(lon.latlon)
+          : lat.input + ' ' + lon.input
+      };
     }
 
-    function showPreview(){
-      if(!currentCoords || !formatted || !displayParts) return;
+    function copyFirePoint(point){
+      if(!point) return null;
+      return {
+        lat:Number(point.lat),
+        lon:Number(point.lon),
+        label:point.label || 'Φωτιά'
+      };
+    }
+
+    function redrawFirePoint(point, popupText){
       try {
         if(typeof map === 'undefined' || typeof L === 'undefined') return;
-        clearPreview();
-        const icon = L.divIcon({
-          className:'',
-          html:'<div class="coord-preview-pin">' + selected.toUpperCase() + '</div>',
-          iconSize:[30,30],
-          iconAnchor:[15,15]
-        });
-        previewMarker = L.marker([currentCoords.lat, currentCoords.lon], {
-          icon:icon,
-          zIndexOffset:2500,
-          keyboard:false
-        }).addTo(map);
-        previewMarker.bindPopup(
-          '<div class="coord-preview-popup"><b>Preview ' + selected.toUpperCase() + '</b><br>' +
-          displayParts[selected].lat + '<br>' + displayParts[selected].lon + '</div>'
-        ).openPopup();
-        const zoom = Math.max(Number(map.getZoom()) || 0, 13);
-        map.setView([currentCoords.lat, currentCoords.lon], zoom);
+
+        if(typeof fireMarker !== 'undefined' && fireMarker){
+          try { map.removeLayer(fireMarker); } catch(e) {}
+          fireMarker = null;
+        }
+
+        if(!point){
+          firePoint = null;
+          try { clearFireCircles(); } catch(e) {}
+          try { drawAll(); } catch(e) {}
+          try { calculate(); } catch(e) {}
+          return;
+        }
+
+        firePoint = copyFirePoint(point);
+        fireMarker = L.marker([firePoint.lat, firePoint.lon], {icon:fireIcon})
+          .addTo(map)
+          .bindPopup(popupText || 'Σημείο φωτιάς');
+
+        try { drawFireCircles(); } catch(e) {}
+        try { drawAll(); } catch(e) {}
+        try { calculate(); } catch(e) {}
       } catch(e) {
-        console.warn('Coord preview error', e);
+        console.warn('Coord fire preview error', e);
       }
+    }
+
+    function restoreOriginalFire(){
+      if(!previewActive) return;
+      previewActive = false;
+      redrawFirePoint(originalFirePoint, 'Σημείο φωτιάς');
+    }
+
+    function previewSelected(){
+      const candidate = candidates[selected];
+      if(!candidate || !fireAccessEnabled()) return;
+
+      previewActive = true;
+      redrawFirePoint(
+        {
+          lat:candidate.lat,
+          lon:candidate.lon,
+          label:'Προεπισκόπηση ' + selected.toUpperCase()
+        },
+        'Προεπισκόπηση ' + selected.toUpperCase()
+      );
+
+      try {
+        const zoom = Math.max(Number(map.getZoom()) || 0, 13);
+        map.setView([candidate.lat, candidate.lon], zoom);
+      } catch(e) {}
+
+      // Fire remains green until GO is pressed.
+      try {
+        fireSelectionArmed = true;
+        mode = 'fire';
+        updateFireModeButtonState();
+      } catch(e) {}
     }
 
     function renderValue(key){
       const el = values[key];
       if(!el) return;
-      if(!displayParts){
+      const candidate = candidates[key];
+
+      if(!candidate){
         el.textContent = '—';
         el.removeAttribute('title');
         return;
       }
-      el.innerHTML = '<span class="coordPart">' + displayParts[key].lat + '</span>' +
-                     '<span class="coordPart">' + displayParts[key].lon + '</span>';
-      el.title = formatted[key];
+
+      el.innerHTML =
+        '<span class="coordPart">' + candidate.latDisplay + '</span>' +
+        '<span class="coordPart">' + candidate.lonDisplay + '</span>';
+      el.title = candidate.input;
     }
 
     function syncSelection(){
       const access = fireAccessEnabled();
-      rows.forEach(row => row.classList.toggle('selected', row.dataset.format === selected));
+      rows.forEach(row => {
+        const key = row.dataset.format;
+        row.classList.toggle('selected', key === selected);
+        row.disabled = !access || !candidates[key];
+      });
+
       latInput.disabled = !access;
       lonInput.disabled = !access;
-      if(!formatted){
+
+      const candidate = candidates[selected];
+      if(!candidate){
         hiddenInput.value = '';
         searchButton.disabled = true;
         return;
       }
-      hiddenInput.value = formatted[selected];
+
+      hiddenInput.value = candidate.input;
       modeSelect.value = selected;
       searchButton.disabled = !access;
     }
 
     function refresh(){
-      cleanDigits(latInput);
-      cleanDigits(lonInput);
-      clearPreview();
-      const lat = parseCompactDDM(latInput.value, true);
-      const lon = parseCompactDDM(lonInput.value, false);
-      const valid = Number.isFinite(lat) && Number.isFinite(lon);
-      currentCoords = valid ? {lat:lat, lon:lon} : null;
-      if(valid){
-        const ddLat = lat.toFixed(7);
-        const ddLon = lon.toFixed(7);
-        const ddmLat = ddmPart(lat, true);
-        const ddmLon = ddmPart(lon, false);
-        const dmsLat = dmsPart(lat, true);
-        const dmsLon = dmsPart(lon, false);
-        displayParts = {
-          dd:{lat:ddLat, lon:ddLon},
-          ddm:{lat:ddmLat, lon:ddmLon},
-          dms:{lat:dmsLat, lon:dmsLon}
-        };
-        formatted = {
-          dd:ddLat + ', ' + ddLon,
-          ddm:ddmLat + ' ' + ddmLon,
-          dms:dmsLat + ' ' + dmsLon
-        };
-      } else {
-        displayParts = null;
-        formatted = null;
-      }
+      const latRaw = cleanDigits(latInput);
+      const lonRaw = cleanDigits(lonInput);
+
+      candidates = {
+        dd:makeCandidate('dd', latRaw, lonRaw),
+        ddm:makeCandidate('ddm', latRaw, lonRaw),
+        dms:makeCandidate('dms', latRaw, lonRaw)
+      };
+
       Object.keys(values).forEach(renderValue);
-      rows.forEach(row => row.disabled = !valid || !fireAccessEnabled());
       syncSelection();
     }
 
     toggle.addEventListener('click', function(){
       if(!fireAccessEnabled()) return;
+
+      const willOpen = panel.hidden;
+      if(willOpen){
+        originalFirePoint = copyFirePoint(
+          (typeof firePoint !== 'undefined') ? firePoint : null
+        );
+        previewActive = false;
+      } else {
+        restoreOriginalFire();
+      }
+
       panel.hidden = !panel.hidden;
       const open = !panel.hidden;
       toggle.classList.toggle('coord-open', open);
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      if(!open) clearPreview();
       if(open) setTimeout(() => latInput.focus(), 50);
     });
 
-    latInput.addEventListener('input', refresh);
-    lonInput.addEventListener('input', refresh);
+    latInput.addEventListener('input', function(){
+      restoreOriginalFire();
+      refresh();
+    });
+
+    lonInput.addEventListener('input', function(){
+      restoreOriginalFire();
+      refresh();
+    });
+
     [latInput, lonInput].forEach(input => input.addEventListener('keydown', function(event){
       if(event.key === 'Enter'){
         event.preventDefault();
@@ -6932,30 +7042,48 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
       if(row.disabled) return;
       selected = row.dataset.format || 'ddm';
       syncSelection();
-      showPreview();
+      previewSelected();
     }));
 
-    // The existing application handler finalizes the fire point. This listener only removes the temporary preview.
+    // Mark GO as a commit before the application's normal handler turns Fire grey.
     searchButton.addEventListener('click', function(){
       if(searchButton.disabled) return;
-      setTimeout(clearPreview, 0);
+      commitPending = true;
+    }, true);
+
+    searchButton.addEventListener('click', function(){
+      if(searchButton.disabled) return;
+      previewActive = false;
+      originalFirePoint = null;
+      commitPending = false;
     });
 
     window.addEventListener('pzl-fire-search-access', function(event){
       const enabled = !!(event && event.detail && event.detail.enabled);
+
       if(!enabled){
-        clearPreview();
+        if(!commitPending) restoreOriginalFire();
+        else {
+          previewActive = false;
+          originalFirePoint = null;
+        }
+
         panel.hidden = true;
         toggle.classList.remove('coord-open');
         toggle.setAttribute('aria-expanded', 'false');
       }
+
       refresh();
     });
 
     refresh();
   }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCoordFourRows);
-  else initCoordFourRows();
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initCoordFourRows);
+  } else {
+    initCoordFourRows();
+  }
 })();
 </script>
 
