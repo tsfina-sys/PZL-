@@ -1,0 +1,280 @@
+name: Build Coord ZIP
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare application ZIP contents
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/PZL--main
+          rsync -a --exclude='.git' --exclude='.github' --exclude='dist' ./ dist/PZL--main/
+
+      - name: Add Coord four-row converter
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          path = Path('dist/PZL--main/index.html')
+          text = path.read_text(encoding='utf-8')
+
+          pattern = re.compile(r'<div class="coordSearchRow">.*?</div></div>', re.S)
+          replacement = '''<button id="coordToggleBtn" type="button" class="secondary" aria-expanded="false">Coord</button><div id="coordEntryPanel" class="coordEntryPanel" hidden><div class="coordRawRow"><input id="coordLatRaw" type="text" inputmode="numeric" maxlength="10" placeholder="LAT 390315" aria-label="Latitude χωρίς σύμβολα" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><input id="coordLonRaw" type="text" inputmode="numeric" maxlength="11" placeholder="LON 0263626" aria-label="Longitude χωρίς σύμβολα" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button id="coordSearchBtn" type="button" disabled>SRCH</button></div><input id="coordBox" type="hidden"><select id="searchInputMode" hidden aria-label="Επιλεγμένη μορφή συντεταγμένων"><option value="dd">DD</option><option value="ddm" selected>DDM</option><option value="dms">DMS</option></select><button type="button" class="coordFormatRow" data-format="dd"><span class="coordFormatName">DD</span><span id="coordDDValue" class="coordFormatValue">—</span></button><button type="button" class="coordFormatRow selected" data-format="ddm"><span class="coordFormatName">DDM</span><span id="coordDDMValue" class="coordFormatValue">—</span></button><button type="button" class="coordFormatRow" data-format="dms"><span class="coordFormatName">DMS</span><span id="coordDMSValue" class="coordFormatValue">—</span></button></div></div>'''
+          text, count = pattern.subn(replacement, text, count=1)
+          if count != 1:
+              raise SystemExit(f'Coordinate row replacement count was {count}, expected 1')
+
+          enhancement = r'''
+          <style id="coord-four-row-style">
+          #coordToggleBtn{
+            width:100%!important;
+            min-height:34px!important;
+            padding:7px 8px!important;
+            border-radius:8px!important;
+            background:#6b7280!important;
+          }
+          #coordToggleBtn.coord-open{background:#157347!important;}
+          #coordEntryPanel[hidden]{display:none!important;}
+          #coordEntryPanel{
+            display:flex!important;
+            flex-direction:column!important;
+            width:100%!important;
+            gap:4px!important;
+            padding:5px!important;
+            border-radius:9px!important;
+            background:rgba(15,23,42,.88)!important;
+            box-shadow:0 3px 10px rgba(0,0,0,.28)!important;
+          }
+          #coordBox,#searchInputMode{display:none!important;}
+          .coordRawRow{
+            display:grid!important;
+            grid-template-columns:minmax(0,1fr) minmax(0,1.12fr) 54px!important;
+            gap:4px!important;
+            width:100%!important;
+          }
+          .coordRawRow input{
+            width:100%!important;
+            min-width:0!important;
+            height:31px!important;
+            min-height:31px!important;
+            padding:4px 5px!important;
+            border-radius:6px!important;
+            border:1px solid #cbd5e1!important;
+            background:#fff!important;
+            color:#111827!important;
+            font-size:10px!important;
+            font-weight:800!important;
+            text-align:center!important;
+          }
+          .coordRawRow #coordSearchBtn{
+            width:54px!important;
+            min-width:54px!important;
+            height:31px!important;
+            min-height:31px!important;
+            padding:3px!important;
+            border-radius:6px!important;
+            font-size:10px!important;
+          }
+          .coordRawRow #coordSearchBtn:disabled{opacity:.42!important;cursor:not-allowed!important;}
+          .coordFormatRow{
+            display:grid!important;
+            grid-template-columns:38px minmax(0,1fr)!important;
+            align-items:center!important;
+            width:100%!important;
+            min-height:30px!important;
+            padding:4px 6px!important;
+            border:1px solid rgba(255,255,255,.25)!important;
+            border-radius:7px!important;
+            background:#6b7280!important;
+            color:#fff!important;
+            text-align:left!important;
+            box-shadow:none!important;
+          }
+          .coordFormatRow.selected{
+            background:#157347!important;
+            border-color:#86efac!important;
+            box-shadow:0 0 0 1px rgba(134,239,172,.45)!important;
+          }
+          .coordFormatRow:disabled{opacity:.55!important;}
+          .coordFormatName{font-size:9px!important;font-weight:900!important;}
+          .coordFormatValue{
+            min-width:0!important;
+            overflow:hidden!important;
+            text-overflow:ellipsis!important;
+            white-space:nowrap!important;
+            font-size:9.3px!important;
+            font-weight:800!important;
+            letter-spacing:-.15px!important;
+          }
+          @media(max-width:700px){
+            #coordToggleBtn{height:30px!important;min-height:30px!important;font-size:11px!important;padding:4px!important;}
+            #coordEntryPanel{gap:3px!important;padding:4px!important;}
+            .coordRawRow{grid-template-columns:minmax(0,1fr) minmax(0,1.08fr) 48px!important;gap:3px!important;}
+            .coordRawRow input{height:29px!important;min-height:29px!important;font-size:8.7px!important;padding:3px!important;}
+            .coordRawRow #coordSearchBtn{width:48px!important;min-width:48px!important;height:29px!important;min-height:29px!important;font-size:9px!important;}
+            .coordFormatRow{min-height:27px!important;grid-template-columns:34px minmax(0,1fr)!important;padding:3px 5px!important;}
+            .coordFormatName{font-size:8px!important;}
+            .coordFormatValue{font-size:8.1px!important;}
+          }
+          </style>
+          <script id="coord-four-row-script">
+          (function(){
+            function initCoordFourRows(){
+              const toggle = document.getElementById('coordToggleBtn');
+              const panel = document.getElementById('coordEntryPanel');
+              const latInput = document.getElementById('coordLatRaw');
+              const lonInput = document.getElementById('coordLonRaw');
+              const hiddenInput = document.getElementById('coordBox');
+              const modeSelect = document.getElementById('searchInputMode');
+              const searchButton = document.getElementById('coordSearchBtn');
+              const rows = Array.from(document.querySelectorAll('.coordFormatRow'));
+              const values = {
+                dd: document.getElementById('coordDDValue'),
+                ddm: document.getElementById('coordDDMValue'),
+                dms: document.getElementById('coordDMSValue')
+              };
+              if(!toggle || !panel || !latInput || !lonInput || !hiddenInput || !modeSelect || !searchButton) return;
+
+              let selected = 'ddm';
+              let formatted = null;
+
+              function cleanDigits(input){
+                const cleaned = String(input.value || '').replace(/\D/g,'');
+                if(input.value !== cleaned) input.value = cleaned;
+              }
+
+              // Raw compact entry is interpreted as DDM without symbols:
+              // LAT 390315 = 39°03.15′, LON 0263626 = 026°36.26′.
+              function parseCompactDDM(raw, isLat){
+                const digits = String(raw || '').replace(/\D/g,'');
+                const degreeDigits = isLat ? 2 : 3;
+                if(digits.length < degreeDigits + 2) return null;
+                const degrees = Number(digits.slice(0, degreeDigits));
+                const minuteWhole = Number(digits.slice(degreeDigits, degreeDigits + 2));
+                const minuteDecimals = digits.slice(degreeDigits + 2);
+                const fraction = minuteDecimals ? Number('0.' + minuteDecimals) : 0;
+                const minutes = minuteWhole + fraction;
+                const limit = isLat ? 90 : 180;
+                if(!Number.isFinite(degrees) || !Number.isFinite(minutes) || degrees > limit || minutes >= 60) return null;
+                const value = degrees + minutes / 60;
+                return value <= limit ? value : null;
+              }
+
+              function pad(value, width){ return String(value).padStart(width, '0'); }
+
+              function ddmPart(value, isLat){
+                const hemi = isLat ? 'N' : 'E';
+                const width = isLat ? 2 : 3;
+                let deg = Math.floor(value);
+                let minutes = (value - deg) * 60;
+                if(Math.round(minutes * 1000) >= 60000){ deg += 1; minutes = 0; }
+                return hemi + pad(deg, width) + '°' + minutes.toFixed(3).padStart(6, '0') + '′';
+              }
+
+              function dmsPart(value, isLat){
+                const hemi = isLat ? 'N' : 'E';
+                const width = isLat ? 2 : 3;
+                let deg = Math.floor(value);
+                let minutesFull = (value - deg) * 60;
+                let min = Math.floor(minutesFull);
+                let sec = (minutesFull - min) * 60;
+                sec = Math.round(sec * 10) / 10;
+                if(sec >= 60){ sec = 0; min += 1; }
+                if(min >= 60){ min = 0; deg += 1; }
+                return hemi + pad(deg, width) + '°' + pad(min, 2) + '′' + sec.toFixed(1).padStart(4, '0') + '″';
+              }
+
+              function syncSelection(){
+                rows.forEach(row => row.classList.toggle('selected', row.dataset.format === selected));
+                if(!formatted){
+                  hiddenInput.value = '';
+                  searchButton.disabled = true;
+                  return;
+                }
+                hiddenInput.value = formatted[selected];
+                modeSelect.value = selected;
+                searchButton.disabled = false;
+              }
+
+              function refresh(){
+                cleanDigits(latInput);
+                cleanDigits(lonInput);
+                const lat = parseCompactDDM(latInput.value, true);
+                const lon = parseCompactDDM(lonInput.value, false);
+                const valid = Number.isFinite(lat) && Number.isFinite(lon);
+                formatted = valid ? {
+                  dd: lat.toFixed(6) + ', ' + lon.toFixed(6),
+                  ddm: ddmPart(lat, true) + ' ' + ddmPart(lon, false),
+                  dms: dmsPart(lat, true) + ' ' + dmsPart(lon, false)
+                } : null;
+                Object.keys(values).forEach(key => {
+                  if(values[key]) values[key].textContent = formatted ? formatted[key] : '—';
+                });
+                rows.forEach(row => row.disabled = !valid);
+                syncSelection();
+              }
+
+              toggle.addEventListener('click', function(){
+                panel.hidden = !panel.hidden;
+                const open = !panel.hidden;
+                toggle.classList.toggle('coord-open', open);
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if(open) setTimeout(() => latInput.focus(), 50);
+              });
+
+              latInput.addEventListener('input', refresh);
+              lonInput.addEventListener('input', refresh);
+              [latInput, lonInput].forEach(input => input.addEventListener('keydown', function(event){
+                if(event.key === 'Enter'){
+                  event.preventDefault();
+                  if(input === latInput) lonInput.focus();
+                  else if(!searchButton.disabled) searchButton.click();
+                }
+              }));
+
+              rows.forEach(row => row.addEventListener('click', function(){
+                if(row.disabled) return;
+                selected = row.dataset.format || 'ddm';
+                syncSelection();
+              }));
+
+              refresh();
+            }
+            if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCoordFourRows);
+            else initCoordFourRows();
+          })();
+          </script>
+          '''
+
+          text = text.replace('</body>', enhancement + '\n</body>', 1)
+          path.write_text(text, encoding='utf-8')
+
+      - name: Validate generated app
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f dist/PZL--main/index.html
+          grep -q 'id="coordToggleBtn"' dist/PZL--main/index.html
+          grep -q 'id="coordDDValue"' dist/PZL--main/index.html
+          grep -q 'id="coordDDMValue"' dist/PZL--main/index.html
+          grep -q 'id="coordDMSValue"' dist/PZL--main/index.html
+
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PZL_COORD_4_FORMATS
+          path: dist
+          if-no-files-found: error
+          compression-level: 9
