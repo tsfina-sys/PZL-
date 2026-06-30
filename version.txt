@@ -1,7 +1,21 @@
-PZL_LIVE_TIMES_ONLY_NOW_20260630M
+PZL_DROP_NOW_WPT_PROGRESS_FINAL_20260630O
 Built 2026-06-30
-- Removed the fixed “from command” value.
-- The drop table now shows only the live decreasing “Από τώρα” countdown.
-- The first-drop summary also shows only “Από τώρα”.
-- The 10-second live refresh and GS > 100 km/h logic remain unchanged.
+
+- Added a single-press “💧 Ρίψη τώρα” button.
+- Pressing it records the actual drop time and position.
+- Calculations immediately switch to the return/refill phase.
+- Next drops, remaining drop count and final landing are recalculated.
+- Actual and future drops are shown separately.
+- During live flight, route calculations use:
+  current GPS -> next non-passed WPT -> remaining WPTs -> fire.
+- A WPT is passed when:
+  1) the aircraft comes within 0.5 NM, or
+  2) it crosses the WPT perpendicular plane and its distance increases for two consecutive GPS updates.
+- Passed WPTs remain on the map but appear faded.
+- After “Ρίψη τώρα”, WPT RTB sequencing starts from the first return WPT.
+- Arrival near the refill airport changes the phase to ground/refill.
+- The next GS > 100 km/h starts a new outbound leg and reactivates all outbound WPTs.
+- Live times and drop data continue refreshing every 10 seconds.
 - Cache identifier updated.
+
+- Screen unlock now reapplies the correct Ρίψη τώρα enabled/disabled state.

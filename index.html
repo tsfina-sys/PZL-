@@ -622,10 +622,10 @@ body.pzl-screen-locked #lockMapBtn {
     line-height:1 !important;
   }
   #searchBox{height:30px !important; font-size:11px !important; padding:5px 6px !important;}
-  #fireModeBtn,#searchBtn,#viaModeBtn,#clearViaBtn,#returnWpBtn,#clearReturnWpBtn,#takeoffBtn,#setManualTimeBtn,#newFireWithWaterBtn,#generalResetBtn{
+  #fireModeBtn,#searchBtn,#viaModeBtn,#clearViaBtn,#returnWpBtn,#clearReturnWpBtn,#takeoffBtn,#setManualTimeBtn,#newFireWithWaterBtn,#dropNowBtn,#generalResetBtn{
     white-space:normal !important;
   }
-  #newFireWithWaterBtn,#generalResetBtn{font-size:10px !important;}
+  #newFireWithWaterBtn,#dropNowBtn,#generalResetBtn{font-size:10px !important;}
 }
 @media (max-width:900px) and (orientation:landscape){
   .map-actions{
@@ -695,7 +695,7 @@ body.pzl-screen-locked #lockMapBtn {
   #fireModeBtn{ height:30px !important; }
   #searchBox{ height:28px !important; font-size:10px !important; padding:3px 5px !important; }
   #searchBtn{ height:29px !important; }
-  #viaModeBtn,#clearViaBtn,#returnWpBtn,#clearReturnWpBtn,#takeoffBtn,#setManualTimeBtn,#newFireWithWaterBtn{ height:28px !important; }
+  #viaModeBtn,#clearViaBtn,#returnWpBtn,#clearReturnWpBtn,#takeoffBtn,#setManualTimeBtn,#newFireWithWaterBtn,#dropNowBtn{ height:28px !important; }
   #clearReturnWpBtn{ font-size:9.7px !important; }
   #setManualTimeBtn{ font-size:9.5px !important; }
   #newFireWithWaterBtn{ font-size:9.5px !important; }
@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_LIVE_TIMES_ONLY_NOW_20260630M">
+<meta name="pzl-build" content="PZL_DROP_NOW_WPT_PROGRESS_FINAL_20260630O">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1027,6 +1027,29 @@ body.pzl-screen-locked #lockMapBtn {
   opacity:.48!important;
   filter:grayscale(.35)!important;
   cursor:not-allowed!important;
+}
+</style>
+
+
+<style id="pzl-drop-now-wpt-progress-css">
+#dropNowBtn{
+  background:#f97316 !important;
+  border-color:#c2410c !important;
+  color:#fff !important;
+  font-weight:900 !important;
+}
+#dropNowBtn:disabled{
+  background:#6b7280 !important;
+  border-color:#4b5563 !important;
+  color:#e5e7eb !important;
+  opacity:.72 !important;
+}
+.pzl-wpt-passed{
+  opacity:.34 !important;
+  filter:grayscale(1) !important;
+}
+@media(max-width:700px) and (orientation:portrait){
+  #dropNowBtn{height:29px !important;font-size:10px !important;}
 }
 </style>
 
@@ -1218,6 +1241,7 @@ body.pzl-screen-locked #lockMapBtn {
       <div class="splitControl fireSplit"><button id="fireModeBtn" class="active">🔥 Fire</button><button id="toggleFireCirclesBtn" class="secondary" title="Εμφάνιση/απόκρυψη 3 κύκλων φωτιάς"><span class="fire-circles-icon" aria-hidden="true"><span class="ring-red"></span><span class="ring-black"></span><span class="flame">🔥</span></span></button></div><div class="searchStack"><div class="searchCombo searchNameRow"><input id="searchBox" disabled placeholder="Περιοχή" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" /><button id="searchBtn" type="button" disabled>SRCH</button></div><button id="coordToggleBtn" type="button" class="secondary" disabled aria-expanded="false">Coord</button><div id="coordEntryPanel" class="coordEntryPanel" hidden><div class="coordRawRow"><label class="coordInputLine" for="coordLatRaw"><span>LAT</span><input id="coordLatRaw" type="text" inputmode="numeric" maxlength="14" placeholder="390315" aria-label="Latitude χωρίς σύμβολα" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></label><label class="coordInputLine" for="coordLonRaw"><span>LON</span><input id="coordLonRaw" type="text" inputmode="numeric" maxlength="15" placeholder="0263626" aria-label="Longitude χωρίς σύμβολα" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></label><button id="coordSearchBtn" type="button" disabled>GO</button></div><input id="coordBox" type="hidden"><select id="searchInputMode" hidden aria-label="Επιλεγμένη μορφή συντεταγμένων"><option value="dd">DD</option><option value="ddm" selected>DDM</option><option value="dms">DMS</option></select><button type="button" class="coordFormatRow" data-format="dd"><span class="coordFormatName">DD</span><span id="coordDDValue" class="coordFormatValue">—</span></button><button type="button" class="coordFormatRow selected" data-format="ddm"><span class="coordFormatName">DDM</span><span id="coordDDMValue" class="coordFormatValue">—</span></button><button type="button" class="coordFormatRow" data-format="dms"><span class="coordFormatName">DMS</span><span id="coordDMSValue" class="coordFormatValue">—</span></button></div></div>
       <div class="splitControl wptSplit"><button id="viaModeBtn" class="secondary">🔥 WPT</button><button id="clearViaBtn" class="danger">🔥 CLR <span class="x2-mark">x2</span></button></div>
       <div class="splitControl rtbSplit"><button id="returnWpBtn" class="secondary">WPT RTB</button><button id="clearReturnWpBtn" class="danger">CLR RTB <span class="x2-mark">x2</span></button></div><div class="splitControl commandSplit"><button id="takeoffBtn">☎️ Εντολή <span class="x2-mark">x2</span></button><button class="secondary" id="setManualTimeBtn">Manual Practice <span class="x2-mark">x2</span></button></div><button id="newFireWithWaterBtn" class="secondary">Airborne Full Tank <span class="x2-mark">x2</span></button>
+      <button id="dropNowBtn" class="drop-now-btn" type="button" disabled>💧 Ρίψη τώρα</button>
       <button id="generalResetBtn" class="danger">🔄 Reset <span class="x2-mark">x2</span></button>
     </div>
   </div>
@@ -1259,6 +1283,8 @@ body.pzl-screen-locked #lockMapBtn {
     <div id="actualTakeoffClock" class="position-report">Ώρα Α/Γ: -</div>
     <div id="fullStopClock" class="position-report">Ώρα Full Stop: -</div>
     <div id="intermediateLandingsBox" class="position-report">Ενδιάμεσες Π/Γ: -</div>
+    <div id="dropNowStatus" class="position-report">Πραγματικές ρίψεις: -</div>
+    <div id="wptProgressStatus" class="position-report">Ενεργό σκέλος: προς φωτιά</div>
 
     
 <div class="row" style="margin-top:8px">
@@ -1722,6 +1748,385 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
     const autoFullStopSpeedKmh = 30;
     const autoFullStopDelayMs = 20 * 60 * 1000;
 
+    // Operational tracking: actual drops and automatic WPT sequencing.
+    let pzlActualDrops = [];
+    let pzlMissionPhase = "to_fire"; // to_fire | to_refill | refill_ground
+    let pzlRefillArrivalTime = null;
+
+    let pzlOutboundWpIndex = 0;
+    let pzlReturnWpIndex = 0;
+    let pzlOutboundPrevDistanceKm = null;
+    let pzlReturnPrevDistanceKm = null;
+    let pzlOutboundIncreasingCount = 0;
+    let pzlReturnIncreasingCount = 0;
+
+    const pzlWpCaptureKm = 0.5 * 1.852; // 0.5 NM
+    const pzlWpIncreaseToleranceKm = 0.02;
+
+    function pzlLatLonFromMarker(marker) {
+      if (!marker || typeof marker.getLatLng !== "function") return null;
+      const ll = marker.getLatLng();
+      return {lat:Number(ll.lat), lon:Number(ll.lng)};
+    }
+
+    function pzlDistanceThrough(start, middlePoints, end) {
+      if (!start || !end) return null;
+      const points = [
+        {lat:Number(start.lat), lon:Number(start.lon)},
+        ...(middlePoints || []).map(p => ({lat:Number(p.lat), lon:Number(p.lon)})),
+        {lat:Number(end.lat), lon:Number(end.lon)}
+      ];
+      let total = 0;
+      for (let i = 0; i < points.length - 1; i++) {
+        total += haversineKm(points[i], points[i + 1]);
+      }
+      return total;
+    }
+
+    function pzlOutboundOrigin() {
+      if (pzlActualDrops.length > 0) {
+        const refillName = selectedRefillBaseName || selectedBaseName;
+        const refill = bases[refillName];
+        if (refill) return {lat:refill.lat, lon:refill.lon};
+      }
+      if (newFireWithWaterMode && newFireStartPoint) {
+        return {lat:newFireStartPoint.lat, lon:newFireStartPoint.lon};
+      }
+      if (useGpsAsStart && currentGps && !pzlHasLiveMissionStarted()) {
+        return {lat:currentGps.lat, lon:currentGps.lon};
+      }
+      const base = bases[selectedBaseName];
+      return base ? {lat:base.lat, lon:base.lon} : null;
+    }
+
+    function pzlReturnDestination(fullStop) {
+      const name = fullStop
+        ? (selectedFullStopBaseName || selectedBaseName)
+        : (selectedRefillBaseName || selectedBaseName);
+      const base = bases[name];
+      return base ? {lat:base.lat, lon:base.lon} : null;
+    }
+
+    function pzlRemainingOutboundPoints() {
+      return viaPoints.slice(Math.max(0, pzlOutboundWpIndex));
+    }
+
+    function pzlAllReturnPoints() {
+      return returnWpMarkers.map(pzlLatLonFromMarker).filter(Boolean);
+    }
+
+    function pzlRemainingReturnPoints() {
+      return returnWpMarkers
+        .slice(Math.max(0, pzlReturnWpIndex))
+        .map(pzlLatLonFromMarker)
+        .filter(Boolean);
+    }
+
+    function pzlCurrentOperationalPoint(fallback) {
+      if (currentGps &&
+          Number.isFinite(Number(currentGps.lat)) &&
+          Number.isFinite(Number(currentGps.lon))) {
+        return {lat:Number(currentGps.lat), lon:Number(currentGps.lon)};
+      }
+      return fallback || null;
+    }
+
+    function pzlRemainingOutboundDistanceKm() {
+      if (!firePoint) return null;
+      const start = pzlCurrentOperationalPoint(pzlOutboundOrigin());
+      return pzlDistanceThrough(start, pzlRemainingOutboundPoints(), firePoint);
+    }
+
+    function pzlFullOutboundDistanceFromRefillKm() {
+      if (!firePoint) return null;
+      const refill = pzlReturnDestination(false);
+      return pzlDistanceThrough(refill, viaPoints, firePoint);
+    }
+
+    function pzlRemainingReturnDistanceKm(fullStop = false) {
+      const destination = pzlReturnDestination(fullStop);
+      if (!destination) return null;
+      const start = pzlCurrentOperationalPoint(
+        firePoint ? {lat:firePoint.lat, lon:firePoint.lon} : null
+      );
+      return pzlDistanceThrough(start, pzlRemainingReturnPoints(), destination);
+    }
+
+    function pzlIsBeyondWaypointPlane(origin, target, current) {
+      if (!origin || !target || !current) return false;
+      const latRad = target.lat * Math.PI / 180;
+      const kmLon = 111.320 * Math.max(0.2, Math.cos(latRad));
+      const kmLat = 110.574;
+
+      const inboundX = (target.lon - origin.lon) * kmLon;
+      const inboundY = (target.lat - origin.lat) * kmLat;
+      const afterX = (current.lon - target.lon) * kmLon;
+      const afterY = (current.lat - target.lat) * kmLat;
+
+      return (inboundX * afterX + inboundY * afterY) > 0;
+    }
+
+    function pzlStyleWaypointMarkers() {
+      viaMarkers.forEach((marker, index) => {
+        try {
+          marker.setOpacity(index < pzlOutboundWpIndex ? 0.34 : 1);
+          const el = marker.getElement && marker.getElement();
+          if (el) el.classList.toggle("pzl-wpt-passed", index < pzlOutboundWpIndex);
+        } catch(e) {}
+      });
+
+      returnWpMarkers.forEach((marker, index) => {
+        try {
+          marker.setOpacity(index < pzlReturnWpIndex ? 0.34 : 1);
+          const el = marker.getElement && marker.getElement();
+          if (el) el.classList.toggle("pzl-wpt-passed", index < pzlReturnWpIndex);
+        } catch(e) {}
+      });
+    }
+
+    function pzlUpdateWptProgressStatus() {
+      const el = document.getElementById("wptProgressStatus");
+      if (!el) return;
+
+      if (pzlMissionPhase === "to_refill") {
+        const total = returnWpMarkers.length;
+        const next = Math.min(total, pzlReturnWpIndex + 1);
+        el.textContent = total > 0 && pzlReturnWpIndex < total
+          ? `Ενεργό σκέλος: προς REFILL — επόμενο WPT RTB ${next}/${total}`
+          : "Ενεργό σκέλος: προς REFILL";
+      } else if (pzlMissionPhase === "refill_ground") {
+        el.textContent = "Ενεργό σκέλος: στο REFILL — αναμονή επόμενης Α/Γ";
+      } else {
+        const total = viaPoints.length;
+        const next = Math.min(total, pzlOutboundWpIndex + 1);
+        el.textContent = total > 0 && pzlOutboundWpIndex < total
+          ? `Ενεργό σκέλος: προς φωτιά — επόμενο WPT ${next}/${total}`
+          : "Ενεργό σκέλος: προς φωτιά";
+      }
+    }
+
+    function pzlResetOutboundProgress() {
+      pzlOutboundWpIndex = 0;
+      pzlOutboundPrevDistanceKm = null;
+      pzlOutboundIncreasingCount = 0;
+      pzlStyleWaypointMarkers();
+      pzlUpdateWptProgressStatus();
+    }
+
+    function pzlResetReturnProgress() {
+      pzlReturnWpIndex = 0;
+      pzlReturnPrevDistanceKm = null;
+      pzlReturnIncreasingCount = 0;
+      pzlStyleWaypointMarkers();
+      pzlUpdateWptProgressStatus();
+    }
+
+    function pzlResetOperationalProgress(clearDrops = false) {
+      pzlMissionPhase = "to_fire";
+      pzlRefillArrivalTime = null;
+      pzlResetOutboundProgress();
+      pzlResetReturnProgress();
+      if (clearDrops) pzlActualDrops = [];
+      pzlRenderActualDrops();
+      pzlUpdateDropNowButton();
+    }
+
+    function pzlRouteOriginForIndex(kind, index) {
+      if (kind === "return") {
+        if (index <= 0) return firePoint ? {lat:firePoint.lat, lon:firePoint.lon} : null;
+        return pzlLatLonFromMarker(returnWpMarkers[index - 1]);
+      }
+      if (index <= 0) return pzlOutboundOrigin();
+      return viaPoints[index - 1] || null;
+    }
+
+    function pzlAdvanceWaypoint(kind) {
+      if (kind === "return") {
+        pzlReturnWpIndex = Math.min(returnWpMarkers.length, pzlReturnWpIndex + 1);
+        pzlReturnPrevDistanceKm = null;
+        pzlReturnIncreasingCount = 0;
+      } else {
+        pzlOutboundWpIndex = Math.min(viaPoints.length, pzlOutboundWpIndex + 1);
+        pzlOutboundPrevDistanceKm = null;
+        pzlOutboundIncreasingCount = 0;
+      }
+      pzlStyleWaypointMarkers();
+      pzlUpdateWptProgressStatus();
+      try { drawAll(); } catch(e) {}
+    }
+
+    function pzlUpdateOneWaypointSequence(kind) {
+      if (!currentGps) return false;
+
+      const isReturn = kind === "return";
+      const points = isReturn
+        ? returnWpMarkers.map(pzlLatLonFromMarker).filter(Boolean)
+        : viaPoints;
+      let index = isReturn ? pzlReturnWpIndex : pzlOutboundWpIndex;
+      if (index >= points.length) return false;
+
+      const target = points[index];
+      const origin = pzlRouteOriginForIndex(kind, index);
+      const current = {lat:Number(currentGps.lat), lon:Number(currentGps.lon)};
+      const distanceKm = haversineKm(current, target);
+
+      let previousDistance = isReturn ? pzlReturnPrevDistanceKm : pzlOutboundPrevDistanceKm;
+      let increasingCount = isReturn ? pzlReturnIncreasingCount : pzlOutboundIncreasingCount;
+
+      const insideCapture = distanceKm <= pzlWpCaptureKm;
+      const beyondPlane = pzlIsBeyondWaypointPlane(origin, target, current);
+      const movingAway = Number.isFinite(previousDistance) &&
+        distanceKm > previousDistance + pzlWpIncreaseToleranceKm;
+
+      if (insideCapture) {
+        pzlAdvanceWaypoint(kind);
+        return true;
+      }
+
+      if (beyondPlane && movingAway) increasingCount += 1;
+      else if (!movingAway || !beyondPlane) increasingCount = 0;
+
+      if (isReturn) {
+        pzlReturnPrevDistanceKm = distanceKm;
+        pzlReturnIncreasingCount = increasingCount;
+      } else {
+        pzlOutboundPrevDistanceKm = distanceKm;
+        pzlOutboundIncreasingCount = increasingCount;
+      }
+
+      // WPT is passed after crossing its perpendicular line and moving away
+      // in two consecutive GPS updates.
+      if (increasingCount >= 2) {
+        pzlAdvanceWaypoint(kind);
+        return true;
+      }
+      return false;
+    }
+
+    function pzlUpdateWaypointProgress() {
+      if (!currentGps || !pzlHasLiveMissionStarted()) return false;
+      if (pzlMissionPhase === "to_refill") {
+        return pzlUpdateOneWaypointSequence("return");
+      }
+      if (pzlMissionPhase === "to_fire") {
+        return pzlUpdateOneWaypointSequence("outbound");
+      }
+      return false;
+    }
+
+    function pzlUpdateMissionPhaseFromGps(speedKmh, now) {
+      if (!pzlActualDrops.length || !currentGps) return false;
+      let changed = false;
+
+      if (pzlMissionPhase === "to_refill") {
+        const refill = pzlReturnDestination(false);
+        const distanceKm = refill
+          ? haversineKm({lat:currentGps.lat, lon:currentGps.lon}, refill)
+          : Infinity;
+
+        const capturedRefill =
+          distanceKm <= pzlWpCaptureKm ||
+          (Number.isFinite(speedKmh) && speedKmh < 30 && distanceKm <= 2 * 1.852);
+
+        if (capturedRefill) {
+          pzlMissionPhase = "refill_ground";
+          pzlRefillArrivalTime = new Date(now.getTime());
+          pzlReturnWpIndex = returnWpMarkers.length;
+          pzlStyleWaypointMarkers();
+          changed = true;
+        }
+      } else if (pzlMissionPhase === "refill_ground" &&
+                 Number.isFinite(speedKmh) &&
+                 speedKmh > 100) {
+        pzlMissionPhase = "to_fire";
+        pzlRefillArrivalTime = null;
+        pzlResetOutboundProgress();
+        changed = true;
+      }
+
+      if (changed) {
+        pzlUpdateWptProgressStatus();
+        lastHeavyCalcTime = 0;
+      }
+      return changed;
+    }
+
+    function pzlRenderActualDrops() {
+      const el = document.getElementById("dropNowStatus");
+      if (!el) return;
+      if (!pzlActualDrops.length) {
+        el.textContent = "Πραγματικές ρίψεις: -";
+        return;
+      }
+      el.innerHTML = "<b>Πραγματικές ρίψεις</b><br>" +
+        pzlActualDrops.map((drop, i) => `${i + 1}η: ${fmtTime(drop.time)}`).join("<br>");
+    }
+
+    function pzlUpdateDropNowButton() {
+      const btn = document.getElementById("dropNowBtn");
+      if (!btn) return;
+      const allowed = !!(commandTime && firePoint);
+      btn.disabled = !allowed;
+      btn.title = allowed
+        ? "Καταγραφή πραγματικής ρίψης και άμεσος επανυπολογισμός"
+        : "Χρειάζεται ώρα εντολής και σημείο φωτιάς";
+    }
+
+    function pzlRecordDropNow() {
+      if (!commandTime || !firePoint) return;
+
+      const now = pzlMissionNow();
+      const point = pzlCurrentOperationalPoint({lat:firePoint.lat, lon:firePoint.lon});
+      pzlActualDrops.push({
+        time:new Date(now.getTime()),
+        lat:point ? point.lat : firePoint.lat,
+        lon:point ? point.lon : firePoint.lon
+      });
+
+      pzlMissionPhase = "to_refill";
+      pzlRefillArrivalTime = null;
+
+      // For the return leg start again from the first RTB WPT.
+      pzlResetReturnProgress();
+      // For the next refill-to-fire leg all outbound WPT become active again.
+      pzlResetOutboundProgress();
+
+      pzlRenderActualDrops();
+      pzlUpdateWptProgressStatus();
+      pzlUpdateDropNowButton();
+
+      lastHeavyCalcTime = 0;
+      try { drawAll(); } catch(e) {}
+      try { calculate(); } catch(e) {}
+    }
+
+    function pzlGroundDelayRemainingMin(now) {
+      if (pzlMissionPhase !== "refill_ground") return getRefillTakeoffDelayMin();
+      if (!pzlRefillArrivalTime) return getRefillTakeoffDelayMin();
+      const elapsedMin = Math.max(0, (now.getTime() - pzlRefillArrivalTime.getTime()) / 60000);
+      return Math.max(0, getRefillTakeoffDelayMin() - elapsedMin);
+    }
+
+    function pzlNoMoreDropsLandingMinutes(speedKmPerMin, now) {
+      const fullStop = pzlReturnDestination(true);
+      if (!fullStop) return 0;
+
+      if (pzlMissionPhase === "to_refill") {
+        const d = pzlRemainingReturnDistanceKm(true);
+        return Number.isFinite(d) ? d / speedKmPerMin : 0;
+      }
+
+      if (pzlMissionPhase === "refill_ground") {
+        const start = pzlReturnDestination(false);
+        const d = start ? haversineKm(start, fullStop) : 0;
+        return pzlGroundDelayRemainingMin(now) + d / speedKmPerMin;
+      }
+
+      const current = pzlCurrentOperationalPoint(firePoint);
+      const d = current ? haversineKm(current, fullStop) : 0;
+      return d / speedKmPerMin;
+    }
+
     function pzlMissionNow() {
       try {
         if (typeof gpsTestModeARunning !== "undefined" &&
@@ -2050,7 +2455,9 @@ function setFireMarker() {
     }
     function addViaMarker(latlng, index) {
       const m = L.marker(latlng,{icon:viaIcon}).addTo(map).bindPopup("Ενδιάμεσο " + index);
-      viaMarkers.push(m); drawAll();
+      viaMarkers.push(m);
+      pzlResetOutboundProgress();
+      drawAll();
     }
     function clearViaMarkers() {
       if (mapLocked) {
@@ -2059,7 +2466,11 @@ function setFireMarker() {
         return;
       }
       viaMarkers.forEach(m => map.removeLayer(m));
-      viaMarkers = []; viaPoints = []; drawAll(); calculate();
+      viaMarkers = [];
+      viaPoints = [];
+      pzlResetOutboundProgress();
+      drawAll();
+      calculate();
     }
 
     function drawAll() {
@@ -2070,16 +2481,46 @@ function setFireMarker() {
     }
 
     function drawRoute() {
-      if (routeLine) map.removeLayer(routeLine);
+      if (routeLine) {
+        try { map.removeLayer(routeLine); } catch(e) {}
+        routeLine = null;
+      }
       if (!firePoint) return;
-      const b = bases[selectedBaseName];
-      // Σε «Νέα φωτιά με νερό» η πράσινη γραμμή και ο υπολογισμός ξεκινούν
-      // από την τρέχουσα/αποθηκευμένη GPS θέση, όχι από το κλιμάκιο.
-      const startPoint = (newFireWithWaterMode && newFireStartPoint)
-        ? [newFireStartPoint.lat, newFireStartPoint.lon]
-        : ((useGpsAsStart && currentGps) ? [currentGps.lat,currentGps.lon] : [b.lat,b.lon]);
-      const points = [startPoint, ...viaPoints.map(p=>[p.lat,p.lon]), [firePoint.lat,firePoint.lon]];
-      routeLine = L.polyline(points, {color:"green", weight:4}).addTo(map);
+
+      const live = pzlHasLiveMissionStarted();
+      let start;
+      let middle;
+      let end;
+      let color = "green";
+
+      if (live && pzlMissionPhase === "to_refill") {
+        start = pzlCurrentOperationalPoint({lat:firePoint.lat, lon:firePoint.lon});
+        middle = pzlRemainingReturnPoints();
+        end = pzlReturnDestination(false);
+        color = "#a855f7";
+      } else {
+        const b = bases[selectedBaseName];
+        if (live) {
+          start = pzlCurrentOperationalPoint(pzlOutboundOrigin());
+          middle = pzlRemainingOutboundPoints();
+        } else {
+          start = (newFireWithWaterMode && newFireStartPoint)
+            ? {lat:newFireStartPoint.lat, lon:newFireStartPoint.lon}
+            : ((useGpsAsStart && currentGps)
+                ? {lat:currentGps.lat, lon:currentGps.lon}
+                : {lat:b.lat, lon:b.lon});
+          middle = viaPoints;
+        }
+        end = {lat:firePoint.lat, lon:firePoint.lon};
+      }
+
+      if (!start || !end) return;
+      const points = [
+        [start.lat, start.lon],
+        ...(middle || []).map(p => [p.lat, p.lon]),
+        [end.lat, end.lon]
+      ];
+      routeLine = L.polyline(points, {color:color, weight:4}).addTo(map);
     }
 
     function drawAlternateLine() {
@@ -2486,6 +2927,7 @@ function setFireMarker() {
     document.getElementById("takeoffBtn").addEventListener("click", () => {
       commandTime = new Date();
       pzlStartDropCountdown(commandTime);
+      pzlResetOperationalProgress(true);
       window.pzlManualCommandTimeActive = false;
       window.manualNewFireCommandTime = null;
       gpsTestModeASimNow = new Date(commandTime.getTime());
@@ -2499,6 +2941,7 @@ function setFireMarker() {
       setTakeoffModeButtons("manual");
       const ok = (typeof setManualCommandTimeFromInput === "function") ? setManualCommandTimeFromInput() : false;
       if (!ok) return;
+      pzlResetOperationalProgress(true);
       try {
         const manualActual = new Date(commandTime.getTime() + getInitialTakeoffDelayMin() * 60000);
         if (typeof gpsTestModeASimNow !== "undefined") gpsTestModeASimNow = new Date(commandTime.getTime());
@@ -2510,6 +2953,14 @@ function setFireMarker() {
       } catch(e) {}
       calculate();
     });
+    const dropNowBtn = document.getElementById("dropNowBtn");
+    if (dropNowBtn) {
+      dropNowBtn.addEventListener("click", pzlRecordDropNow);
+    }
+    pzlRenderActualDrops();
+    pzlUpdateWptProgressStatus();
+    pzlUpdateDropNowButton();
+
     function exitReturnWpModeForNormalMode() {
       // Όταν γυρίζουμε σε Fire ή 🔥 WPT, πρέπει να βγαίνουμε ΠΑΝΤΑ από WPT RTB.
       // Αλλιώς τα επόμενα taps στον χάρτη συνέχιζαν να γράφονται ως WPT RTB.
@@ -3007,6 +3458,13 @@ function setFireMarker() {
           handleAutoTakeoffFullStop(speedKmh, now);
           updateAirborneAndFuel(now, speedKmh);
 
+          const pzlPhaseChanged = pzlUpdateMissionPhaseFromGps(speedKmh, now);
+          const pzlWpChanged = pzlUpdateWaypointProgress();
+          if (pzlPhaseChanged || pzlWpChanged) {
+            try { drawAll(); } catch(e) {}
+            lastHeavyCalcTime = 0;
+          }
+
           // Compact Live GPS panel: GS and coordinates are already visible in the HUD.
           let text = `Ακρίβεια: ±${c.accuracy.toFixed(0)} m
 `;
@@ -3114,14 +3572,16 @@ function setFireMarker() {
     }
     function routeDistanceKm() {
       if (!firePoint) return null;
+
+      if (pzlHasLiveMissionStarted() && pzlMissionPhase === "to_fire") {
+        return pzlRemainingOutboundDistanceKm();
+      }
+
       const b = bases[selectedBaseName];
-      const liveGpsStart = pzlHasLiveMissionStarted();
-      const start = ((liveGpsStart || useGpsAsStart) && currentGps)
+      const start = (useGpsAsStart && currentGps)
         ? {lat:currentGps.lat, lon:currentGps.lon}
-        : {lat:b.lat,lon:b.lon};
-      const points = [start, ...viaPoints, {lat:firePoint.lat,lon:firePoint.lon}];
-      let total=0; for(let i=0;i<points.length-1;i++) total += haversineKm(points[i],points[i+1]);
-      return total;
+        : {lat:b.lat, lon:b.lon};
+      return pzlDistanceThrough(start, viaPoints, firePoint);
     }
     function alternateDistanceKm() {
       const b = bases[selectedBaseName], alt = airports[b.alt];
@@ -3207,6 +3667,7 @@ function setFireMarker() {
 
         returnWpMarkers.forEach(m => { try { map.removeLayer(m); } catch(e) {} });
         returnWpMarkers = [];
+        pzlResetOperationalProgress(true);
         if (returnWpLine) { try { map.removeLayer(returnWpLine); } catch(e) {} returnWpLine = null; }
         returnWpMode = false;
         modeBeforeReturnWp = null;
@@ -3292,6 +3753,7 @@ function setFireMarker() {
       try { updateReturnToGpsDistanceBox(); } catch(e) {} // UPDATE_RETURN_DISTANCE_AFTER_RETURN_CLEAR
       });
       returnWpMarkers = [];
+      pzlResetReturnProgress();
       returnWpMode = false;
       if (modeBeforeReturnWp && typeof mode !== "undefined") mode = modeBeforeReturnWp;
       modeBeforeReturnWp = null;
@@ -3319,6 +3781,7 @@ function setFireMarker() {
       const marker = L.marker([lat, lng], {icon}).addTo(map);
       marker.bindTooltip(`WP επιστροφής ${returnWpMarkers.length + 1}`);
       returnWpMarkers.push(marker);
+      pzlResetReturnProgress();
       updateReturnWpStatus();
       updateReturnWpLine();
       try { updateReturnToGpsDistanceBox(); } catch(e) {} // UPDATE_RETURN_DISTANCE_AFTER_RETURN_WP_CHANGE
@@ -3632,15 +4095,31 @@ function setFireMarker() {
       const calcId = ++lastCalcId;
       const result = document.getElementById("result"), dropsDiv = document.getElementById("drops");
       const fuelResult = document.getElementById("fuelResult");
+      const liveMission = pzlHasLiveMissionStarted();
+      if (liveMission) pzlUpdateWaypointProgress();
+
+      const missionNow = pzlMissionNow();
+      const completedDrops = pzlActualDrops.length;
+      const missionPhase = pzlMissionPhase;
+
       const normalD = routeDistanceKm();
       const refillCycleD = refillBaseFireDistanceKm();
       const returnRouteD = refillRouteDistanceKm();
       const approachRouteD = approachRouteDistanceKm();
       const finalReturnRouteD = finalReturnRouteDistanceKm();
       const firstLegDistanceKm = newFireFirstLegDistanceKm();
-      const D = (newFireWithWaterMode && firstLegDistanceKm !== null) ? firstLegDistanceKm : normalD;
-      const liveMission = pzlHasLiveMissionStarted();
-      const missionNow = pzlMissionNow();
+
+      let D;
+      if (liveMission && missionPhase === "to_fire") {
+        D = pzlRemainingOutboundDistanceKm();
+      } else if (completedDrops > 0 &&
+                 (missionPhase === "to_refill" || missionPhase === "refill_ground")) {
+        D = pzlFullOutboundDistanceFromRefillKm();
+      } else {
+        D = (newFireWithWaterMode && firstLegDistanceKm !== null)
+          ? firstLegDistanceKm
+          : normalD;
+      }
       const calcCommandTime = liveMission
         ? missionNow
         : ((newFireWithWaterMode && newFireCalcStartTime) ? newFireCalcStartTime : commandTime);
@@ -3687,6 +4166,7 @@ function setFireMarker() {
         dropsDiv.innerHTML = "";
         fuelResult.textContent = "Αναμονή δεδομένων καυσίμων...";
         updateFuelGauges(Number(initialTankFuel.value), Number(initialTankFuel.value));
+        pzlUpdateDropNowButton();
         return;
       }
 
@@ -3699,11 +4179,42 @@ function setFireMarker() {
         const approachLegD = (approachRouteD !== null) ? approachRouteD : ((newFireWithWaterMode && normalD !== null) ? normalD : D);
         const finalReturnLegD = (finalReturnRouteD !== null) ? finalReturnRouteD : returnLegD;
         const cycleDistanceKm = returnLegD + approachLegD;
-        const cycleMin = returnLegD/calcSpeedKmPerMin + getRefillTakeoffDelayMin() + approachLegD/calcSpeedKmPerMin;
-        const firstLegMin = D/calcSpeedKmPerMin + attackCircuitMin;
-        const finalReturnMin = finalReturnLegD/calcSpeedKmPerMin;
-        const firstDrop = addMinutes(calcCommandTime, effectiveInitialDelayMin + D/calcSpeedKmPerMin + attackCircuitMin);
-        const firstTakeoff = addMinutes(calcCommandTime, effectiveInitialDelayMin);
+        const cycleMin =
+          returnLegD / calcSpeedKmPerMin +
+          getRefillTakeoffDelayMin() +
+          approachLegD / calcSpeedKmPerMin;
+        const firstLegMin = D / calcSpeedKmPerMin + attackCircuitMin;
+        const finalReturnMin = finalReturnLegD / calcSpeedKmPerMin;
+
+        let firstDropLeadMin;
+        if (completedDrops > 0 && missionPhase === "to_refill") {
+          const remainingReturnD = pzlRemainingReturnDistanceKm(false);
+          firstDropLeadMin =
+            (Number.isFinite(remainingReturnD) ? remainingReturnD : returnLegD) / calcSpeedKmPerMin +
+            getRefillTakeoffDelayMin() +
+            approachLegD / calcSpeedKmPerMin +
+            attackCircuitMin;
+        } else if (completedDrops > 0 && missionPhase === "refill_ground") {
+          firstDropLeadMin =
+            pzlGroundDelayRemainingMin(missionNow) +
+            approachLegD / calcSpeedKmPerMin +
+            attackCircuitMin;
+        } else if (liveMission) {
+          firstDropLeadMin = D / calcSpeedKmPerMin + attackCircuitMin;
+        } else {
+          firstDropLeadMin =
+            effectiveInitialDelayMin +
+            D / calcSpeedKmPerMin +
+            attackCircuitMin;
+        }
+
+        const firstDropBase = (liveMission || completedDrops > 0)
+          ? missionNow
+          : calcCommandTime;
+        const firstDrop = addMinutes(firstDropBase, firstDropLeadMin);
+        const firstTakeoff = liveMission
+          ? (pzlActualTakeoffForMission() || missionNow)
+          : addMinutes(calcCommandTime, effectiveInitialDelayMin);
 
         // FIX37D333:
         // Το maxDrops πρέπει να ελέγχεται από την πραγματική ώρα Α/Γ έως την τελική Π/Γ.
@@ -3746,8 +4257,15 @@ function setFireMarker() {
         let maxDrops = Math.max(0, Math.min(maxBy3Hours, maxByCutoff));
 
         const returnDurationMin = finalReturnMin;
-        const lastLanding = lastLandingForDrops(maxDrops);
-        const missionDurationMin = maxDrops>0 ? (lastLanding.getTime() - missionStartFor3Hours.getTime())/60000 : 0;
+        const noMoreDropsLanding = completedDrops > 0
+          ? addMinutes(missionNow, pzlNoMoreDropsLandingMinutes(calcSpeedKmPerMin, missionNow))
+          : null;
+        const lastLanding = maxDrops > 0
+          ? lastLandingForDrops(maxDrops)
+          : noMoreDropsLanding;
+        const missionDurationMin = lastLanding
+          ? Math.max(0, (lastLanding.getTime() - missionStartFor3Hours.getTime()) / 60000)
+          : 0;
 
         const returnEta = lastLanding;
 const base = bases[selectedBaseName];
@@ -3768,7 +4286,8 @@ const base = bases[selectedBaseName];
           `ΤΦ ${cutoffInfo.refName}: ${fmtTime(cutoffInfo.twilight)}\n` +
           `CUT OFF: ${fmtTime(cutoffInfo.cutoff)} (βάσει Full Stop ${cutoffInfo.fullStopName} / ΤΦ ${cutoffInfo.refName} - ${cutoffInfo.offset}')\n` +
           `Απόσταση διαδρομής προς φωτιά: ${D.toFixed(1)} km${newFireWithWaterMode ? ' (Νέα φωτιά με νερό: GPS → 🔥 WPT → φωτιά)' : (useGpsAsStart ? ' (αφετηρία GPS)' : '')}\n` +
-          `${newFireWithWaterMode ? '🔥 WPT στον υπολογισμό: ' + viaMarkers.length + '\n' : ''}` +
+          `${viaPoints.length ? 'WPT μετάβασης: περασμένα ' + pzlOutboundWpIndex + '/' + viaPoints.length + '\n' : ''}` +
+          `${returnWpMarkers.length ? 'WPT RTB: περασμένα ' + pzlReturnWpIndex + '/' + returnWpMarkers.length + '\n' : ''}` +
           `${newFireWithWaterMode ? 'Επιστροφή προς επαναπλήρωση: ' + returnLegD.toFixed(1) + ' km' + (returnWpMarkers.length ? ' με WPT RTB' : ' direct') + '\n' : ''}` +
           `${newFireWithWaterMode ? 'Επαναμετάβαση από επαναπλήρωση: ' + approachLegD.toFixed(1) + ' km' + (viaMarkers.length ? ' με 🔥 WPT' : ' direct') + '\n' : ''}` +
           `Τελική επιστροφή προς Full Stop: ${finalReturnLegD.toFixed(1)} km${returnWpMarkers.length ? ' με WPT RTB' : ' direct'}\n` +
@@ -3778,7 +4297,9 @@ const base = bases[selectedBaseName];
           `Χρόνος αρχικής Α/Γ: ${getInitialTakeoffDelayMin()}\'\n` +
           `Χρόνος Α/Γ μετά επαναπλήρωση: ${getRefillTakeoffDelayMin()}\'\n` +
           `Ώρα πρώτης ρίψης: ${fmtTime(firstDrop)} (σε ${fmtUntilFromCalcCommand(firstDrop)} από τώρα)\n` +
-          `Μέγιστες ρίψεις: ${maxDrops}\n` +
+          `Πραγματοποιημένες ρίψεις: ${completedDrops}\n` +
+          `Επόμενες δυνατές ρίψεις: ${maxDrops}\n` +
+          `Σύνολο αποστολής: ${completedDrops + maxDrops}\n` +
           `Τελευταία Π/Γ: ${lastLanding ? fmtTime(lastLanding) : "-"}\n` +
           `Διάρκεια/ώρα επιστροφής: ${fmtDurationMin(returnDurationMin)} / ${lastLanding ? fmtTime(lastLanding) : "-"}\n` +
           `Περιορισμός: ${
@@ -3796,25 +4317,33 @@ const base = bases[selectedBaseName];
           }`;
         setText("dashBase", fullStopForTfName);
         setText("dashAlt", fullStopForTf.alt || fullStopForTf.ref);
-        setText("dashDrops", String(maxDrops));
+        setText("dashDrops", completedDrops > 0
+          ? `${completedDrops}+${maxDrops}`
+          : String(maxDrops));
         setText("dashFirstDrop", fmtTime(firstDrop));
         setText("dashCutoff", fmtTime(cutoffInfo.cutoff));
         setText("dashLastLanding", lastLanding ? fmtTime(lastLanding) : "-");
         setText("dashFireDist", `${D.toFixed(1)} km`);
         setText("dashLimit", maxDrops === 0 ? "ΑΝΕΠΑΡΚΗΣ" : limiting);
 
-        let html = "<b>Ώρες ρίψεων</b>";
+        let html = "<b>Ρίψεις</b>";
+        if (completedDrops > 0) {
+          html += `<div class="result" style="margin-top:6px;padding:6px">Πραγματοποιημένες: ${completedDrops} — τελευταία ${fmtTime(pzlActualDrops[completedDrops - 1].time)}</div>`;
+        }
         if (maxDrops === 0) {
-          html += "<div class=\"result\" style=\"background:#fff7ed;border:1px solid #fdba74;margin-top:6px\">Δεν επιτρέπεται ρίψη με τα τρέχοντα δεδομένα.</div>";
+          html += "<div class=\"result\" style=\"background:#fff7ed;border:1px solid #fdba74;margin-top:6px\">Δεν υπολογίζεται άλλη ρίψη με τα τρέχοντα δεδομένα.</div>";
         } else {
           html += "<table class=\"drop-table\"><tr><th>#</th><th>Ώρα</th><th>Από τώρα</th></tr>";
           for (let i=1; i<=maxDrops; i++) {
             const dropTime = addMinutes(firstDrop, (i-1)*cycleMin);
-            html += `<tr><td>${i}</td><td>${fmtTime(dropTime)}</td><td>${fmtUntilFromCalcCommand(dropTime)}</td></tr>`;
+            html += `<tr><td>${completedDrops + i}</td><td>${fmtTime(dropTime)}</td><td>${fmtUntilFromCalcCommand(dropTime)}</td></tr>`;
           }
           html += "</table>";
         }
         dropsDiv.innerHTML = html;
+        pzlRenderActualDrops();
+        pzlUpdateWptProgressStatus();
+        pzlUpdateDropNowButton();
 
         updateFuel(maxDrops, D, altD, missionDurationMin);
 
@@ -4186,6 +4715,7 @@ const base = bases[selectedBaseName];
       recalcAfterReturnClear();
           });
           returnWpMarkers = [];
+          pzlResetReturnProgress();
         }
         if (typeof returnWpLine !== "undefined" && returnWpLine) {
           try { map.removeLayer(returnWpLine); } catch(e) {}
@@ -5155,6 +5685,9 @@ const base = bases[selectedBaseName];
       try {
         if (typeof pzlUpdateFireSearchAccess === 'function') {
           pzlUpdateFireSearchAccess();
+        }
+        if (typeof pzlUpdateDropNowButton === 'function') {
+          pzlUpdateDropNowButton();
         }
       } catch(e) {}
     }
@@ -6795,7 +7328,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_LIVE_TIMES_ONLY_NOW_20260630M */
+/* PZL_DROP_NOW_WPT_PROGRESS_FINAL_20260630O */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
