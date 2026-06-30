@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_MISSION_LOG_ARCHIVE_20260630Q">
+<meta name="pzl-build" content="PZL_FULL_TEST_MODE_20260701R">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1178,6 +1178,68 @@ body.pzl-screen-locked #lockMapBtn {
   .mission-log-time{font-size:10px;}
   .mission-log-actions button{font-size:10px;}
   .mission-archive-open{min-width:64px;}
+}
+</style>
+
+
+<style id="pzl-full-test-mode-css">
+.pzl-test-panel summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+#pzlTestModeBadge{
+  background:#6b7280;
+  color:white;
+  border-radius:999px;
+  padding:2px 8px;
+  font-size:10px;
+  font-weight:900;
+}
+#pzlTestModeBadge.on{background:#16a34a;}
+#pzlTestModeBadge.pause{background:#eab308;color:#111827;}
+.pzl-test-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin-top:7px;
+}
+.pzl-test-actions button{
+  min-height:30px;
+  flex:1 1 auto;
+}
+.pzl-test-grid{
+  margin-top:7px;
+}
+.pzl-test-grid label{
+  display:block;
+  font-weight:800;
+  font-size:11px;
+}
+.pzl-test-quick{
+  display:flex;
+  gap:3px;
+}
+.pzl-test-quick button{
+  min-width:0;
+  flex:1;
+  padding:5px 3px;
+}
+#pzlTestStatus{
+  background:#ecfeff;
+  border-color:#06b6d4;
+  font-family:monospace;
+  font-size:11px;
+  line-height:1.25;
+}
+#pzlTestPickBtn.active{
+  background:#7c3aed !important;
+  color:white !important;
+}
+@media(max-width:700px){
+  .pzl-test-actions button{font-size:10px;padding:5px 4px;}
+  .pzl-test-grid input,.pzl-test-grid select{font-size:11px;}
 }
 </style>
 
@@ -1434,6 +1496,88 @@ body.pzl-screen-locked #lockMapBtn {
 </div>
 <div id="returnWpStatus" class="small">Ενδιάμεσα επιστροφής: 0 σημεία</div>
 <div class="row" style="margin-top:6px"></div>
+      </div>
+    </details>
+
+    <details id="pzlTestModePanel" class="collapsible-panel pzl-test-panel">
+      <summary>🧪 Test Mode <span id="pzlTestModeBadge">OFF</span></summary>
+      <div class="collapsible-body">
+        <div class="small">
+          Προσομοίωση GPS, ανέμου, απόκλισης πορείας και χρόνου. Δεν χρησιμοποιεί το πραγματικό GPS.
+        </div>
+
+        <div class="pzl-test-actions">
+          <button id="pzlTestNewBtn" type="button">Νέα test αποστολή</button>
+          <button id="pzlTestRunBtn" type="button" class="secondary">▶ Start</button>
+          <button id="pzlTestStopBtn" type="button" class="danger">■ Έξοδος</button>
+        </div>
+
+        <div class="grid2 pzl-test-grid">
+          <div>
+            <label>GS km/h</label>
+            <input id="pzlTestGs" type="number" min="0" max="400" step="5" value="0">
+          </div>
+          <div>
+            <label>Ταχύτητα χρόνου</label>
+            <select id="pzlTestRate">
+              <option value="1">x1</option>
+              <option value="2">x2</option>
+              <option value="5">x5</option>
+              <option value="10" selected>x10</option>
+            </select>
+          </div>
+          <div>
+            <label>Πορεία °</label>
+            <input id="pzlTestHeading" type="number" min="0" max="359" step="1" value="0">
+          </div>
+          <div>
+            <label>Κίνηση</label>
+            <select id="pzlTestNavMode">
+              <option value="auto" selected>AUTO διαδρομή</option>
+              <option value="manual">Χειροκίνητη</option>
+            </select>
+          </div>
+          <div>
+            <label>Άνεμος από °</label>
+            <input id="pzlTestWindDir" type="number" min="0" max="360" step="1" value="0">
+          </div>
+          <div>
+            <label>Άνεμος kts</label>
+            <input id="pzlTestWindSpeed" type="number" min="0" max="100" step="1" value="0">
+          </div>
+          <div>
+            <label>Ριπές kts</label>
+            <input id="pzlTestWindGust" type="number" min="0" max="120" step="1" value="0">
+          </div>
+          <div>
+            <label>Γρήγορη GS</label>
+            <div class="pzl-test-quick">
+              <button type="button" data-test-gs="0">0</button>
+              <button type="button" data-test-gs="25">&lt;30</button>
+              <button type="button" data-test-gs="180">&gt;100</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pzl-test-actions">
+          <button id="pzlTestLeftBtn" type="button" class="secondary">↺ −10°</button>
+          <button id="pzlTestRightBtn" type="button" class="secondary">+10° ↻</button>
+          <button id="pzlTestPickBtn" type="button" class="secondary">📍 Tap θέση</button>
+        </div>
+
+        <div class="pzl-test-actions">
+          <button id="pzlTestBaseBtn" type="button" class="secondary">Στην αρχική Α/Γ</button>
+          <button id="pzlTestFireBtn" type="button" class="secondary">Στη φωτιά</button>
+          <button id="pzlTestRefillBtn" type="button" class="secondary">Στο REFILL</button>
+          <button id="pzlTestFullStopBtn" type="button" class="secondary">Στο Full Stop</button>
+        </div>
+
+        <div class="pzl-test-actions">
+          <button id="pzlTestPlus5Btn" type="button" class="secondary">+5′</button>
+          <button id="pzlTestPlus20Btn" type="button" class="secondary">+20′</button>
+        </div>
+
+        <div id="pzlTestStatus" class="position-report">Test Mode: ανενεργό</div>
       </div>
     </details>
 
@@ -3035,6 +3179,15 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
     updateBaseMarker();
 
     map.on("click", (e) => {
+      if (typeof pzlTestModePickPosition !== "undefined" &&
+          pzlTestModePickPosition &&
+          typeof pzlTestModeSetPosition === "function") {
+        pzlTestModeSetPosition(e.latlng.lat, e.latlng.lng, true);
+        pzlTestModePickPosition = false;
+        const pickBtn = document.getElementById("pzlTestPickBtn");
+        if (pickBtn) pickBtn.classList.remove("active");
+        return;
+      }
       if (typeof mapLocked !== "undefined" && mapLocked) { return; }
       if (typeof returnWpMode !== "undefined" && returnWpMode) {
         addReturnWaypoint(e.latlng.lat, e.latlng.lng);
@@ -6027,6 +6180,470 @@ const base = bases[selectedBaseName];
     });
 
     
+
+    // -----------------------------------------------------------------
+    // Full interactive Test Mode
+    // -----------------------------------------------------------------
+    let pzlTestModeActive = false;
+    let pzlTestModePaused = true;
+    let pzlTestModeTimer = null;
+    let pzlTestModePickPosition = false;
+    let pzlTestModeLastRealMs = null;
+    let pzlTestModeLastCalcRealMs = 0;
+    let pzlTestModeLowGsStartSimMs = null;
+    let pzlTestModeOwnsMarker = false;
+
+    function pzlTestModeInputNumber(id, fallback = 0) {
+      const el = document.getElementById(id);
+      const value = el ? Number(el.value) : NaN;
+      return Number.isFinite(value) ? value : fallback;
+    }
+
+    function pzlTestModeNormalizeHeading(value) {
+      value = Number(value);
+      if (!Number.isFinite(value)) value = 0;
+      return ((value % 360) + 360) % 360;
+    }
+
+    function pzlTestModeSetBadge(state) {
+      const badge = document.getElementById("pzlTestModeBadge");
+      if (!badge) return;
+      badge.classList.remove("on", "pause");
+      if (!pzlTestModeActive) {
+        badge.textContent = "OFF";
+        return;
+      }
+      if (state === "pause") {
+        badge.textContent = "PAUSE";
+        badge.classList.add("pause");
+      } else {
+        badge.textContent = "ON";
+        badge.classList.add("on");
+      }
+    }
+
+    function pzlTestModeSetStatus(extra = "") {
+      const el = document.getElementById("pzlTestStatus");
+      if (!el) return;
+
+      const gs = pzlTestModeInputNumber("pzlTestGs", 0);
+      const hdg = pzlTestModeNormalizeHeading(pzlTestModeInputNumber("pzlTestHeading", 0));
+      const rate = Math.max(1, pzlTestModeInputNumber("pzlTestRate", 1));
+      const nav = document.getElementById("pzlTestNavMode");
+      const navText = nav && nav.value === "manual" ? "MANUAL" : "AUTO";
+      const phase = typeof pzlMissionPhase !== "undefined" ? pzlMissionPhase : "-";
+      const now = gpsTestModeASimNow || new Date();
+
+      let landingText = "-";
+      if (pzlTestModeLowGsStartSimMs !== null) {
+        const elapsedMin = Math.max(0, (now.getTime() - pzlTestModeLowGsStartSimMs) / 60000);
+        landingText = `${elapsedMin.toFixed(1)}′ / 20′`;
+      }
+
+      el.textContent =
+        `TEST ${pzlTestModePaused ? "PAUSE" : "RUN"} | ${pzlMissionLogFormatDateTime(now)}\n` +
+        `GS ${gs.toFixed(0)} km/h | HDG ${String(Math.round(hdg)).padStart(3,"0")}° | ${navText} | x${rate}\n` +
+        `Φάση: ${phase} | Αναμονή τελευταίας Π/Γ: ${landingText}` +
+        (extra ? `\n${extra}` : "");
+    }
+
+    function pzlTestModeApplyWind() {
+      const dir = Math.max(0, Math.min(360, pzlTestModeInputNumber("pzlTestWindDir", 0)));
+      const speed = Math.max(0, pzlTestModeInputNumber("pzlTestWindSpeed", 0));
+      const gust = Math.max(0, pzlTestModeInputNumber("pzlTestWindGust", 0));
+
+      const windDirEl = document.getElementById("windDir");
+      const windSpeedEl = document.getElementById("windSpeed");
+      const windGustEl = document.getElementById("windGust");
+
+      if (windDirEl) windDirEl.value = String(Math.round(dir));
+      if (windSpeedEl) windSpeedEl.value = String(speed);
+      if (windGustEl) windGustEl.value = String(gust);
+
+      try { updateWindResult(); } catch(e) {}
+      try { drawAll(); } catch(e) {}
+    }
+
+    function pzlTestModeTarget() {
+      try {
+        if (pzlMissionPhase === "to_refill") {
+          const remaining = pzlRemainingReturnPoints();
+          if (remaining.length) return remaining[0];
+          return pzlReturnDestination(false);
+        }
+
+        if (pzlMissionPhase === "refill_ground") {
+          return pzlReturnDestination(false);
+        }
+
+        const remaining = pzlRemainingOutboundPoints();
+        if (remaining.length) return remaining[0];
+        if (firePoint) return {lat:Number(firePoint.lat), lon:Number(firePoint.lon)};
+      } catch(e) {}
+      return null;
+    }
+
+    function pzlTestModeUpdateMarker(lat, lon, heading, gs) {
+      currentGps = {
+        lat:Number(lat),
+        lon:Number(lon),
+        speedMps:Number(gs) / 3.6,
+        heading:pzlTestModeNormalizeHeading(heading),
+        altitudeM:1000,
+        accuracy:5
+      };
+
+      if (gpsMarker) {
+        gpsMarker.setLatLng([currentGps.lat, currentGps.lon]);
+      } else {
+        gpsMarker = L.marker(
+          [currentGps.lat, currentGps.lon],
+          {icon:gpsIcon}
+        ).addTo(map).bindPopup("TEST MODE");
+        pzlTestModeOwnsMarker = true;
+      }
+
+      try {
+        if (gpsMarker && gpsMarker.setZIndexOffset) gpsMarker.setZIndexOffset(9999);
+      } catch(e) {}
+
+      try {
+        ensureGpsPlaneInnerSymbol();
+        const aircraftEl = document.querySelector(".gps-plane-symbol");
+        if (aircraftEl) aircraftEl.style.transform = `rotate(${currentGps.heading}deg)`;
+      } catch(e) {}
+
+      const gpsResult = document.getElementById("gpsResult");
+      if (gpsResult) {
+        gpsResult.textContent =
+          `TEST MODE GPS\n${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}\n` +
+          `GS: ${Number(gs).toFixed(0)} km/h | HDG: ${String(Math.round(currentGps.heading)).padStart(3,"0")}°`;
+      }
+
+      try { setText("dashGS", `${Number(gs).toFixed(0)} km/h`); } catch(e) {}
+      try { updateHsiHud(); } catch(e) {}
+    }
+
+    function pzlTestModeSetPosition(lat, lon, centerMap = false) {
+      const hdg = pzlTestModeNormalizeHeading(pzlTestModeInputNumber("pzlTestHeading", 0));
+      const gs = Math.max(0, pzlTestModeInputNumber("pzlTestGs", 0));
+      pzlTestModeUpdateMarker(lat, lon, hdg, gs);
+      if (centerMap) {
+        try { map.setView([lat, lon], Math.max(Number(map.getZoom()) || 0, 11)); } catch(e) {}
+      }
+      try { drawAll(); } catch(e) {}
+      try { calculate(); } catch(e) {}
+      pzlTestModeSetStatus("Η θέση μετακινήθηκε χειροκίνητα.");
+    }
+
+    function pzlTestModeSetAt(kind) {
+      let point = null;
+      if (kind === "base") {
+        const base = bases[selectedBaseName];
+        if (base) point = {lat:base.lat, lon:base.lon};
+      } else if (kind === "fire" && firePoint) {
+        point = {lat:firePoint.lat, lon:firePoint.lon};
+      } else if (kind === "refill") {
+        point = pzlReturnDestination(false);
+      } else if (kind === "full") {
+        point = pzlReturnDestination(true);
+      }
+
+      if (!point) {
+        alert("Δεν υπάρχει διαθέσιμο σημείο για αυτή την επιλογή.");
+        return;
+      }
+      pzlTestModeSetPosition(point.lat, point.lon, true);
+    }
+
+    function pzlTestModeAdvanceClock(seconds) {
+      if (!gpsTestModeASimNow) gpsTestModeASimNow = new Date();
+      gpsTestModeASimNow = new Date(gpsTestModeASimNow.getTime() + seconds * 1000);
+    }
+
+    function pzlTestModeCheckLandingClock(gs) {
+      if (!gpsTestModeASimNow) return;
+
+      if (gs > 100) {
+        pzlTestModeLowGsStartSimMs = null;
+        return;
+      }
+
+      if (gs < 30 &&
+          pzlMissionLogState &&
+          pzlMissionLogState.pendingLandingId) {
+
+        if (pzlTestModeLowGsStartSimMs === null) {
+          pzlTestModeLowGsStartSimMs = gpsTestModeASimNow.getTime();
+        }
+
+        const elapsedMs = gpsTestModeASimNow.getTime() - pzlTestModeLowGsStartSimMs;
+        if (elapsedMs >= 20 * 60 * 1000 && !autoFullStopTime) {
+          const landingEvent = pzlMissionLog.find(
+            event => event.id === pzlMissionLogState.pendingLandingId
+          );
+          const landingTime = landingEvent
+            ? new Date(landingEvent.time)
+            : new Date(pzlTestModeLowGsStartSimMs);
+          setAutoFullStop(landingTime);
+          pzlTestModeSetStatus("Η Π/Γ καταγράφηκε ως τελευταία μετά από 20′ χωρίς νέα Α/Γ.");
+        }
+      } else {
+        pzlTestModeLowGsStartSimMs = null;
+      }
+    }
+
+    function pzlTestModeFeedSystems(gs, heading) {
+      const now = gpsTestModeASimNow || new Date();
+
+      try { handleAutoTakeoffFullStop(gs, now); } catch(e) {}
+      try { updateAirborneAndFuel(now, gs); } catch(e) {}
+      try { pzlUpdateMissionPhaseFromGps(gs, now); } catch(e) {}
+      try { pzlUpdateWaypointProgress(); } catch(e) {}
+      try { updateFlightStatus(); } catch(e) {}
+
+      pzlTestModeCheckLandingClock(gs);
+    }
+
+    function pzlTestModeMove(simSeconds) {
+      if (!currentGps) return;
+
+      const gs = Math.max(0, pzlTestModeInputNumber("pzlTestGs", 0));
+      const navModeEl = document.getElementById("pzlTestNavMode");
+      const autoNav = !navModeEl || navModeEl.value === "auto";
+      let heading = pzlTestModeNormalizeHeading(pzlTestModeInputNumber("pzlTestHeading", 0));
+
+      if (autoNav) {
+        const target = pzlTestModeTarget();
+        if (target) {
+          heading = bearingDeg(
+            {lat:currentGps.lat, lon:currentGps.lon},
+            target
+          );
+          const headingEl = document.getElementById("pzlTestHeading");
+          if (headingEl) headingEl.value = String(Math.round(heading));
+
+          if (gs >= 30) {
+            const stepKm = gs * simSeconds / 3600;
+            const distKm = haversineKm(
+              {lat:currentGps.lat, lon:currentGps.lon},
+              target
+            );
+            if (distKm <= stepKm) {
+              pzlTestModeUpdateMarker(target.lat, target.lon, heading, gs);
+              return;
+            }
+          }
+        }
+      }
+
+      // GS <30 is treated as ground speed: clock runs but the aircraft stays at the airport.
+      if (gs < 30) {
+        pzlTestModeUpdateMarker(currentGps.lat, currentGps.lon, heading, gs);
+        return;
+      }
+
+      const stepKm = gs * simSeconds / 3600;
+      const next = endpointFromBearing(currentGps.lat, currentGps.lon, heading, stepKm);
+      pzlTestModeUpdateMarker(next.lat, next.lon, heading, gs);
+    }
+
+    function pzlTestModeTick() {
+      if (!pzlTestModeActive || pzlTestModePaused) return;
+
+      const realNow = Date.now();
+      if (!pzlTestModeLastRealMs) pzlTestModeLastRealMs = realNow;
+      const realDeltaSec = Math.min(2, Math.max(0.05, (realNow - pzlTestModeLastRealMs) / 1000));
+      pzlTestModeLastRealMs = realNow;
+
+      const rate = Math.max(1, Math.min(10, pzlTestModeInputNumber("pzlTestRate", 1)));
+      const simSeconds = realDeltaSec * rate;
+      pzlTestModeAdvanceClock(simSeconds);
+      pzlTestModeApplyWind();
+      pzlTestModeMove(simSeconds);
+
+      const gs = Math.max(0, pzlTestModeInputNumber("pzlTestGs", 0));
+      const heading = pzlTestModeNormalizeHeading(pzlTestModeInputNumber("pzlTestHeading", 0));
+      pzlTestModeFeedSystems(gs, heading);
+
+      if (realNow - pzlTestModeLastCalcRealMs >= 1000) {
+        pzlTestModeLastCalcRealMs = realNow;
+        try { drawAll(); } catch(e) {}
+        try { calculate(); } catch(e) {}
+      }
+
+      pzlTestModeSetStatus();
+    }
+
+    function pzlTestModeStart(newMission = false) {
+      if (gpsTestModeATimer) {
+        clearInterval(gpsTestModeATimer);
+        gpsTestModeATimer = null;
+      }
+
+      try {
+        if (gpsWatchId !== null && navigator.geolocation) {
+          navigator.geolocation.clearWatch(gpsWatchId);
+          gpsWatchId = null;
+        }
+      } catch(e) {}
+
+      if (newMission || !commandTime) {
+        const commandBtn = document.getElementById("takeoffBtn");
+        if (commandBtn) commandBtn.click();
+      }
+
+      if (!commandTime) commandTime = new Date();
+
+      pzlTestModeActive = true;
+      pzlTestModePaused = false;
+      gpsTestModeARunning = true;
+      gpsTestModeASimNow = new Date(commandTime.getTime());
+      pzlTestModeLastRealMs = Date.now();
+      pzlTestModeLastCalcRealMs = 0;
+      pzlTestModeLowGsStartSimMs = null;
+
+      const base = bases[selectedBaseName];
+      if (base) {
+        pzlTestModeUpdateMarker(base.lat, base.lon, 0, 0);
+        try { map.setView([base.lat, base.lon], Math.max(Number(map.getZoom()) || 0, 9)); } catch(e) {}
+      }
+
+      const gsEl = document.getElementById("pzlTestGs");
+      if (gsEl) gsEl.value = "0";
+
+      pzlTestModeApplyWind();
+      pzlTestModeSetBadge("on");
+
+      const runBtn = document.getElementById("pzlTestRunBtn");
+      if (runBtn) runBtn.textContent = "⏸ Pause";
+
+      if (pzlTestModeTimer) clearInterval(pzlTestModeTimer);
+      pzlTestModeTimer = setInterval(pzlTestModeTick, 250);
+
+      pzlTestModeSetStatus("Έτοιμο. Βάλε GS >100 για πραγματική Α/Γ.");
+    }
+
+    function pzlTestModeToggleRun() {
+      if (!pzlTestModeActive) {
+        pzlTestModeStart(false);
+        return;
+      }
+
+      pzlTestModePaused = !pzlTestModePaused;
+      pzlTestModeLastRealMs = Date.now();
+
+      const runBtn = document.getElementById("pzlTestRunBtn");
+      if (runBtn) runBtn.textContent = pzlTestModePaused ? "▶ Start" : "⏸ Pause";
+      pzlTestModeSetBadge(pzlTestModePaused ? "pause" : "on");
+      pzlTestModeSetStatus();
+    }
+
+    function pzlTestModeStop() {
+      pzlTestModeActive = false;
+      pzlTestModePaused = true;
+      pzlTestModePickPosition = false;
+      gpsTestModeARunning = false;
+      gpsTestModeASimNow = null;
+      pzlTestModeLowGsStartSimMs = null;
+
+      if (pzlTestModeTimer) clearInterval(pzlTestModeTimer);
+      pzlTestModeTimer = null;
+
+      if (fullStopTimerId) {
+        clearTimeout(fullStopTimerId);
+        fullStopTimerId = null;
+      }
+
+      const pickBtn = document.getElementById("pzlTestPickBtn");
+      if (pickBtn) pickBtn.classList.remove("active");
+      const runBtn = document.getElementById("pzlTestRunBtn");
+      if (runBtn) runBtn.textContent = "▶ Start";
+
+      pzlTestModeSetBadge("off");
+
+      const gpsResult = document.getElementById("gpsResult");
+      if (gpsResult) gpsResult.textContent = "GPS Test Mode τερματίστηκε.";
+
+      pzlTestModeSetStatus("Το ημερολόγιο και οι αποθηκευμένες καταγραφές διατηρήθηκαν.");
+    }
+
+    function pzlTestModeAdjustHeading(delta) {
+      const headingEl = document.getElementById("pzlTestHeading");
+      const navMode = document.getElementById("pzlTestNavMode");
+      if (navMode) navMode.value = "manual";
+      const next = pzlTestModeNormalizeHeading(
+        pzlTestModeInputNumber("pzlTestHeading", 0) + delta
+      );
+      if (headingEl) headingEl.value = String(Math.round(next));
+      pzlTestModeSetStatus("Χειροκίνητη απόκλιση από τη διαδρομή.");
+    }
+
+    function pzlTestModeJumpMinutes(minutes) {
+      if (!pzlTestModeActive) pzlTestModeStart(false);
+      pzlTestModeAdvanceClock(Number(minutes) * 60);
+
+      const gs = Math.max(0, pzlTestModeInputNumber("pzlTestGs", 0));
+      pzlTestModeFeedSystems(gs, pzlTestModeInputNumber("pzlTestHeading", 0));
+      try { calculate(); } catch(e) {}
+      pzlTestModeSetStatus(`Μετακινήθηκε ο χρόνος κατά +${minutes}′.`);
+    }
+
+    function pzlTestModeBindUi() {
+      const bind = (id, fn) => {
+        const el = document.getElementById(id);
+        if (el && !el.dataset.testBound) {
+          el.dataset.testBound = "1";
+          el.addEventListener("click", fn);
+        }
+      };
+
+      bind("pzlTestNewBtn", () => pzlTestModeStart(true));
+      bind("pzlTestRunBtn", pzlTestModeToggleRun);
+      bind("pzlTestStopBtn", pzlTestModeStop);
+      bind("pzlTestLeftBtn", () => pzlTestModeAdjustHeading(-10));
+      bind("pzlTestRightBtn", () => pzlTestModeAdjustHeading(10));
+      bind("pzlTestPickBtn", () => {
+        pzlTestModePickPosition = true;
+        const btn = document.getElementById("pzlTestPickBtn");
+        if (btn) btn.classList.add("active");
+        pzlTestModeSetStatus("Πάτησε οποιοδήποτε σημείο στον χάρτη.");
+      });
+      bind("pzlTestBaseBtn", () => pzlTestModeSetAt("base"));
+      bind("pzlTestFireBtn", () => pzlTestModeSetAt("fire"));
+      bind("pzlTestRefillBtn", () => pzlTestModeSetAt("refill"));
+      bind("pzlTestFullStopBtn", () => pzlTestModeSetAt("full"));
+      bind("pzlTestPlus5Btn", () => pzlTestModeJumpMinutes(5));
+      bind("pzlTestPlus20Btn", () => pzlTestModeJumpMinutes(20));
+
+      document.querySelectorAll("[data-test-gs]").forEach(btn => {
+        if (btn.dataset.testBound) return;
+        btn.dataset.testBound = "1";
+        btn.addEventListener("click", () => {
+          const gsEl = document.getElementById("pzlTestGs");
+          if (gsEl) gsEl.value = btn.getAttribute("data-test-gs");
+          pzlTestModeSetStatus();
+        });
+      });
+
+      ["pzlTestWindDir", "pzlTestWindSpeed", "pzlTestWindGust"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.dataset.testBound) {
+          el.dataset.testBound = "1";
+          el.addEventListener("input", pzlTestModeApplyWind);
+        }
+      });
+
+      pzlTestModeSetBadge("off");
+      pzlTestModeSetStatus();
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", pzlTestModeBindUi);
+    } else {
+      pzlTestModeBindUi();
+    }
+
     function gpsDebugLatLngOfLayer(layer) {
       try {
         if (!layer) return "-";
@@ -8046,7 +8663,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_MISSION_LOG_ARCHIVE_20260630Q */
+/* PZL_FULL_TEST_MODE_20260701R */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;

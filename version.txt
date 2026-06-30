@@ -1,13 +1,20 @@
-PZL_MISSION_LOG_ARCHIVE_20260630Q
-Built 2026-06-30
+PZL_FULL_TEST_MODE_20260701R
+Built 2026-07-01
 
-- General Reset no longer deletes the mission log.
-- Added persistent mission-log archive in local storage.
-- Current mission log now shows the mission date.
-- Added “Αποθήκευση καταγραφής” button to store the current log separately.
-- Added archive list of saved logs.
-- Each saved log can be opened later, edited and deleted.
-- A new command auto-saves the previous current log before starting a new one.
-- A final landing auto-saves the current log to the archive.
-- Mission log archive survives page refresh and panel reset.
+- Added full interactive Test Mode.
+- Adjustable simulated GS.
+- Quick GS buttons: 0, <30 and >100.
+- Adjustable wind direction, speed and gusts.
+- Time acceleration x1, x2, x5 and x10.
+- AUTO route follows the next active WPT, fire and REFILL.
+- Manual heading mode allows deliberate route deviation.
+- “Tap θέση” moves the simulated aircraft anywhere on the map.
+- Quick teleport to initial airport, fire, REFILL or Full Stop.
+- “Ρίψη τώρα” works normally during Test Mode and updates calculations and mission log.
+- GS >100 records actual/intermediate takeoff.
+- GS <30 records a pending landing.
+- A new GS >100 before 20 simulated minutes turns it into an intermediate landing and records an intermediate takeoff.
+- Twenty simulated minutes without another takeoff turns it into the final landing.
+- Added +5 and +20 simulated minute controls.
+- Mission log and archive remain separate from the panel Reset.
 - Cache identifier updated.
