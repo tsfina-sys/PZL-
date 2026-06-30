@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_COORD_GO_SAME_PREVIEW_FIX_20260630I">
+<meta name="pzl-build" content="PZL_COORD_GO_DIRECT_COMMIT_FIX_20260630J">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -6611,7 +6611,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_COORD_GO_SAME_PREVIEW_FIX_20260630I */
+/* PZL_COORD_GO_DIRECT_COMMIT_FIX_20260630J */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
@@ -7045,28 +7045,40 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
       previewSelected();
     }));
 
-    // Commit exactly the same numeric point that is currently previewed.
-    // We pass it to the existing application handler as DD, avoiding the
-    // older DDM/DMS text parser that could reuse the latitude as longitude.
-    searchButton.addEventListener('click', function(){
+    // GO commits the exact in-memory preview point directly.
+    // The old text parser is bypassed completely, so the final point cannot
+    // differ from the DD / DDM / DMS position currently visible on the map.
+    searchButton.addEventListener('click', function(event){
       if(searchButton.disabled) return;
 
       const candidate = candidates[selected];
       if(!candidate) return;
 
-      hiddenInput.value =
-        Number(candidate.lat).toFixed(10) + ', ' +
-        Number(candidate.lon).toFixed(10);
-      modeSelect.value = 'dd';
-      commitPending = true;
-    }, true);
+      event.preventDefault();
+      event.stopImmediatePropagation();
 
-    searchButton.addEventListener('click', function(){
-      if(!commitPending) return;
+      commitPending = true;
       previewActive = false;
       originalFirePoint = null;
-      commitPending = false;
-    });
+
+      try {
+        firePoint = {
+          lat:Number(candidate.lat),
+          lon:Number(candidate.lon),
+          label:'Συντεταγμένες ' + selected.toUpperCase()
+        };
+
+        setFireMarker();
+        map.setView([firePoint.lat, firePoint.lon], Math.max(Number(map.getZoom()) || 0, 13));
+
+        mode = 'fire';
+        fireSelectionArmed = false;
+        updateFireModeButtonState();
+        calculate();
+      } finally {
+        commitPending = false;
+      }
+    }, true);
 
     window.addEventListener('pzl-fire-search-access', function(event){
       const enabled = !!(event && event.detail && event.detail.enabled);
