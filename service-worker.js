@@ -1,4 +1,4 @@
-const PZL_BUILD = 'PZL_LIVE_TIMES_COUNTDOWN_FIX_20260630L';
+const PZL_BUILD = 'PZL_LIVE_TIMES_ONLY_NOW_20260630M';
 self.addEventListener('install', event => { self.skipWaiting(); });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {

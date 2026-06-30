@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_LIVE_TIMES_COUNTDOWN_FIX_20260630L">
+<meta name="pzl-build" content="PZL_LIVE_TIMES_ONLY_NOW_20260630M">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1774,13 +1774,11 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
 
     let pzlCountdownOriginMs = null;
     let pzlCountdownStartedRealMs = null;
-    let pzlInitialDropOffsetsSec = [];
 
     function pzlStartDropCountdown(originTime) {
       if (!originTime) return;
       pzlCountdownOriginMs = originTime.getTime();
       pzlCountdownStartedRealMs = Date.now();
-      pzlInitialDropOffsetsSec = [];
     }
 
     function pzlEnsureDropCountdown(originTime) {
@@ -3669,7 +3667,7 @@ function setFireMarker() {
           : `${m}'`;
       };
 
-      const fmtUntilFromCalcCommand = (targetTime, dropIndex = 0) => {
+      const fmtUntilFromCalcCommand = (targetTime) => {
         if (!targetTime || !countdownOrigin) return "-";
 
         const nowForCountdown = pzlCountdownNow(countdownOrigin);
@@ -3678,14 +3676,7 @@ function setFireMarker() {
           Math.ceil((targetTime.getTime() - nowForCountdown.getTime()) / 1000)
         );
 
-        if (!Number.isFinite(pzlInitialDropOffsetsSec[dropIndex])) {
-          pzlInitialDropOffsetsSec[dropIndex] = Math.max(
-            0,
-            Math.round((targetTime.getTime() - countdownOrigin.getTime()) / 1000)
-          );
-        }
-
-        return `${fmtCountdownPart(remainingSec, true)} / ${fmtCountdownPart(pzlInitialDropOffsetsSec[dropIndex], false)}`;
+        return fmtCountdownPart(remainingSec, true);
       };
 
       updateWindResult();
@@ -3786,7 +3777,7 @@ const base = bases[selectedBaseName];
           `${(typeof newFireWithWaterMode !== "undefined" && newFireWithWaterMode) ? "Νέα φωτιά με νερό: χωρίς 15\' αρχικής Α/Γ\n" : ""}` +
           `Χρόνος αρχικής Α/Γ: ${getInitialTakeoffDelayMin()}\'\n` +
           `Χρόνος Α/Γ μετά επαναπλήρωση: ${getRefillTakeoffDelayMin()}\'\n` +
-          `Ώρα πρώτης ρίψης: ${fmtTime(firstDrop)} (σε ${fmtUntilFromCalcCommand(firstDrop, 0)} από τώρα/εντολή)\n` +
+          `Ώρα πρώτης ρίψης: ${fmtTime(firstDrop)} (σε ${fmtUntilFromCalcCommand(firstDrop)} από τώρα)\n` +
           `Μέγιστες ρίψεις: ${maxDrops}\n` +
           `Τελευταία Π/Γ: ${lastLanding ? fmtTime(lastLanding) : "-"}\n` +
           `Διάρκεια/ώρα επιστροφής: ${fmtDurationMin(returnDurationMin)} / ${lastLanding ? fmtTime(lastLanding) : "-"}\n` +
@@ -3816,10 +3807,10 @@ const base = bases[selectedBaseName];
         if (maxDrops === 0) {
           html += "<div class=\"result\" style=\"background:#fff7ed;border:1px solid #fdba74;margin-top:6px\">Δεν επιτρέπεται ρίψη με τα τρέχοντα δεδομένα.</div>";
         } else {
-          html += "<table class=\"drop-table\"><tr><th>#</th><th>Ώρα</th><th>Από τώρα / από εντολή</th></tr>";
+          html += "<table class=\"drop-table\"><tr><th>#</th><th>Ώρα</th><th>Από τώρα</th></tr>";
           for (let i=1; i<=maxDrops; i++) {
             const dropTime = addMinutes(firstDrop, (i-1)*cycleMin);
-            html += `<tr><td>${i}</td><td>${fmtTime(dropTime)}</td><td>${fmtUntilFromCalcCommand(dropTime, i - 1)}</td></tr>`;
+            html += `<tr><td>${i}</td><td>${fmtTime(dropTime)}</td><td>${fmtUntilFromCalcCommand(dropTime)}</td></tr>`;
           }
           html += "</table>";
         }
@@ -6804,7 +6795,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_LIVE_TIMES_COUNTDOWN_FIX_20260630L */
+/* PZL_LIVE_TIMES_ONLY_NOW_20260630M */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
