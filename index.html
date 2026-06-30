@@ -6321,12 +6321,39 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 }
 </style>
 
-<style id="chatgpt-hud-zfix">
-#hsiHud .hsiHdg,#hsiHud .hsiAlt{z-index:20 !important;}
-#hsiHud .hsiRefill,#hsiHud .hsiFull,#hsiHud .hsiFire{z-index:10 !important;}
+<style id="fix37d78-hud-needle-layering">
+/* D78: keep all three HUD needles behind every HUD data readout. */
+#hsiHud .hsiDial{
+  isolation:isolate !important;
+}
+
+/* Compass graphics remain at the base. */
+#hsiHud .hsiRose,
+#hsiHud .hsiHeadingBug{
+  z-index:2 !important;
+}
+
+/* All three needles remain visible over the dial, but below the data. */
+#hsiHud .hsiArrow,
+#hsiHud .hsiRefill,
+#hsiHud .hsiFull,
+#hsiHud .hsiFire{
+  z-index:10 !important;
+}
+
+/* Every textual/readout element is painted above the needles. */
+#hsiHud .hsiHdg,
+#hsiHud .hsiGs,
+#hsiHud .hsiAlt,
+#hsiHud .hsiLabel,
+#hsiHud .hsiPos,
+#hsiHud .hsiNorth,
+#hsiHud .hsiE,
+#hsiHud .hsiS,
+#hsiHud .hsiW,
+#hsiHud .hsiRoseLabel{
+  z-index:30 !important;
+}
 </style>
 </body>
 </html>
-
-#hsiHud .hsiGs,#hsiHud .hsiGs *,#hsiHud .hsiAlt{position:relative;z-index:20 !important;}
-#hsiHud .hsiArrow{z-index:2 !important;}
