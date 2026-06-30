@@ -1,19 +1,13 @@
-PZL_MISSION_LOG_20260630P
+PZL_MISSION_LOG_ARCHIVE_20260630Q
 Built 2026-06-30
 
-- Added a collapsible “Ημερολόγιο αποστολής”.
-- Automatically records:
-  • Ώρα εντολής
-  • Πραγματική πρώτη Α/Γ
-  • Κάθε Ρίψη τώρα
-  • Κάθε ενδιάμεση Π/Γ
-  • Κάθε ενδιάμεση Α/Γ
-  • Τελευταία Π/Γ
-- A landing is initially shown as pending.
-- If GS rises above 100 km/h within 20 minutes, it becomes an intermediate landing.
-- If no new takeoff occurs for 20 minutes, it becomes the final landing.
-- Events show hours, minutes and seconds in chronological order.
-- The log is preserved after an accidental page refresh.
-- A new Command or Manual Practice starts a fresh log.
-- General Reset clears the log.
+- General Reset no longer deletes the mission log.
+- Added persistent mission-log archive in local storage.
+- Current mission log now shows the mission date.
+- Added “Αποθήκευση καταγραφής” button to store the current log separately.
+- Added archive list of saved logs.
+- Each saved log can be opened later, edited and deleted.
+- A new command auto-saves the previous current log before starting a new one.
+- A final landing auto-saves the current log to the archive.
+- Mission log archive survives page refresh and panel reset.
 - Cache identifier updated.

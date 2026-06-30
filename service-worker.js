@@ -1,4 +1,4 @@
-const PZL_BUILD = 'PZL_MISSION_LOG_20260630P';
+const PZL_BUILD = 'PZL_MISSION_LOG_ARCHIVE_20260630Q';
 self.addEventListener('install', event => { self.skipWaiting(); });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {

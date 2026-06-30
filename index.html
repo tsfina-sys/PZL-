@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_MISSION_LOG_20260630P">
+<meta name="pzl-build" content="PZL_MISSION_LOG_ARCHIVE_20260630Q">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1066,7 +1066,25 @@ body.pzl-screen-locked #lockMapBtn {
   opacity:.78;
   font-weight:800;
 }
-.mission-log-list{
+.mission-log-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:7px;
+  margin-bottom:7px;
+}
+.mission-log-actions button{
+  min-height:30px;
+}
+.mission-log-archive-title{
+  margin-top:10px;
+  margin-bottom:6px;
+  font-size:12px;
+  font-weight:900;
+  color:#334155;
+}
+.mission-log-list,
+.mission-archive-list{
   display:flex;
   flex-direction:column;
   gap:5px;
@@ -1082,7 +1100,7 @@ body.pzl-screen-locked #lockMapBtn {
 }
 .mission-log-row{
   display:grid;
-  grid-template-columns:70px minmax(0,1fr);
+  grid-template-columns:86px minmax(0,1fr);
   gap:8px;
   align-items:center;
   padding:6px 8px;
@@ -1094,6 +1112,7 @@ body.pzl-screen-locked #lockMapBtn {
   font-weight:900;
   font-variant-numeric:tabular-nums;
   white-space:nowrap;
+  line-height:1.15;
 }
 .mission-log-label{
   min-width:0;
@@ -1115,13 +1134,50 @@ body.pzl-screen-locked #lockMapBtn {
   border-left:5px solid #eab308;
   background:rgba(254,249,195,.82);
 }
+.mission-archive-card{
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  background:rgba(255,255,255,.82);
+  padding:7px 8px;
+}
+.mission-archive-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+.mission-archive-meta{
+  min-width:0;
+}
+.mission-archive-name{
+  font-weight:900;
+  font-size:12px;
+}
+.mission-archive-date{
+  font-size:10px;
+  opacity:.75;
+  margin-top:2px;
+}
+.mission-archive-open{
+  min-width:72px;
+  min-height:28px;
+}
+.mission-archive-editor{
+  margin-top:10px;
+  padding:8px;
+  border:1px solid #cbd5e1;
+  border-radius:10px;
+  background:rgba(255,255,255,.85);
+}
 @media(max-width:700px){
   .mission-log-row{
-    grid-template-columns:62px minmax(0,1fr);
+    grid-template-columns:72px minmax(0,1fr);
     padding:5px 6px;
     font-size:11px;
   }
   .mission-log-time{font-size:10px;}
+  .mission-log-actions button{font-size:10px;}
+  .mission-archive-open{min-width:64px;}
 }
 </style>
 
@@ -1385,10 +1441,45 @@ body.pzl-screen-locked #lockMapBtn {
       <summary>Ημερολόγιο αποστολής <span id="missionLogCount">(0)</span></summary>
       <div class="collapsible-body">
         <div id="missionLogHint" class="small">
-          Αυτόματη καταγραφή: Εντολή, πραγματικές Α/Γ, Ρίψη τώρα, ενδιάμεσες Π/Γ–Α/Γ και τελευταία Π/Γ.
+          Το Reset του panel <b>δεν</b> σβήνει το ημερολόγιο. Το ημερολόγιο κρατιέται ξεχωριστά.
         </div>
+
+        <div class="mission-log-actions">
+          <button id="missionLogSaveBtn" type="button" class="secondary">💾 Αποθήκευση καταγραφής</button>
+          <button id="missionLogClearBtn" type="button" class="secondary">🧹 Καθαρισμός τρέχουσας</button>
+        </div>
+
+        <div id="missionLogDate" class="small">Ημερομηνία τρέχουσας: -</div>
+
         <div id="missionLogList" class="mission-log-list">
           <div class="mission-log-empty">Δεν υπάρχουν ακόμη καταγραφές.</div>
+        </div>
+
+        <div class="mission-log-archive-title">Αποθηκευμένες καταγραφές</div>
+        <div id="missionArchiveList" class="mission-archive-list">
+          <div class="mission-log-empty">Δεν υπάρχουν αποθηκευμένες καταγραφές.</div>
+        </div>
+
+        <div id="missionArchiveEditor" class="mission-archive-editor" hidden>
+          <div class="mission-log-archive-title">Επεξεργασία καταγραφής</div>
+          <div class="grid2">
+            <div>
+              <label>Τίτλος καταγραφής</label>
+              <input id="missionArchiveTitle" type="text" placeholder="Τίτλος καταγραφής" />
+            </div>
+            <div>
+              <label>Ημερομηνία</label>
+              <input id="missionArchiveDate" type="text" readonly />
+            </div>
+          </div>
+          <div>
+            <label>Περιεχόμενο</label>
+            <textarea id="missionArchiveText" rows="10" style="width:100%;resize:vertical;"></textarea>
+          </div>
+          <div class="mission-log-actions">
+            <button id="missionArchiveSaveBtn" type="button" class="secondary">✅ Αποθήκευση αλλαγών</button>
+            <button id="missionArchiveDeleteBtn" type="button" class="danger">🗑 Διαγραφή καταγραφής</button>
+          </div>
         </div>
       </div>
     </details>
@@ -1833,19 +1924,203 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
 
     // Mission log
     const pzlMissionLogStorageKey = "pzl_mission_log_v1";
+    const pzlMissionLogArchiveKey = "pzl_mission_log_archive_v1";
+
     let pzlMissionLog = [];
+    let pzlMissionLogArchive = [];
+    let pzlMissionLogSelectedArchiveId = null;
     let pzlMissionLogState = {
       airborne:false,
-      pendingLandingId:null
+      pendingLandingId:null,
+      currentArchiveId:null
     };
 
-    function pzlMissionLogSave() {
+    function pzlMissionLogFormatDate(dt) {
+      try {
+        return new Date(dt).toLocaleDateString("el-GR", {
+          year:"numeric",
+          month:"2-digit",
+          day:"2-digit"
+        });
+      } catch(e) {
+        return "--/--/----";
+      }
+    }
+
+    function pzlMissionLogFormatTime(dt) {
+      try {
+        return new Date(dt).toLocaleTimeString("el-GR", {
+          hour:"2-digit",
+          minute:"2-digit",
+          second:"2-digit",
+          hour12:false
+        });
+      } catch(e) {
+        return "--:--:--";
+      }
+    }
+
+    function pzlMissionLogFormatDateTime(dt) {
+      return `${pzlMissionLogFormatDate(dt)} ${pzlMissionLogFormatTime(dt)}`;
+    }
+
+    function pzlMissionLogCurrentDateLabel() {
+      if (!pzlMissionLog.length) return "-";
+      return pzlMissionLogFormatDate(pzlMissionLog[0].time);
+    }
+
+    function pzlMissionLogEventsToText(events) {
+      const ordered = (events || []).slice().sort((a, b) => {
+        const ta = new Date(a.time).getTime();
+        const tb = new Date(b.time).getTime();
+        if (ta !== tb) return ta - tb;
+        return Number(a.seq || 0) - Number(b.seq || 0);
+      });
+
+      if (!ordered.length) return "";
+
+      const head = `Ημερομηνία: ${pzlMissionLogFormatDate(ordered[0].time)}`;
+      const lines = ordered.map(event => {
+        const note = event.note ? ` (${event.note})` : "";
+        return `${pzlMissionLogFormatDateTime(event.time)} — ${event.label}${note}`;
+      });
+      return [head, ...lines].join("\n");
+    }
+
+    function pzlMissionLogDefaultTitle() {
+      if (!pzlMissionLog.length) return "Καταγραφή αποστολής";
+      return `Αποστολή ${pzlMissionLogFormatDateTime(pzlMissionLog[0].time)}`;
+    }
+
+    function pzlMissionLogSaveCurrent() {
       try {
         localStorage.setItem(pzlMissionLogStorageKey, JSON.stringify({
           events:pzlMissionLog,
           state:pzlMissionLogState
         }));
       } catch(e) {}
+    }
+
+    function pzlMissionLogSaveArchive() {
+      try {
+        localStorage.setItem(pzlMissionLogArchiveKey, JSON.stringify(pzlMissionLogArchive));
+      } catch(e) {}
+    }
+
+    function pzlMissionLogSaveAll() {
+      pzlMissionLogSaveCurrent();
+      pzlMissionLogSaveArchive();
+    }
+
+    function pzlMissionLogClass(type) {
+      if (type === "command") return "command";
+      if (type === "actual_takeoff" || type === "intermediate_takeoff") return "takeoff";
+      if (type === "drop") return "drop";
+      if (type === "final_landing") return "final";
+      if (type === "landing_pending") return "pending";
+      return "landing";
+    }
+
+    function pzlMissionLogOrdered(events) {
+      return (events || []).slice().sort((a, b) => {
+        const ta = new Date(a.time).getTime();
+        const tb = new Date(b.time).getTime();
+        if (ta !== tb) return ta - tb;
+        return Number(a.seq || 0) - Number(b.seq || 0);
+      });
+    }
+
+    function pzlMissionLogRenderCurrent() {
+      const list = document.getElementById("missionLogList");
+      const count = document.getElementById("missionLogCount");
+      const dateEl = document.getElementById("missionLogDate");
+
+      if (count) count.textContent = `(${pzlMissionLog.length})`;
+      if (dateEl) dateEl.textContent = `Ημερομηνία τρέχουσας: ${pzlMissionLogCurrentDateLabel()}`;
+      if (!list) return;
+
+      if (!pzlMissionLog.length) {
+        list.innerHTML = '<div class="mission-log-empty">Δεν υπάρχουν ακόμη καταγραφές.</div>';
+        return;
+      }
+
+      const ordered = pzlMissionLogOrdered(pzlMissionLog);
+      list.innerHTML = ordered.map(event => {
+        const note = event.note
+          ? `<span class="mission-log-note">${String(event.note)}</span>`
+          : "";
+        return `<div class="mission-log-row ${pzlMissionLogClass(event.type)}">
+          <div class="mission-log-time">${pzlMissionLogFormatDate(event.time)}<br>${pzlMissionLogFormatTime(event.time)}</div>
+          <div class="mission-log-label">${String(event.label)}${note}</div>
+        </div>`;
+      }).join("");
+    }
+
+    function pzlMissionArchiveSelect(id) {
+      pzlMissionLogSelectedArchiveId = id || null;
+      const editor = document.getElementById("missionArchiveEditor");
+      const titleInput = document.getElementById("missionArchiveTitle");
+      const dateInput = document.getElementById("missionArchiveDate");
+      const textInput = document.getElementById("missionArchiveText");
+
+      const entry = pzlMissionLogArchive.find(item => item.id === pzlMissionLogSelectedArchiveId);
+      if (!entry) {
+        if (editor) editor.hidden = true;
+        if (titleInput) titleInput.value = "";
+        if (dateInput) dateInput.value = "";
+        if (textInput) textInput.value = "";
+        pzlMissionArchiveRender();
+        return;
+      }
+
+      if (editor) editor.hidden = false;
+      if (titleInput) titleInput.value = entry.title || "";
+      if (dateInput) dateInput.value = pzlMissionLogFormatDate(entry.missionDate || entry.createdAt);
+      if (textInput) textInput.value = entry.text || "";
+      pzlMissionArchiveRender();
+    }
+
+    function pzlMissionArchiveRender() {
+      const list = document.getElementById("missionArchiveList");
+      if (!list) return;
+
+      if (!pzlMissionLogArchive.length) {
+        list.innerHTML = '<div class="mission-log-empty">Δεν υπάρχουν αποθηκευμένες καταγραφές.</div>';
+        return;
+      }
+
+      const ordered = pzlMissionLogArchive.slice().sort((a, b) => {
+        const ta = new Date(a.updatedAt || a.createdAt || 0).getTime();
+        const tb = new Date(b.updatedAt || b.createdAt || 0).getTime();
+        return tb - ta;
+      });
+
+      list.innerHTML = ordered.map(entry => `
+        <div class="mission-archive-card">
+          <div class="mission-archive-head">
+            <div class="mission-archive-meta">
+              <div class="mission-archive-name">${entry.title || "Καταγραφή"}</div>
+              <div class="mission-archive-date">
+                Ημερομηνία: ${pzlMissionLogFormatDate(entry.missionDate || entry.createdAt)} · Τελ. ενημέρωση: ${pzlMissionLogFormatDateTime(entry.updatedAt || entry.createdAt)}
+              </div>
+            </div>
+            <button type="button" class="secondary mission-archive-open" data-open-archive-id="${entry.id}">
+              ${entry.id === pzlMissionLogSelectedArchiveId ? "Ανοιχτή" : "Άνοιγμα"}
+            </button>
+          </div>
+        </div>
+      `).join("");
+
+      list.querySelectorAll("[data-open-archive-id]").forEach(btn => {
+        btn.addEventListener("click", function(){
+          pzlMissionArchiveSelect(btn.getAttribute("data-open-archive-id"));
+        });
+      });
+    }
+
+    function pzlMissionLogRender() {
+      pzlMissionLogRenderCurrent();
+      pzlMissionArchiveRender();
     }
 
     function pzlMissionLogLoad() {
@@ -1859,66 +2134,29 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
           if (parsed && parsed.state) {
             pzlMissionLogState = {
               airborne:!!parsed.state.airborne,
-              pendingLandingId:parsed.state.pendingLandingId || null
+              pendingLandingId:parsed.state.pendingLandingId || null,
+              currentArchiveId:parsed.state.currentArchiveId || null
             };
           }
         }
       } catch(e) {
         pzlMissionLog = [];
-        pzlMissionLogState = {airborne:false, pendingLandingId:null};
+        pzlMissionLogState = {airborne:false, pendingLandingId:null, currentArchiveId:null};
       }
-      pzlMissionLogRender();
-    }
 
-    function pzlMissionLogTime(dt) {
       try {
-        return new Date(dt).toLocaleTimeString("el-GR", {
-          hour:"2-digit",
-          minute:"2-digit",
-          second:"2-digit",
-          hour12:false
-        });
+        const rawArchive = localStorage.getItem(pzlMissionLogArchiveKey);
+        if (rawArchive) {
+          const parsedArchive = JSON.parse(rawArchive);
+          if (Array.isArray(parsedArchive)) {
+            pzlMissionLogArchive = parsedArchive.filter(item => item && item.id);
+          }
+        }
       } catch(e) {
-        return "--:--:--";
-      }
-    }
-
-    function pzlMissionLogClass(type) {
-      if (type === "command") return "command";
-      if (type === "actual_takeoff" || type === "intermediate_takeoff") return "takeoff";
-      if (type === "drop") return "drop";
-      if (type === "final_landing") return "final";
-      if (type === "landing_pending") return "pending";
-      return "landing";
-    }
-
-    function pzlMissionLogRender() {
-      const list = document.getElementById("missionLogList");
-      const count = document.getElementById("missionLogCount");
-      if (count) count.textContent = `(${pzlMissionLog.length})`;
-      if (!list) return;
-
-      if (!pzlMissionLog.length) {
-        list.innerHTML = '<div class="mission-log-empty">Δεν υπάρχουν ακόμη καταγραφές.</div>';
-        return;
+        pzlMissionLogArchive = [];
       }
 
-      const ordered = pzlMissionLog.slice().sort((a, b) => {
-        const ta = new Date(a.time).getTime();
-        const tb = new Date(b.time).getTime();
-        if (ta !== tb) return ta - tb;
-        return Number(a.seq || 0) - Number(b.seq || 0);
-      });
-
-      list.innerHTML = ordered.map(event => {
-        const note = event.note
-          ? `<span class="mission-log-note">${String(event.note)}</span>`
-          : "";
-        return `<div class="mission-log-row ${pzlMissionLogClass(event.type)}">
-          <div class="mission-log-time">${pzlMissionLogTime(event.time)}</div>
-          <div class="mission-log-label">${String(event.label)}${note}</div>
-        </div>`;
-      }).join("");
+      pzlMissionLogRender();
     }
 
     function pzlMissionLogAdd(type, label, dt, note = "") {
@@ -1932,8 +2170,8 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
         note:note || ""
       };
       pzlMissionLog.push(event);
-      pzlMissionLogSave();
-      pzlMissionLogRender();
+      pzlMissionLogSaveCurrent();
+      pzlMissionLogRenderCurrent();
       return event;
     }
 
@@ -1941,8 +2179,8 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
       const event = pzlMissionLog.find(item => item.id === id);
       if (!event) return null;
       Object.assign(event, patch || {});
-      pzlMissionLogSave();
-      pzlMissionLogRender();
+      pzlMissionLogSaveCurrent();
+      pzlMissionLogRenderCurrent();
       return event;
     }
 
@@ -1950,16 +2188,68 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
       return pzlMissionLog.filter(event => event.type === type).length;
     }
 
-    function pzlMissionLogBegin(commandDt, manual = false) {
+    function pzlMissionLogArchiveCurrent(mode = "manual") {
+      if (!pzlMissionLog.length) return null;
+
+      const nowIso = new Date().toISOString();
+      let entry = null;
+
+      if (pzlMissionLogState.currentArchiveId) {
+        entry = pzlMissionLogArchive.find(item => item.id === pzlMissionLogState.currentArchiveId) || null;
+      }
+
+      if (!entry) {
+        entry = {
+          id:`arch_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`,
+          title:pzlMissionLogDefaultTitle(),
+          missionDate:pzlMissionLog[0].time,
+          createdAt:nowIso,
+          updatedAt:nowIso,
+          text:"",
+          source:mode
+        };
+        pzlMissionLogArchive.push(entry);
+        pzlMissionLogState.currentArchiveId = entry.id;
+      }
+
+      entry.title = entry.title || pzlMissionLogDefaultTitle();
+      entry.missionDate = pzlMissionLog[0].time;
+      entry.updatedAt = nowIso;
+      entry.text = pzlMissionLogEventsToText(pzlMissionLog);
+      entry.source = mode;
+
+      pzlMissionLogSaveAll();
+      pzlMissionArchiveSelect(entry.id);
+      return entry;
+    }
+
+    function pzlMissionLogClearCurrent(ask = true) {
+      if (ask && !confirm("Να καθαρίσει μόνο η τρέχουσα καταγραφή;\nΟι αποθηκευμένες καταγραφές θα παραμείνουν.")) return;
       pzlMissionLog = [];
-      pzlMissionLogState = {airborne:false, pendingLandingId:null};
+      pzlMissionLogState = {
+        airborne:false,
+        pendingLandingId:null,
+        currentArchiveId:null
+      };
+      pzlMissionLogSaveCurrent();
+      pzlMissionLogRenderCurrent();
+    }
+
+    function pzlMissionLogBegin(commandDt, manual = false) {
+      if (pzlMissionLog.length) {
+        pzlMissionLogArchiveCurrent("auto_new_command");
+      }
+
+      pzlMissionLog = [];
+      pzlMissionLogState = {airborne:false, pendingLandingId:null, currentArchiveId:null};
       pzlMissionLogAdd(
         "command",
         "Ώρα εντολής",
         commandDt,
         manual ? "Manual Practice" : ""
       );
-      pzlMissionLogSave();
+      pzlMissionLogSaveCurrent();
+      pzlMissionLogRenderCurrent();
     }
 
     function pzlMissionLogHasTakeoff() {
@@ -1972,7 +2262,7 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
     function pzlMissionLogSeedAirborne(commandDt, takeoffDt) {
       if (!pzlMissionLog.some(event => event.type === "command")) {
         pzlMissionLog = [];
-        pzlMissionLogState = {airborne:false, pendingLandingId:null};
+        pzlMissionLogState = {airborne:false, pendingLandingId:null, currentArchiveId:null};
         pzlMissionLogAdd("command", "Ώρα εντολής", commandDt, "Airborne Full Tank");
       }
 
@@ -1987,8 +2277,8 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
 
       pzlMissionLogState.airborne = true;
       pzlMissionLogState.pendingLandingId = null;
-      pzlMissionLogSave();
-      pzlMissionLogRender();
+      pzlMissionLogSaveCurrent();
+      pzlMissionLogRenderCurrent();
     }
 
     function pzlMissionLogCreatePendingLanding(dt) {
@@ -2000,7 +2290,7 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
         "Αν δεν υπάρξει νέα Α/Γ σε 20′, θα καταγραφεί ως τελευταία Π/Γ"
       );
       pzlMissionLogState.pendingLandingId = event.id;
-      pzlMissionLogSave();
+      pzlMissionLogSaveCurrent();
     }
 
     function pzlMissionLogFinalizePendingAsIntermediate() {
@@ -2013,7 +2303,7 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
         note:""
       });
       pzlMissionLogState.pendingLandingId = null;
-      pzlMissionLogSave();
+      pzlMissionLogSaveCurrent();
     }
 
     function pzlMissionLogFinalizePendingAsFinal(dt) {
@@ -2030,8 +2320,9 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
       }
       pzlMissionLogState.pendingLandingId = null;
       pzlMissionLogState.airborne = false;
-      pzlMissionLogSave();
-      pzlMissionLogRender();
+      pzlMissionLogSaveCurrent();
+      pzlMissionLogArchiveCurrent("auto_final");
+      pzlMissionLogRenderCurrent();
     }
 
     function pzlMissionLogOnTakeoff(dt) {
@@ -2053,15 +2344,87 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
       }
 
       pzlMissionLogState.airborne = true;
-      pzlMissionLogSave();
+      pzlMissionLogSaveCurrent();
     }
 
     function pzlMissionLogOnLanding(dt) {
       if (!pzlMissionLogState.airborne) return false;
       pzlMissionLogState.airborne = false;
-      pzlMissionLogSave();
+      pzlMissionLogSaveCurrent();
       pzlMissionLogCreatePendingLanding(dt);
       return true;
+    }
+
+    function pzlMissionLogDeleteSelectedArchive() {
+      const id = pzlMissionLogSelectedArchiveId;
+      if (!id) return;
+      const entry = pzlMissionLogArchive.find(item => item.id === id);
+      if (!entry) return;
+      const ok = confirm(`Να διαγραφεί η καταγραφή "${entry.title || "Καταγραφή"}";`);
+      if (!ok) return;
+
+      pzlMissionLogArchive = pzlMissionLogArchive.filter(item => item.id !== id);
+      if (pzlMissionLogState.currentArchiveId === id) {
+        pzlMissionLogState.currentArchiveId = null;
+        pzlMissionLogSaveCurrent();
+      }
+      pzlMissionLogSaveArchive();
+      pzlMissionArchiveSelect(null);
+      pzlMissionLogRender();
+    }
+
+    function pzlMissionLogSaveSelectedArchiveEdits() {
+      const id = pzlMissionLogSelectedArchiveId;
+      if (!id) return;
+      const entry = pzlMissionLogArchive.find(item => item.id === id);
+      if (!entry) return;
+
+      const titleInput = document.getElementById("missionArchiveTitle");
+      const textInput = document.getElementById("missionArchiveText");
+
+      entry.title = (titleInput && titleInput.value.trim()) ? titleInput.value.trim() : (entry.title || "Καταγραφή");
+      entry.text = textInput ? textInput.value : entry.text;
+      entry.updatedAt = new Date().toISOString();
+
+      pzlMissionLogSaveArchive();
+      pzlMissionArchiveRender();
+      alert("Η καταγραφή αποθηκεύτηκε.");
+    }
+
+    function pzlMissionLogInstallUi() {
+      const saveBtn = document.getElementById("missionLogSaveBtn");
+      const clearBtn = document.getElementById("missionLogClearBtn");
+      const saveArchiveBtn = document.getElementById("missionArchiveSaveBtn");
+      const deleteArchiveBtn = document.getElementById("missionArchiveDeleteBtn");
+
+      if (saveBtn && !saveBtn.dataset.boundMissionLog) {
+        saveBtn.dataset.boundMissionLog = "1";
+        saveBtn.addEventListener("click", function(){
+          if (!pzlMissionLog.length) {
+            alert("Δεν υπάρχει τρέχουσα καταγραφή για αποθήκευση.");
+            return;
+          }
+          pzlMissionLogArchiveCurrent("manual");
+          alert("Η καταγραφή αποθηκεύτηκε.");
+        });
+      }
+
+      if (clearBtn && !clearBtn.dataset.boundMissionLog) {
+        clearBtn.dataset.boundMissionLog = "1";
+        clearBtn.addEventListener("click", function(){
+          pzlMissionLogClearCurrent(true);
+        });
+      }
+
+      if (saveArchiveBtn && !saveArchiveBtn.dataset.boundMissionLog) {
+        saveArchiveBtn.dataset.boundMissionLog = "1";
+        saveArchiveBtn.addEventListener("click", pzlMissionLogSaveSelectedArchiveEdits);
+      }
+
+      if (deleteArchiveBtn && !deleteArchiveBtn.dataset.boundMissionLog) {
+        deleteArchiveBtn.dataset.boundMissionLog = "1";
+        deleteArchiveBtn.addEventListener("click", pzlMissionLogDeleteSelectedArchive);
+      }
     }
 
     // Operational tracking: actual drops and automatic WPT sequencing.
@@ -3285,6 +3648,7 @@ function setFireMarker() {
     pzlRenderActualDrops();
     pzlUpdateWptProgressStatus();
     pzlUpdateDropNowButton();
+    pzlMissionLogInstallUi();
     pzlMissionLogLoad();
 
     function exitReturnWpModeForNormalMode() {
@@ -6169,7 +6533,13 @@ const base = bases[selectedBaseName];
       const preserve = {};
       for (let i=0; i<localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k && (k.startsWith("pzl_tf_") || k.toLowerCase().includes("twilight") || k.toLowerCase().includes("tf"))) {
+        if (k && (
+              k.startsWith("pzl_tf_") ||
+              k.toLowerCase().includes("twilight") ||
+              k.toLowerCase().includes("tf") ||
+              k === "pzl_mission_log_v1" ||
+              k === "pzl_mission_log_archive_v1"
+            )) {
           preserve[k] = localStorage.getItem(k);
         }
       }
@@ -7676,7 +8046,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_MISSION_LOG_20260630P */
+/* PZL_MISSION_LOG_ARCHIVE_20260630Q */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
