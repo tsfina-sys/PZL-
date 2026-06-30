@@ -1203,7 +1203,7 @@ body.pzl-screen-locked #lockMapBtn {
 
     <div class="map-actions">
       <button id="lockMapBtn" class="secondary">🔓</button>
-      <div class="splitControl fireSplit"><button id="fireModeBtn" class="active">🔥 Fire</button><button id="toggleFireCirclesBtn" class="secondary" title="Εμφάνιση/απόκρυψη 3 κύκλων φωτιάς"><span class="fire-circles-icon" aria-hidden="true"><span class="ring-red"></span><span class="ring-black"></span><span class="flame">🔥</span></span></button></div><div class="searchCombo"><input id="searchBox" placeholder="Περιοχή" /><button id="searchBtn" type="button">SRCH</button></div>
+      <div class="splitControl fireSplit"><button id="fireModeBtn" class="active">🔥 Fire</button><button id="toggleFireCirclesBtn" class="secondary" title="Εμφάνιση/απόκρυψη 3 κύκλων φωτιάς"><span class="fire-circles-icon" aria-hidden="true"><span class="ring-red"></span><span class="ring-black"></span><span class="flame">🔥</span></span></button></div><div class="searchCombo"><input id="searchBox" placeholder="Περιοχή / συντεταγμένες" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" /><button id="searchBtn" type="button">SRCH</button></div><select id="searchInputMode" aria-label="Μορφή αναζήτησης" title="Επίλεξε ονομασία ή μορφή συντεταγμένων"><option value="auto">Αυτόματα: όνομα / coords</option><option value="name">Ονομασία περιοχής</option><option value="dms">DMS: μοίρες / λεπτά / δευτ.</option><option value="ddm">DDM: μοίρες / δεκ. λεπτά</option><option value="dd">DD: δεκαδικοί βαθμοί</option></select>
       <div class="splitControl wptSplit"><button id="viaModeBtn" class="secondary">🔥 WPT</button><button id="clearViaBtn" class="danger">🔥 CLR <span class="x2-mark">x2</span></button></div>
       <div class="splitControl rtbSplit"><button id="returnWpBtn" class="secondary">WPT RTB</button><button id="clearReturnWpBtn" class="danger">CLR RTB <span class="x2-mark">x2</span></button></div><div class="splitControl commandSplit"><button id="takeoffBtn">☎️ Εντολή <span class="x2-mark">x2</span></button><button class="secondary" id="setManualTimeBtn">Manual Practice <span class="x2-mark">x2</span></button></div><button id="newFireWithWaterBtn" class="secondary">Airborne Full Tank <span class="x2-mark">x2</span></button>
       <button id="generalResetBtn" class="danger">🔄 Reset <span class="x2-mark">x2</span></button>
@@ -2622,12 +2622,153 @@ function setFireMarker() {
         .slice(0, 20);
     }
 
-    document.getElementById("searchBtn").addEventListener("click", async () => {
-      const q = document.getElementById("searchBox").value.trim();
-      if (!q) return;
+    // SRCH_COORDS: αναζήτηση με ονομασία ή συντεταγμένες DMS / DDM / DD.
+    function pzlNormalizeCoordinateText(value) {
+      return String(value || '')
+        .toUpperCase()
+        .replace(/[−–—]/g, '-')
+        .replace(/([0-9]),([0-9])/g, '$1.$2')
+        .replace(/[º˚]/g, '°')
+        .replace(/[′’`]/g, "'")
+        .replace(/[″“”]/g, '"')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function pzlCoordinateTokens(value) {
+      return pzlNormalizeCoordinateText(value).match(/[NSEW]|[+-]?\d+(?:\.\d+)?/g) || [];
+    }
+
+    function pzlNumbersBetween(tokens, start, end) {
+      return tokens.slice(start, end)
+        .filter(t => !/^[NSEW]$/.test(t))
+        .map(Number)
+        .filter(Number.isFinite);
+    }
+
+    function pzlPartsToDegrees(parts, hemi, axis) {
+      if (!parts || !parts.length) return null;
+      const deg = Number(parts[0]);
+      const min = parts.length > 1 ? Number(parts[1]) : 0;
+      const sec = parts.length > 2 ? Number(parts[2]) : 0;
+      if (![deg,min,sec].every(Number.isFinite) || min < 0 || min >= 60 || sec < 0 || sec >= 60) return null;
+      let value = Math.abs(deg) + min / 60 + sec / 3600;
+      if (hemi === 'S' || hemi === 'W' || (!hemi && deg < 0)) value = -value;
+      const limit = axis === 'lat' ? 90 : 180;
+      return Math.abs(value) <= limit ? value : null;
+    }
+
+    function pzlParseCoordinateByMode(value, format) {
+      const partCount = format === 'dms' ? 3 : (format === 'ddm' ? 2 : 1);
+      const tokens = pzlCoordinateTokens(value);
+      if (!tokens.length) return null;
+
+      let latParts = null, lonParts = null, latHem = '', lonHem = '';
+      tokens.forEach((token, index) => {
+        if (!/^[NSEW]$/.test(token)) return;
+        const axis = /[NS]/.test(token) ? 'lat' : 'lon';
+        let prevHemi = -1, nextHemi = tokens.length;
+        for (let i = index - 1; i >= 0; i--) { if (/^[NSEW]$/.test(tokens[i])) { prevHemi = i; break; } }
+        for (let i = index + 1; i < tokens.length; i++) { if (/^[NSEW]$/.test(tokens[i])) { nextHemi = i; break; } }
+        const before = pzlNumbersBetween(tokens, prevHemi + 1, index);
+        const after = pzlNumbersBetween(tokens, index + 1, nextHemi);
+        let parts = null;
+
+        if (axis === 'lat') {
+          // N/S στην αρχή: N 39 03 09. N/S μετά τους αριθμούς: 39 03 09 N.
+          if (index === 0 || before.length < partCount) parts = after.slice(0, partCount);
+          else parts = before.slice(-partCount);
+        } else {
+          // E/W στο τέλος: 026 36 16 E. E/W πριν τους αριθμούς: E 026 36 16.
+          if (index === tokens.length - 1 || after.length < partCount) parts = before.slice(-partCount);
+          else parts = after.slice(0, partCount);
+        }
+        if (parts.length !== partCount) parts = null;
+        if (axis === 'lat' && !latParts) { latParts = parts; latHem = token; }
+        if (axis === 'lon' && !lonParts) { lonParts = parts; lonHem = token; }
+      });
+
+      if (!latParts || !lonParts) {
+        const nums = tokens.filter(t => !/^[NSEW]$/.test(t)).map(Number).filter(Number.isFinite);
+        if (nums.length !== partCount * 2) return null;
+        latParts = nums.slice(0, partCount);
+        lonParts = nums.slice(partCount);
+      }
+
+      const lat = pzlPartsToDegrees(latParts, latHem, 'lat');
+      const lon = pzlPartsToDegrees(lonParts, lonHem, 'lon');
+      return Number.isFinite(lat) && Number.isFinite(lon) ? {lat, lon, format} : null;
+    }
+
+    function pzlParseCoordinateInput(value, mode) {
+      if (mode && mode !== 'auto' && mode !== 'name') return pzlParseCoordinateByMode(value, mode);
+      return pzlParseCoordinateByMode(value, 'dms') ||
+             pzlParseCoordinateByMode(value, 'ddm') ||
+             pzlParseCoordinateByMode(value, 'dd');
+    }
+
+    function pzlCoordinateExample(mode) {
+      if (mode === 'dms') return `39°03'09"N 026°36'16"E`;
+      if (mode === 'ddm') return `N39°03.15' E026°36.26'`;
+      if (mode === 'dd') return '39.0525, 26.6043';
+      return 'Περιοχή ή συντεταγμένες';
+    }
+
+    function pzlUpdateSearchInputMode() {
+      const select = document.getElementById('searchInputMode');
+      const input = document.getElementById('searchBox');
+      if (!select || !input) return;
+      const mode = select.value || 'auto';
+      input.placeholder = mode === 'name' ? 'Περιοχή' : pzlCoordinateExample(mode);
+      input.title = mode === 'name' ? 'Γράψε ονομασία περιοχής' : 'Παράδειγμα: ' + pzlCoordinateExample(mode);
+      try { localStorage.setItem('pzl_search_input_mode', mode); } catch(e) {}
+    }
+
+    (function pzlInitSearchInputMode(){
+      const select = document.getElementById('searchInputMode');
+      const input = document.getElementById('searchBox');
+      if (!select || !input) return;
       try {
+        const saved = localStorage.getItem('pzl_search_input_mode');
+        if (saved && Array.from(select.options).some(o => o.value === saved)) select.value = saved;
+      } catch(e) {}
+      select.addEventListener('change', pzlUpdateSearchInputMode);
+      input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') { event.preventDefault(); document.getElementById('searchBtn').click(); }
+      });
+      pzlUpdateSearchInputMode();
+    })();
+
+    document.getElementById("searchBtn").addEventListener("click", async () => {
+      const input = document.getElementById("searchBox");
+      const q = input.value.trim();
+      if (!q) return;
+      const searchMode = (document.getElementById('searchInputMode') || {}).value || 'auto';
+
+      try {
+        if (searchMode !== 'name') {
+          const coords = pzlParseCoordinateInput(q, searchMode);
+          if (coords) {
+            firePoint = {
+              lat: coords.lat,
+              lon: coords.lon,
+              label: 'Συντεταγμένες ' + formatLatLonDDM(coords.lat, coords.lon)
+            };
+            setFireMarker();
+            mode = "fire";
+            fireSelectionArmed = false;
+            updateFireModeButtonState();
+            map.setView([firePoint.lat, firePoint.lon], 13);
+            calculate();
+            return;
+          }
+          if (searchMode !== 'auto') {
+            return alert('Δεν αναγνωρίστηκαν οι συντεταγμένες.\nΠαράδειγμα: ' + pzlCoordinateExample(searchMode));
+          }
+        }
+
         const data = await pzlSearchGreekPlaces(q);
-        if (!data.length) return alert("Δεν βρέθηκε περιοχή.");
+        if (!data.length) return alert("Δεν βρέθηκε περιοχή ή έγκυρη μορφή συντεταγμένων.");
         const chosen = await pzlChooseSearchResult(data);
         if (!chosen) return;
         firePoint = {lat:parseFloat(chosen.lat), lon:parseFloat(chosen.lon), label:chosen.display_name};
@@ -2638,7 +2779,10 @@ function setFireMarker() {
         updateFireModeButtonState();
         const zoom = data.length > 1 ? 12 : 10;
         map.setView([firePoint.lat,firePoint.lon], zoom); calculate();
-      } catch(e) { alert("Σφάλμα αναζήτησης περιοχής."); }
+      } catch(e) {
+        console.error('SRCH error', e);
+        alert("Σφάλμα αναζήτησης περιοχής ή συντεταγμένων.");
+      }
     });
 
     
@@ -6271,7 +6415,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     box.innerHTML='<button id="windEstBtn" class="secondary" type="button">WIND</button><button id="windIasBtn" class="secondary" type="button">IAS 180</button>';
     const status=document.createElement('div');
     status.id='windEstStatus';
-    const search=panel.querySelector('.searchCombo');
+    const search=panel.querySelector('#searchInputMode') || panel.querySelector('.searchCombo');
     if(search && search.nextSibling){ panel.insertBefore(status, search.nextSibling); panel.insertBefore(box, status); }
     else { panel.appendChild(box); panel.appendChild(status); }
     btn('windEstBtn').addEventListener('click', toggleWind);
@@ -6320,5 +6464,37 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
   #hsiHud #hudFireBrg{font-size:8px !important;}
 }
 </style>
+
+
+<style id="pzl-coordinate-search-css">
+/* SRCH: ονομασία ή συντεταγμένες με επιλεγόμενη μορφή */
+#searchInputMode{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  height:23px!important;
+  min-height:23px!important;
+  margin:0!important;
+  padding:2px 22px 2px 5px!important;
+  border:1px solid rgba(255,255,255,.28)!important;
+  border-radius:7px!important;
+  background:#68717d!important;
+  color:#fff!important;
+  font-size:9.5px!important;
+  font-weight:700!important;
+  line-height:1!important;
+  box-sizing:border-box!important;
+  box-shadow:0 1px 5px rgba(0,0,0,.22)!important;
+}
+#searchInputMode option{background:#fff!important;color:#111!important;}
+#searchBox::placeholder{font-size:.92em!important;}
+@media(max-width:700px){
+  #searchInputMode{height:20px!important;min-height:20px!important;font-size:8.2px!important;padding:1px 18px 1px 4px!important;}
+}
+@media(max-width:380px){
+  #searchInputMode{height:19px!important;min-height:19px!important;font-size:7.6px!important;}
+}
+</style>
+
 </body>
 </html>
