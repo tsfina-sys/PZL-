@@ -1,6 +1,7 @@
-PZL_COORD_PREVIEW_GO_FULLDIGITS_20260630D
+PZL_COORD_LAT_LON_VERTICAL_20260630E
 Built 2026-06-30
-- Coord format row click shows a temporary map preview.
-- GO finalizes the selected coordinate format.
-- Full raw and converted coordinate digits are visible.
-- Flat ZIP with cache-clearing service worker.
+- LAT and LON are shown in two full-width fields, one below the other.
+- GO remains below the two fields.
+- Coordinate preview and DD/DDM/DMS selection remain unchanged.
+- All entered and converted digits remain visible.
+- Cache-clearing service worker updated.

@@ -1,4 +1,4 @@
-const PZL_BUILD = 'PZL_COORD_PREVIEW_GO_FULLDIGITS_20260630D';
+const PZL_BUILD = 'PZL_COORD_LAT_LON_VERTICAL_20260630E';
 self.addEventListener('install', event => { self.skipWaiting(); });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
