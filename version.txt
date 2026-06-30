@@ -2,3 +2,5 @@ PZL_FIX37D76_HUD_FIRE_NEEDLE_FROM_D75
 Base: D75 SEARCH CHOICES DEDUP FROM D74
 Change: HUD red FIRE needle + FIRE BRG/DIST/ETA data.
 SRCH_COORD_FORMAT_SELECTOR_VISIBLE
+
+D80: separate coord field below Περιοχή with format selector and GO button.
