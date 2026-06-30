@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_LIVE_TIMES_10SEC_20260630K">
+<meta name="pzl-build" content="PZL_LIVE_TIMES_COUNTDOWN_FIX_20260630L">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1420,6 +1420,7 @@ function getStoredOrPromptTakeoffTimeForNewFire(allowPrompt = true, useCommandFa
 
     const cmd = new Date(d.getTime() - getInitialTakeoffDelayMin() * 60000);
     commandTime = cmd;
+    pzlStartDropCountdown(commandTime);
     window.pzlManualCommandTimeActive = true;
     window.manualNewFireCommandTime = null;
 
@@ -1735,6 +1736,7 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
 
     function pzlHasLiveMissionStarted() {
       try {
+        pzlEnsureLiveStateFromCurrentGs();
         return !!(
           pzlAutoHasBeenAirborne === true &&
           currentGps &&
@@ -1753,6 +1755,59 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
       } catch(e) {
         return null;
       }
+    }
+
+    function pzlEnsureLiveStateFromCurrentGs() {
+      try {
+        const gsKmh = pzlCurrentGsKmh();
+        if (currentGps && Number.isFinite(gsKmh) && gsKmh > autoTakeoffSpeedKmh) {
+          if (!pzlAutoHasBeenAirborne) {
+            pzlAutoHasBeenAirborne = true;
+            setAutoActualTakeoff(pzlMissionNow(), true);
+            lastHeavyCalcTime = 0;
+          }
+          return true;
+        }
+      } catch(e) {}
+      return !!pzlAutoHasBeenAirborne;
+    }
+
+    let pzlCountdownOriginMs = null;
+    let pzlCountdownStartedRealMs = null;
+    let pzlInitialDropOffsetsSec = [];
+
+    function pzlStartDropCountdown(originTime) {
+      if (!originTime) return;
+      pzlCountdownOriginMs = originTime.getTime();
+      pzlCountdownStartedRealMs = Date.now();
+      pzlInitialDropOffsetsSec = [];
+    }
+
+    function pzlEnsureDropCountdown(originTime) {
+      if (!originTime) return;
+      const key = originTime.getTime();
+      if (!Number.isFinite(pzlCountdownOriginMs) ||
+          Math.abs(pzlCountdownOriginMs - key) > 1000 ||
+          !Number.isFinite(pzlCountdownStartedRealMs)) {
+        pzlStartDropCountdown(originTime);
+      }
+    }
+
+    function pzlCountdownNow(originTime) {
+      try {
+        if (typeof gpsTestModeARunning !== "undefined" &&
+            gpsTestModeARunning &&
+            typeof gpsTestModeASimNow !== "undefined" &&
+            gpsTestModeASimNow) {
+          return new Date(gpsTestModeASimNow.getTime());
+        }
+      } catch(e) {}
+
+      if (pzlHasLiveMissionStarted()) return pzlMissionNow();
+
+      pzlEnsureDropCountdown(originTime);
+      const elapsedMs = Math.max(0, Date.now() - pzlCountdownStartedRealMs);
+      return new Date(originTime.getTime() + elapsedMs);
     }
 
     function pzlCalculationSpeedKmPerMin() {
@@ -2432,6 +2487,7 @@ function setFireMarker() {
       updateBaseMarker(); calculate(); try { updateHsiHud(); } catch(e) {} });
     document.getElementById("takeoffBtn").addEventListener("click", () => {
       commandTime = new Date();
+      pzlStartDropCountdown(commandTime);
       window.pzlManualCommandTimeActive = false;
       window.manualNewFireCommandTime = null;
       gpsTestModeASimNow = new Date(commandTime.getTime());
@@ -3416,6 +3472,7 @@ function setFireMarker() {
         // Η χειροκίνητη ώρα είναι ΩΡΑ ΕΝΤΟΛΗΣ Α/Γ.
         // Η πραγματική Α/Γ για τους υπολογισμούς είναι εντολή + 15'.
         commandTime = d;
+        pzlStartDropCountdown(commandTime);
         window.pzlManualCommandTimeActive = true;
         window.manualNewFireCommandTime = null;
 
@@ -3591,16 +3648,44 @@ function setFireMarker() {
         : ((newFireWithWaterMode && newFireCalcStartTime) ? newFireCalcStartTime : commandTime);
       const calcSpeedKmPerMin = pzlCalculationSpeedKmPerMin();
       const effectiveInitialDelayMin = getEffectiveInitialDelayMin();
-      const fmtUntilFromCalcCommand = (targetTime) => {
-        if (!targetTime) return "-";
-        const countdownNow = pzlMissionNow();
-        const totalSec = Math.max(0, Math.ceil((targetTime.getTime() - countdownNow.getTime()) / 1000));
+      const countdownOrigin =
+        (newFireWithWaterMode && newFireCalcStartTime)
+          ? newFireCalcStartTime
+          : commandTime;
+      pzlEnsureDropCountdown(countdownOrigin);
+
+      const fmtCountdownPart = (seconds, showSeconds) => {
+        const totalSec = Math.max(0, Math.round(seconds));
         const h = Math.floor(totalSec / 3600);
         const m = Math.floor((totalSec % 3600) / 60);
         const s = totalSec % 60;
-        return h > 0
-          ? `${h}ω ${String(m).padStart(2,"0")}' ${String(s).padStart(2,"0")}"`
-          : `${m}' ${String(s).padStart(2,"0")}"`;
+        if (h > 0) {
+          return showSeconds
+            ? `${h}ω ${String(m).padStart(2,"0")}' ${String(s).padStart(2,"0")}"`
+            : `${h}ω ${String(m).padStart(2,"0")}'`;
+        }
+        return showSeconds
+          ? `${m}' ${String(s).padStart(2,"0")}"`
+          : `${m}'`;
+      };
+
+      const fmtUntilFromCalcCommand = (targetTime, dropIndex = 0) => {
+        if (!targetTime || !countdownOrigin) return "-";
+
+        const nowForCountdown = pzlCountdownNow(countdownOrigin);
+        const remainingSec = Math.max(
+          0,
+          Math.ceil((targetTime.getTime() - nowForCountdown.getTime()) / 1000)
+        );
+
+        if (!Number.isFinite(pzlInitialDropOffsetsSec[dropIndex])) {
+          pzlInitialDropOffsetsSec[dropIndex] = Math.max(
+            0,
+            Math.round((targetTime.getTime() - countdownOrigin.getTime()) / 1000)
+          );
+        }
+
+        return `${fmtCountdownPart(remainingSec, true)} / ${fmtCountdownPart(pzlInitialDropOffsetsSec[dropIndex], false)}`;
       };
 
       updateWindResult();
@@ -3701,7 +3786,7 @@ const base = bases[selectedBaseName];
           `${(typeof newFireWithWaterMode !== "undefined" && newFireWithWaterMode) ? "Νέα φωτιά με νερό: χωρίς 15\' αρχικής Α/Γ\n" : ""}` +
           `Χρόνος αρχικής Α/Γ: ${getInitialTakeoffDelayMin()}\'\n` +
           `Χρόνος Α/Γ μετά επαναπλήρωση: ${getRefillTakeoffDelayMin()}\'\n` +
-          `Ώρα πρώτης ρίψης: ${fmtTime(firstDrop)} (σε ${fmtUntilFromCalcCommand(firstDrop)} από τώρα/εντολή)\n` +
+          `Ώρα πρώτης ρίψης: ${fmtTime(firstDrop)} (σε ${fmtUntilFromCalcCommand(firstDrop, 0)} από τώρα/εντολή)\n` +
           `Μέγιστες ρίψεις: ${maxDrops}\n` +
           `Τελευταία Π/Γ: ${lastLanding ? fmtTime(lastLanding) : "-"}\n` +
           `Διάρκεια/ώρα επιστροφής: ${fmtDurationMin(returnDurationMin)} / ${lastLanding ? fmtTime(lastLanding) : "-"}\n` +
@@ -3731,10 +3816,10 @@ const base = bases[selectedBaseName];
         if (maxDrops === 0) {
           html += "<div class=\"result\" style=\"background:#fff7ed;border:1px solid #fdba74;margin-top:6px\">Δεν επιτρέπεται ρίψη με τα τρέχοντα δεδομένα.</div>";
         } else {
-          html += "<table class=\"drop-table\"><tr><th>#</th><th>Ώρα</th><th>Από τώρα/εντολή</th></tr>";
+          html += "<table class=\"drop-table\"><tr><th>#</th><th>Ώρα</th><th>Από τώρα / από εντολή</th></tr>";
           for (let i=1; i<=maxDrops; i++) {
             const dropTime = addMinutes(firstDrop, (i-1)*cycleMin);
-            html += `<tr><td>${i}</td><td>${fmtTime(dropTime)}</td><td>${fmtUntilFromCalcCommand(dropTime)}</td></tr>`;
+            html += `<tr><td>${i}</td><td>${fmtTime(dropTime)}</td><td>${fmtUntilFromCalcCommand(dropTime, i - 1)}</td></tr>`;
           }
           html += "</table>";
         }
@@ -6719,7 +6804,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_LIVE_TIMES_10SEC_20260630K */
+/* PZL_LIVE_TIMES_COUNTDOWN_FIX_20260630L */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
