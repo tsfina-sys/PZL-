@@ -1,4 +1,4 @@
-const PZL_BUILD = 'PZL_DROP_NOW_WPT_PROGRESS_FINAL_20260630O';
+const PZL_BUILD = 'PZL_MISSION_LOG_20260630P';
 self.addEventListener('install', event => { self.skipWaiting(); });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
