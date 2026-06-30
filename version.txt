@@ -1,3 +1,3 @@
-PZL_COORD_4_ROWS_FLAT_FIX
+PZL_COORD_4_ROWS_CACHE_FIX_20260630C
 Built 2026-06-30
-Coord button opens compact DDM input plus DD/DDM/DMS rows.
+Flat ZIP, 4 coordinate rows, cache-clearing service worker.

@@ -1,6 +1,1 @@
-Placeholder for HUD FIRE NEEDLE FIXED version.
-(Original file regenerated placeholder)
-
-SRCH: εμφανής επιλογή AUTO / ΟΝΟΜΑ / DMS / DDM / DD μέσα στη σειρά αναζήτησης.
-
-D80: Added separate coordinate input row under Περιοχή with AUTO/DMS/DDM/DD selector.
+Αντικατάσταση όλων των αρχείων στο GitHub. Το service-worker.js καθαρίζει την παλιά αποθηκευμένη έκδοση. Το Coord ανοίγει 4 σειρές: εισαγωγή, DD, DDM, DMS.
