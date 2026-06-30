@@ -1,7 +1,7 @@
 {
-  "name": "PZL Mission Tool Coord 4 Rows",
+  "name": "PZL Mission Tool v8.2 Cockpit",
   "short_name": "PZL Mission",
-  "start_url": "./index.html?v=20260630C",
+  "start_url": "./index.html?v=20260630D",
   "display": "standalone",
   "background_color": "#eef2f6",
   "theme_color": "#0f3d5e",

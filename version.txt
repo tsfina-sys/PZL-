@@ -1,3 +1,6 @@
-PZL_COORD_4_ROWS_CACHE_FIX_20260630C
+PZL_COORD_PREVIEW_GO_FULLDIGITS_20260630D
 Built 2026-06-30
-Flat ZIP, 4 coordinate rows, cache-clearing service worker.
+- Coord format row click shows a temporary map preview.
+- GO finalizes the selected coordinate format.
+- Full raw and converted coordinate digits are visible.
+- Flat ZIP with cache-clearing service worker.

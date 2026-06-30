@@ -1,4 +1,4 @@
-const PZL_BUILD = 'PZL_COORD_4_ROWS_CACHE_FIX_20260630C';
+const PZL_BUILD = 'PZL_COORD_PREVIEW_GO_FULLDIGITS_20260630D';
 self.addEventListener('install', event => { self.skipWaiting(); });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {

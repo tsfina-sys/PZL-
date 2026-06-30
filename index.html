@@ -2,15 +2,12 @@
 <html lang="el">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PZL Mission Tool v8.2 D67 Cockpit FIX37D413</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
-  <link rel="manifest" href="manifest.json?v=20260630C" />
+  <link rel="manifest" href="manifest.json" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
@@ -1021,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-  <meta name="pzl-build" content="PZL_COORD_4_ROWS_CACHE_FIX_20260630C" />
+<meta name="pzl-build" content="PZL_COORD_PREVIEW_GO_FULLDIGITS_20260630D">
 </head>
 
 <style id="fix37d46-metar-final-css">
@@ -1207,7 +1204,7 @@ body.pzl-screen-locked #lockMapBtn {
 
     <div class="map-actions">
       <button id="lockMapBtn" class="secondary">🔓</button>
-      <div class="splitControl fireSplit"><button id="fireModeBtn" class="active">🔥 Fire</button><button id="toggleFireCirclesBtn" class="secondary" title="Εμφάνιση/απόκρυψη 3 κύκλων φωτιάς"><span class="fire-circles-icon" aria-hidden="true"><span class="ring-red"></span><span class="ring-black"></span><span class="flame">🔥</span></span></button></div><div class="searchStack"><div class="searchCombo searchNameRow"><input id="searchBox" placeholder="Περιοχή" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" /><button id="searchBtn" type="button">SRCH</button></div><button id="coordToggleBtn" type="button" class="secondary" aria-expanded="false">Coord</button><div id="coordEntryPanel" class="coordEntryPanel" hidden><div class="coordRawRow"><input id="coordRawInput" type="text" inputmode="numeric" maxlength="24" placeholder="390315 0263626" aria-label="Συντεταγμένες χωρίς σύμβολα" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button id="coordSearchBtn" type="button" disabled>SRCH</button></div><input id="coordBox" type="hidden"><select id="searchInputMode" hidden aria-label="Επιλεγμένη μορφή συντεταγμένων"><option value="dd">DD</option><option value="ddm" selected>DDM</option><option value="dms">DMS</option></select><button type="button" class="coordFormatRow" data-format="dd"><span class="coordFormatName">DD</span><span id="coordDDValue" class="coordFormatValue">—</span></button><button type="button" class="coordFormatRow selected" data-format="ddm"><span class="coordFormatName">DDM</span><span id="coordDDMValue" class="coordFormatValue">—</span></button><button type="button" class="coordFormatRow" data-format="dms"><span class="coordFormatName">DMS</span><span id="coordDMSValue" class="coordFormatValue">—</span></button></div></div>
+      <div class="splitControl fireSplit"><button id="fireModeBtn" class="active">🔥 Fire</button><button id="toggleFireCirclesBtn" class="secondary" title="Εμφάνιση/απόκρυψη 3 κύκλων φωτιάς"><span class="fire-circles-icon" aria-hidden="true"><span class="ring-red"></span><span class="ring-black"></span><span class="flame">🔥</span></span></button></div><div class="searchStack"><div class="searchCombo searchNameRow"><input id="searchBox" placeholder="Περιοχή" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" /><button id="searchBtn" type="button">SRCH</button></div><button id="coordToggleBtn" type="button" class="secondary" aria-expanded="false">Coord</button><div id="coordEntryPanel" class="coordEntryPanel" hidden><div class="coordRawRow"><input id="coordLatRaw" type="text" inputmode="numeric" maxlength="14" placeholder="LAT 390315" aria-label="Latitude χωρίς σύμβολα" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><input id="coordLonRaw" type="text" inputmode="numeric" maxlength="15" placeholder="LON 0263626" aria-label="Longitude χωρίς σύμβολα" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button id="coordSearchBtn" type="button" disabled>GO</button></div><input id="coordBox" type="hidden"><select id="searchInputMode" hidden aria-label="Επιλεγμένη μορφή συντεταγμένων"><option value="dd">DD</option><option value="ddm" selected>DDM</option><option value="dms">DMS</option></select><button type="button" class="coordFormatRow" data-format="dd"><span class="coordFormatName">DD</span><span id="coordDDValue" class="coordFormatValue">—</span></button><button type="button" class="coordFormatRow selected" data-format="ddm"><span class="coordFormatName">DDM</span><span id="coordDDMValue" class="coordFormatValue">—</span></button><button type="button" class="coordFormatRow" data-format="dms"><span class="coordFormatName">DMS</span><span id="coordDMSValue" class="coordFormatValue">—</span></button></div></div>
       <div class="splitControl wptSplit"><button id="viaModeBtn" class="secondary">🔥 WPT</button><button id="clearViaBtn" class="danger">🔥 CLR <span class="x2-mark">x2</span></button></div>
       <div class="splitControl rtbSplit"><button id="returnWpBtn" class="secondary">WPT RTB</button><button id="clearReturnWpBtn" class="danger">CLR RTB <span class="x2-mark">x2</span></button></div><div class="splitControl commandSplit"><button id="takeoffBtn">☎️ Εντολή <span class="x2-mark">x2</span></button><button class="secondary" id="setManualTimeBtn">Manual Practice <span class="x2-mark">x2</span></button></div><button id="newFireWithWaterBtn" class="secondary">Airborne Full Tank <span class="x2-mark">x2</span></button>
       <button id="generalResetBtn" class="danger">🔄 Reset <span class="x2-mark">x2</span></button>
@@ -4672,21 +4669,8 @@ const base = bases[selectedBaseName];
     }, 1000); // RETURN_TO_GPS_DISTANCE_BOX_TIMER
 
     if ("serviceWorker" in navigator) {
-      window.addEventListener("load", async () => {
-        try {
-          const reg = await navigator.serviceWorker.register("service-worker.js?v=20260630C", {updateViaCache:"none"});
-          await reg.update();
-        } catch(e) {}
-      });
-      navigator.serviceWorker.addEventListener("message", (event) => {
-        if (event.data && event.data.type === "PZL_NEW_VERSION") {
-          try {
-            if (!sessionStorage.getItem("pzl_coord_20260630C_reload")) {
-              sessionStorage.setItem("pzl_coord_20260630C_reload", "1");
-              location.reload();
-            }
-          } catch(e) { location.reload(); }
-        }
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js").catch(() => {});
       });
     }
 
@@ -6570,6 +6554,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
+/* PZL_COORD_PREVIEW_GO_FULLDIGITS_20260630D */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
@@ -6583,84 +6568,102 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 #coordEntryPanel{
   display:flex!important;
   flex-direction:column!important;
-  width:100%!important;
-  gap:4px!important;
-  padding:5px!important;
-  border-radius:9px!important;
-  background:rgba(15,23,42,.92)!important;
-  box-shadow:0 3px 10px rgba(0,0,0,.30)!important;
+  align-self:flex-end!important;
+  width:min(240px, calc(100vw - 16px))!important;
+  max-width:calc(100vw - 16px)!important;
+  gap:5px!important;
+  padding:6px!important;
+  border-radius:10px!important;
+  background:rgba(15,23,42,.94)!important;
+  box-shadow:0 4px 14px rgba(0,0,0,.36)!important;
+  box-sizing:border-box!important;
 }
 #coordBox,#searchInputMode{display:none!important;}
 .coordRawRow{
   display:grid!important;
-  grid-template-columns:minmax(0,1fr) 56px!important;
-  gap:4px!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.12fr) 50px!important;
+  gap:5px!important;
   width:100%!important;
 }
 .coordRawRow input{
   width:100%!important;
   min-width:0!important;
-  height:32px!important;
-  min-height:32px!important;
-  padding:4px 6px!important;
-  border-radius:6px!important;
+  height:34px!important;
+  min-height:34px!important;
+  padding:4px 5px!important;
+  border-radius:7px!important;
   border:1px solid #cbd5e1!important;
   background:#fff!important;
   color:#111827!important;
   font-size:11px!important;
   font-weight:900!important;
   text-align:center!important;
-  letter-spacing:.25px!important;
+  letter-spacing:0!important;
+  box-sizing:border-box!important;
 }
+.coordRawRow input:focus{outline:2px solid #38bdf8!important;outline-offset:0!important;}
 .coordRawRow #coordSearchBtn{
-  width:56px!important;
-  min-width:56px!important;
-  height:32px!important;
-  min-height:32px!important;
+  width:50px!important;
+  min-width:50px!important;
+  height:34px!important;
+  min-height:34px!important;
   padding:3px!important;
-  border-radius:6px!important;
-  font-size:10px!important;
+  border-radius:7px!important;
+  font-size:11px!important;
+  font-weight:900!important;
 }
 .coordRawRow #coordSearchBtn:disabled{opacity:.42!important;cursor:not-allowed!important;}
 .coordFormatRow{
   display:grid!important;
-  grid-template-columns:40px minmax(0,1fr)!important;
+  grid-template-columns:42px minmax(0,1fr)!important;
   align-items:center!important;
   width:100%!important;
-  min-height:31px!important;
-  padding:4px 6px!important;
+  min-height:45px!important;
+  padding:5px 7px!important;
   border:1px solid rgba(255,255,255,.28)!important;
-  border-radius:7px!important;
+  border-radius:8px!important;
   background:#6b7280!important;
   color:#fff!important;
   text-align:left!important;
   box-shadow:none!important;
+  box-sizing:border-box!important;
 }
 .coordFormatRow.selected{
   background:#157347!important;
   border-color:#86efac!important;
-  box-shadow:0 0 0 1px rgba(134,239,172,.45)!important;
+  box-shadow:0 0 0 2px rgba(134,239,172,.55)!important;
 }
 .coordFormatRow:disabled{opacity:.55!important;}
-.coordFormatName{font-size:9px!important;font-weight:900!important;}
+.coordFormatName{font-size:10px!important;font-weight:900!important;}
 .coordFormatValue{
   min-width:0!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-  white-space:nowrap!important;
-  font-size:9.4px!important;
-  font-weight:800!important;
-  letter-spacing:-.12px!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:normal!important;
+  font-size:10px!important;
+  line-height:1.15!important;
+  font-weight:900!important;
+  letter-spacing:-.05px!important;
+  word-break:normal!important;
 }
+.coordFormatValue .coordPart{display:block!important;white-space:nowrap!important;overflow:visible!important;}
+.coord-preview-pin{
+  width:24px;height:24px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:#16a34a;color:#fff;border:3px solid #fff;
+  box-shadow:0 2px 8px rgba(0,0,0,.65);
+  font:900 11px/1 Arial,sans-serif;
+}
+.coord-preview-popup{font-weight:800;line-height:1.25;white-space:nowrap;}
 @media(max-width:700px){
   #coordToggleBtn{height:30px!important;min-height:30px!important;font-size:11px!important;padding:4px!important;}
-  #coordEntryPanel{gap:3px!important;padding:4px!important;}
-  .coordRawRow{grid-template-columns:minmax(0,1fr) 49px!important;gap:3px!important;}
-  .coordRawRow input{height:29px!important;min-height:29px!important;font-size:9.2px!important;padding:3px 4px!important;}
-  .coordRawRow #coordSearchBtn{width:49px!important;min-width:49px!important;height:29px!important;min-height:29px!important;font-size:9px!important;}
-  .coordFormatRow{min-height:28px!important;grid-template-columns:35px minmax(0,1fr)!important;padding:3px 5px!important;}
-  .coordFormatName{font-size:8px!important;}
-  .coordFormatValue{font-size:8.2px!important;}
+  #coordEntryPanel{width:min(240px, calc(100vw - 12px))!important;max-width:calc(100vw - 12px)!important;gap:4px!important;padding:5px!important;}
+  .coordRawRow{grid-template-columns:minmax(0,1fr) minmax(0,1.12fr) 48px!important;gap:4px!important;}
+  .coordRawRow input{height:32px!important;min-height:32px!important;font-size:10.5px!important;padding:3px 4px!important;}
+  .coordRawRow #coordSearchBtn{width:48px!important;min-width:48px!important;height:32px!important;min-height:32px!important;font-size:10px!important;}
+  .coordFormatRow{min-height:43px!important;grid-template-columns:39px minmax(0,1fr)!important;padding:4px 6px!important;}
+  .coordFormatName{font-size:9px!important;}
+  .coordFormatValue{font-size:9.5px!important;line-height:1.12!important;}
 }
 </style>
 <script id="coord-four-row-script">
@@ -6668,7 +6671,8 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
   function initCoordFourRows(){
     const toggle = document.getElementById('coordToggleBtn');
     const panel = document.getElementById('coordEntryPanel');
-    const rawInput = document.getElementById('coordRawInput');
+    const latInput = document.getElementById('coordLatRaw');
+    const lonInput = document.getElementById('coordLonRaw');
     const hiddenInput = document.getElementById('coordBox');
     const modeSelect = document.getElementById('searchInputMode');
     const searchButton = document.getElementById('coordSearchBtn');
@@ -6678,26 +6682,25 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
       ddm: document.getElementById('coordDDMValue'),
       dms: document.getElementById('coordDMSValue')
     };
-    if(!toggle || !panel || !rawInput || !hiddenInput || !modeSelect || !searchButton) return;
+    if(!toggle || !panel || !latInput || !lonInput || !hiddenInput || !modeSelect || !searchButton) return;
 
+    searchButton.textContent = 'GO';
     let selected = 'ddm';
     let formatted = null;
+    let displayParts = null;
+    let currentCoords = null;
+    let previewMarker = null;
 
-    function splitRaw(value){
-      const original = String(value || '');
-      const groups = original.trim().split(/\s+/).map(x => x.replace(/\D/g,'')).filter(Boolean);
-      if(groups.length >= 2) return [groups[0], groups[1]];
-      const digits = original.replace(/\D/g,'');
-      // Default operational form: LAT DDMMmm and LON DDDMMmm.
-      // Example: 3903150263626 -> 390315 + 0263626.
-      if(digits.length >= 13) return [digits.slice(0,6), digits.slice(6,13)];
-      return null;
+    function cleanDigits(input){
+      const cleaned = String(input.value || '').replace(/\D/g,'');
+      if(input.value !== cleaned) input.value = cleaned;
     }
 
+    // Compact DDM without symbols. Examples: LAT 390315 => 39°03.15′, LON 0263626 => 026°36.26′.
     function parseCompactDDM(raw, isLat){
       const digits = String(raw || '').replace(/\D/g,'');
       const degreeDigits = isLat ? 2 : 3;
-      if(digits.length < degreeDigits + 3) return null;
+      if(digits.length < degreeDigits + 2) return null;
       const degrees = Number(digits.slice(0, degreeDigits));
       const minuteWhole = Number(digits.slice(degreeDigits, degreeDigits + 2));
       const minuteDecimals = digits.slice(degreeDigits + 2);
@@ -6710,45 +6713,117 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     }
 
     function pad(value, width){ return String(value).padStart(width, '0'); }
+
     function ddmPart(value, isLat){
       const hemi = isLat ? 'N' : 'E';
       const width = isLat ? 2 : 3;
       let deg = Math.floor(value);
       let minutes = (value - deg) * 60;
-      if(Math.round(minutes * 1000) >= 60000){ deg += 1; minutes = 0; }
-      return hemi + pad(deg, width) + '°' + minutes.toFixed(3).padStart(6, '0') + '′';
+      if(Math.round(minutes * 10000) >= 600000){ deg += 1; minutes = 0; }
+      return hemi + pad(deg, width) + '°' + minutes.toFixed(4).padStart(7, '0') + '′';
     }
+
     function dmsPart(value, isLat){
       const hemi = isLat ? 'N' : 'E';
       const width = isLat ? 2 : 3;
       let deg = Math.floor(value);
       let minutesFull = (value - deg) * 60;
       let min = Math.floor(minutesFull);
-      let sec = Math.round((minutesFull - min) * 600) / 10;
+      let sec = Math.round((minutesFull - min) * 6000) / 100;
       if(sec >= 60){ sec = 0; min += 1; }
       if(min >= 60){ min = 0; deg += 1; }
-      return hemi + pad(deg, width) + '°' + pad(min, 2) + '′' + sec.toFixed(1).padStart(4, '0') + '″';
+      return hemi + pad(deg, width) + '°' + pad(min, 2) + '′' + sec.toFixed(2).padStart(5, '0') + '″';
+    }
+
+    function clearPreview(){
+      try {
+        if(previewMarker && typeof map !== 'undefined' && map) map.removeLayer(previewMarker);
+      } catch(e) {}
+      previewMarker = null;
+    }
+
+    function showPreview(){
+      if(!currentCoords || !formatted || !displayParts) return;
+      try {
+        if(typeof map === 'undefined' || typeof L === 'undefined') return;
+        clearPreview();
+        const icon = L.divIcon({
+          className:'',
+          html:'<div class="coord-preview-pin">' + selected.toUpperCase() + '</div>',
+          iconSize:[30,30],
+          iconAnchor:[15,15]
+        });
+        previewMarker = L.marker([currentCoords.lat, currentCoords.lon], {
+          icon:icon,
+          zIndexOffset:2500,
+          keyboard:false
+        }).addTo(map);
+        previewMarker.bindPopup(
+          '<div class="coord-preview-popup"><b>Preview ' + selected.toUpperCase() + '</b><br>' +
+          displayParts[selected].lat + '<br>' + displayParts[selected].lon + '</div>'
+        ).openPopup();
+        const zoom = Math.max(Number(map.getZoom()) || 0, 13);
+        map.setView([currentCoords.lat, currentCoords.lon], zoom);
+      } catch(e) {
+        console.warn('Coord preview error', e);
+      }
+    }
+
+    function renderValue(key){
+      const el = values[key];
+      if(!el) return;
+      if(!displayParts){
+        el.textContent = '—';
+        el.removeAttribute('title');
+        return;
+      }
+      el.innerHTML = '<span class="coordPart">' + displayParts[key].lat + '</span>' +
+                     '<span class="coordPart">' + displayParts[key].lon + '</span>';
+      el.title = formatted[key];
     }
 
     function syncSelection(){
       rows.forEach(row => row.classList.toggle('selected', row.dataset.format === selected));
-      if(!formatted){ hiddenInput.value=''; searchButton.disabled=true; return; }
+      if(!formatted){
+        hiddenInput.value = '';
+        searchButton.disabled = true;
+        return;
+      }
       hiddenInput.value = formatted[selected];
       modeSelect.value = selected;
       searchButton.disabled = false;
     }
 
     function refresh(){
-      const parts = splitRaw(rawInput.value);
-      const lat = parts ? parseCompactDDM(parts[0], true) : null;
-      const lon = parts ? parseCompactDDM(parts[1], false) : null;
+      cleanDigits(latInput);
+      cleanDigits(lonInput);
+      clearPreview();
+      const lat = parseCompactDDM(latInput.value, true);
+      const lon = parseCompactDDM(lonInput.value, false);
       const valid = Number.isFinite(lat) && Number.isFinite(lon);
-      formatted = valid ? {
-        dd: lat.toFixed(6) + ', ' + lon.toFixed(6),
-        ddm: ddmPart(lat,true) + ' ' + ddmPart(lon,false),
-        dms: dmsPart(lat,true) + ' ' + dmsPart(lon,false)
-      } : null;
-      Object.keys(values).forEach(key => { if(values[key]) values[key].textContent = formatted ? formatted[key] : '—'; });
+      currentCoords = valid ? {lat:lat, lon:lon} : null;
+      if(valid){
+        const ddLat = lat.toFixed(7);
+        const ddLon = lon.toFixed(7);
+        const ddmLat = ddmPart(lat, true);
+        const ddmLon = ddmPart(lon, false);
+        const dmsLat = dmsPart(lat, true);
+        const dmsLon = dmsPart(lon, false);
+        displayParts = {
+          dd:{lat:ddLat, lon:ddLon},
+          ddm:{lat:ddmLat, lon:ddmLon},
+          dms:{lat:dmsLat, lon:dmsLon}
+        };
+        formatted = {
+          dd:ddLat + ', ' + ddLon,
+          ddm:ddmLat + ' ' + ddmLon,
+          dms:dmsLat + ' ' + dmsLon
+        };
+      } else {
+        displayParts = null;
+        formatted = null;
+      }
+      Object.keys(values).forEach(renderValue);
       rows.forEach(row => row.disabled = !valid);
       syncSelection();
     }
@@ -6758,22 +6833,39 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
       const open = !panel.hidden;
       toggle.classList.toggle('coord-open', open);
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      if(open) setTimeout(() => rawInput.focus(), 50);
+      if(!open) clearPreview();
+      if(open) setTimeout(() => latInput.focus(), 50);
     });
-    rawInput.addEventListener('input', refresh);
-    rawInput.addEventListener('keydown', function(event){
-      if(event.key === 'Enter' && !searchButton.disabled){ event.preventDefault(); searchButton.click(); }
-    });
+
+    latInput.addEventListener('input', refresh);
+    lonInput.addEventListener('input', refresh);
+    [latInput, lonInput].forEach(input => input.addEventListener('keydown', function(event){
+      if(event.key === 'Enter'){
+        event.preventDefault();
+        if(input === latInput) lonInput.focus();
+        else if(!searchButton.disabled) searchButton.click();
+      }
+    }));
+
     rows.forEach(row => row.addEventListener('click', function(){
       if(row.disabled) return;
       selected = row.dataset.format || 'ddm';
       syncSelection();
+      showPreview();
     }));
+
+    // The existing application handler finalizes the fire point. This listener only removes the temporary preview.
+    searchButton.addEventListener('click', function(){
+      if(searchButton.disabled) return;
+      setTimeout(clearPreview, 0);
+    });
+
     refresh();
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCoordFourRows);
   else initCoordFourRows();
 })();
 </script>
+
 </body>
 </html>
