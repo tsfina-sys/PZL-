@@ -1,7 +1,8 @@
-PZL_COORD_LAT_LON_VERTICAL_20260630E
+PZL_FIRE_REQUIRED_FOR_SEARCH_20260630F
 Built 2026-06-30
-- LAT and LON are shown in two full-width fields, one below the other.
-- GO remains below the two fields.
-- Coordinate preview and DD/DDM/DMS selection remain unchanged.
-- All entered and converted digits remain visible.
-- Cache-clearing service worker updated.
+- Area input, area SRCH and Coord are available only while Fire is green.
+- Selecting WPT or WPT RTB disables Fire search access.
+- After selecting a fire point, the Fire button turns grey and search controls lock.
+- Press Fire again to enter a new area or new coordinates.
+- Coordinate preview, vertical LAT/LON, GO and full digits remain unchanged.
+- Cache identifier updated.

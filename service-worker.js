@@ -1,4 +1,4 @@
-const PZL_BUILD = 'PZL_COORD_LAT_LON_VERTICAL_20260630E';
+const PZL_BUILD = 'PZL_FIRE_REQUIRED_FOR_SEARCH_20260630F';
 self.addEventListener('install', event => { self.skipWaiting(); });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {

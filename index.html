@@ -1018,7 +1018,18 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_COORD_LAT_LON_VERTICAL_20260630E">
+<meta name="pzl-build" content="PZL_FIRE_REQUIRED_FOR_SEARCH_20260630F">
+
+<style id="fire-required-search-style">
+#searchBox:disabled,
+#searchBtn:disabled,
+#coordToggleBtn:disabled{
+  opacity:.48!important;
+  filter:grayscale(.35)!important;
+  cursor:not-allowed!important;
+}
+</style>
+
 </head>
 
 <style id="fix37d46-metar-final-css">
@@ -2404,16 +2415,49 @@ function setFireMarker() {
       } catch(e) {}
     }
 
+    function pzlUpdateFireSearchAccess() {
+      const enabled = mode === "fire" && fireSelectionArmed === true;
+      window.pzlFireSearchEnabled = enabled;
+
+      const searchBox = document.getElementById("searchBox");
+      const searchBtn = document.getElementById("searchBtn");
+      const coordToggleBtn = document.getElementById("coordToggleBtn");
+      if (searchBox) searchBox.disabled = !enabled;
+      if (searchBtn) searchBtn.disabled = !enabled;
+      if (coordToggleBtn) coordToggleBtn.disabled = !enabled;
+
+      if (!enabled) {
+        const panel = document.getElementById("coordEntryPanel");
+        if (panel) panel.hidden = true;
+        if (coordToggleBtn) {
+          coordToggleBtn.classList.remove("coord-open");
+          coordToggleBtn.setAttribute("aria-expanded", "false");
+        }
+        ["coordLatRaw", "coordLonRaw", "coordSearchBtn"].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.disabled = true;
+        });
+        document.querySelectorAll(".coordFormatRow").forEach(row => row.disabled = true);
+      }
+
+      try {
+        window.dispatchEvent(new CustomEvent("pzl-fire-search-access", {
+          detail: {enabled: enabled}
+        }));
+      } catch(e) {}
+    }
+
     function updateFireModeButtonState() {
       const fireBtn = document.getElementById("fireModeBtn");
       if (!fireBtn) return;
       if (mode === "fire" && fireSelectionArmed) {
         fireBtn.className = "active";
-        fireBtn.title = "Fire: ενεργό — πάτησε στον χάρτη για σημείο φωτιάς";
+        fireBtn.title = "Fire: ενεργό — επιτρέπεται Περιοχή, Coord ή επιλογή στον χάρτη";
       } else {
         fireBtn.className = "secondary";
-        fireBtn.title = "Fire: πατημένο για ενεργοποίηση επιλογής φωτιάς";
+        fireBtn.title = "Πάτησε Fire για να ενεργοποιήσεις Περιοχή, Coord ή επιλογή στον χάρτη";
       }
+      pzlUpdateFireSearchAccess();
     }
 
     function setViaWptArmed(active) {
@@ -2743,6 +2787,7 @@ function setFireMarker() {
     })();
 
     document.getElementById("searchBtn").addEventListener("click", async () => {
+      if (!(mode === "fire" && fireSelectionArmed === true)) return;
       const input = document.getElementById("searchBox");
       const q = input.value.trim();
       if (!q) return;
@@ -2766,6 +2811,7 @@ function setFireMarker() {
     });
 
     document.getElementById("coordSearchBtn").addEventListener("click", () => {
+      if (!(mode === "fire" && fireSelectionArmed === true)) return;
       const input = document.getElementById("coordBox");
       const q = input.value.trim();
       if (!q) return;
@@ -4698,6 +4744,8 @@ const base = bases[selectedBaseName];
         if (returnWpMode) {
           modeBeforeReturnWp = (typeof mode !== "undefined") ? mode : null;
           if (typeof mode !== "undefined") mode = "return";
+          fireSelectionArmed = false;
+          updateFireModeButtonState();
         } else {
           if (modeBeforeReturnWp && typeof mode !== "undefined") mode = modeBeforeReturnWp;
           modeBeforeReturnWp = null;
@@ -6554,7 +6602,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_COORD_LAT_LON_VERTICAL_20260630E */
+/* PZL_FIRE_REQUIRED_FOR_SEARCH_20260630F */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
@@ -6707,6 +6755,10 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     let currentCoords = null;
     let previewMarker = null;
 
+    function fireAccessEnabled(){
+      return window.pzlFireSearchEnabled === true;
+    }
+
     function cleanDigits(input){
       const cleaned = String(input.value || '').replace(/\D/g,'');
       if(input.value !== cleaned) input.value = cleaned;
@@ -6799,7 +6851,10 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     }
 
     function syncSelection(){
+      const access = fireAccessEnabled();
       rows.forEach(row => row.classList.toggle('selected', row.dataset.format === selected));
+      latInput.disabled = !access;
+      lonInput.disabled = !access;
       if(!formatted){
         hiddenInput.value = '';
         searchButton.disabled = true;
@@ -6807,7 +6862,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
       }
       hiddenInput.value = formatted[selected];
       modeSelect.value = selected;
-      searchButton.disabled = false;
+      searchButton.disabled = !access;
     }
 
     function refresh(){
@@ -6840,11 +6895,12 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
         formatted = null;
       }
       Object.keys(values).forEach(renderValue);
-      rows.forEach(row => row.disabled = !valid);
+      rows.forEach(row => row.disabled = !valid || !fireAccessEnabled());
       syncSelection();
     }
 
     toggle.addEventListener('click', function(){
+      if(!fireAccessEnabled()) return;
       panel.hidden = !panel.hidden;
       const open = !panel.hidden;
       toggle.classList.toggle('coord-open', open);
@@ -6874,6 +6930,17 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     searchButton.addEventListener('click', function(){
       if(searchButton.disabled) return;
       setTimeout(clearPreview, 0);
+    });
+
+    window.addEventListener('pzl-fire-search-access', function(event){
+      const enabled = !!(event && event.detail && event.detail.enabled);
+      if(!enabled){
+        clearPreview();
+        panel.hidden = true;
+        toggle.classList.remove('coord-open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+      refresh();
     });
 
     refresh();
