@@ -214,7 +214,7 @@
 #hsiHud .hsiHdg{top:24px;left:69px;color:#a7ff77;}
 #hsiHud .hsiGs{top:68px;left:55px;width:80px;background:transparent;border:0;font-size:12px;}
 #hsiHud .hsiGs strong{display:block;font-size:28px;line-height:26px;}
-#hsiHud .hsiAlt{bottom:66px;left:78px;color:#ffca45;font-size:20px;font-weight:800;text-align:center;}
+#hsiHud .hsiAlt{bottom:82px;left:78px;color:#ffca45;font-size:20px;font-weight:800;text-align:center;}
 #hsiHud .hsiPos{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:11px;font-weight:700;line-height:1.15;}
 #hsiHud .hsiPlane{position:absolute;left:83px;top:91px;font-size:22px;transform:translate(-50%,-50%);}
 #hsiHud .hsiArrow{position:absolute;left:94px;top:94px;width:3px;height:74px;transform-origin:50% 0;opacity:.95;}
@@ -225,7 +225,7 @@
 #hsiHud .hsiLabel.refill{left:8px;color:#7ef06e;}
 #hsiHud .hsiLabel.full{right:6px;color:#5ab2ff;text-align:right;}
 #hsiHud .hsiAirport{display:block;font-size:9px;font-weight:900;line-height:1.0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.9);}
-#hsiHud .hsiMetric{display:block;font-size:9px;line-height:1.05;font-weight:800;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.85);}
+#hsiHud .hsiMetric{position:relative;top:-6px;display:block;font-size:9px;line-height:1.05;font-weight:800;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.85);}
 #hsiHud .hsiControls{display:flex;justify-content:center;gap:4px;margin-top:4px;pointer-events:auto;}
 #hsiHud .hsiControls button{font-size:11px;padding:4px 7px;border-radius:7px;background:rgba(107,114,128,.86);}
 #hsiHud .hsiControls button.active{background:rgba(21,115,71,.90);}
@@ -395,7 +395,7 @@
   text-overflow:ellipsis !important;
 }
 #hsiHud .hsiMetric{font-size:8px !important;line-height:1.0 !important;}
-#hsiHud #hudRefillBrg, #hsiHud #hudFullBrg{font-size:10px !important;font-weight:900 !important;}
+#hsiHud #hudRefillBrg, #hsiHud #hudFullBrg{position:relative;top:-6px;font-size:10px !important;font-weight:900 !important;}
 #hsiHud .hsiArrow{z-index:3 !important;}
 #hsiHud .hsiPlane{z-index:7 !important;}
 @media(max-width:700px){
