@@ -1,4 +1,4 @@
-const PZL_BUILD = 'PZL_FIRE_REQUIRED_FOR_SEARCH_20260630F';
+const PZL_BUILD = 'PZL_FIRE_REQUIRED_FIXED_20260630G';
 self.addEventListener('install', event => { self.skipWaiting(); });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {

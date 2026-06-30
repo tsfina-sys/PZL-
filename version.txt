@@ -1,8 +1,6 @@
-PZL_FIRE_REQUIRED_FOR_SEARCH_20260630F
+PZL_FIRE_REQUIRED_FIXED_20260630G
 Built 2026-06-30
-- Area input, area SRCH and Coord are available only while Fire is green.
-- Selecting WPT or WPT RTB disables Fire search access.
-- After selecting a fire point, the Fire button turns grey and search controls lock.
-- Press Fire again to enter a new area or new coordinates.
-- Coordinate preview, vertical LAT/LON, GO and full digits remain unchanged.
-- Cache identifier updated.
+- Fixed screen-lock code that was re-enabling Area and Coord controls.
+- Area, SRCH, Coord, LAT, LON, DD, DDM, DMS and GO are now blocked unless Fire is green.
+- Added a capture-phase safety guard against accidental re-enabling.
+- Updated cache identifier.
