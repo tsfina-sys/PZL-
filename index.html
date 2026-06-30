@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_COORD_GO_DIRECT_COMMIT_FIX_20260630J">
+<meta name="pzl-build" content="PZL_LIVE_TIMES_10SEC_20260630K">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1699,7 +1699,7 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
     let lastAirborneTick = null;
     let calculatedFuelBurnedL = 0;
     let lastHeavyCalcTime = 0;
-    const heavyCalcIntervalMs = 30000; // βαριοί υπολογισμοί ανά 30''
+    const heavyCalcIntervalMs = 10000; // ζωντανός επανυπολογισμός ανά 10''
     const airborneStartSpeedKmh = 100;
     const airborneStopSpeedKmh = 30;
     let viaMarkers = [];
@@ -1720,6 +1720,59 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, al
     const autoTakeoffSpeedKmh = 100;
     const autoFullStopSpeedKmh = 30;
     const autoFullStopDelayMs = 20 * 60 * 1000;
+
+    function pzlMissionNow() {
+      try {
+        if (typeof gpsTestModeARunning !== "undefined" &&
+            gpsTestModeARunning &&
+            typeof gpsTestModeASimNow !== "undefined" &&
+            gpsTestModeASimNow) {
+          return new Date(gpsTestModeASimNow.getTime());
+        }
+      } catch(e) {}
+      return new Date();
+    }
+
+    function pzlHasLiveMissionStarted() {
+      try {
+        return !!(
+          pzlAutoHasBeenAirborne === true &&
+          currentGps &&
+          Number.isFinite(Number(currentGps.lat)) &&
+          Number.isFinite(Number(currentGps.lon))
+        );
+      } catch(e) {
+        return false;
+      }
+    }
+
+    function pzlCurrentGsKmh() {
+      try {
+        const mps = currentGps && Number(currentGps.speedMps);
+        return Number.isFinite(mps) ? mps * 3.6 : null;
+      } catch(e) {
+        return null;
+      }
+    }
+
+    function pzlCalculationSpeedKmPerMin() {
+      const gsKmh = pzlCurrentGsKmh();
+      if (pzlHasLiveMissionStarted() && Number.isFinite(gsKmh) && gsKmh > 30) {
+        return Math.max(0.1, gsKmh / 60);
+      }
+      return speedKmPerMin;
+    }
+
+    function pzlActualTakeoffForMission() {
+      try {
+        if (autoActualTakeoffTime) return new Date(autoActualTakeoffTime.getTime());
+        if (typeof actualTakeoffTime !== "undefined" && actualTakeoffTime) return new Date(actualTakeoffTime.getTime());
+        if (typeof takeoffTime !== "undefined" && takeoffTime) return new Date(takeoffTime.getTime());
+        if (typeof gpsTestModeATakeoffSimTime !== "undefined" && gpsTestModeATakeoffSimTime) return new Date(gpsTestModeATakeoffSimTime.getTime());
+      } catch(e) {}
+      if (commandTime) return new Date(commandTime.getTime() + getInitialTakeoffDelayMin() * 60000);
+      return null;
+    }
 
     const map = L.map("map").setView([38.7, 23.7], 6);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:18, attribution:"© OpenStreetMap"}).addTo(map);
@@ -3008,7 +3061,10 @@ function setFireMarker() {
     function routeDistanceKm() {
       if (!firePoint) return null;
       const b = bases[selectedBaseName];
-      const start = (useGpsAsStart && currentGps) ? {lat:currentGps.lat, lon:currentGps.lon} : {lat:b.lat,lon:b.lon};
+      const liveGpsStart = pzlHasLiveMissionStarted();
+      const start = ((liveGpsStart || useGpsAsStart) && currentGps)
+        ? {lat:currentGps.lat, lon:currentGps.lon}
+        : {lat:b.lat,lon:b.lon};
       const points = [start, ...viaPoints, {lat:firePoint.lat,lon:firePoint.lon}];
       let total=0; for(let i=0;i<points.length-1;i++) total += haversineKm(points[i],points[i+1]);
       return total;
@@ -3017,6 +3073,8 @@ function setFireMarker() {
       const b = bases[selectedBaseName], alt = airports[b.alt];
       return haversineKm({lat:b.lat,lon:b.lon}, alt);
     }
+
+    let pzlCutoffCache = {key:"", value:null, savedAt:0};
 
     async function getCutoffTime() {
       // Ο περιορισμός ΤΦ/Cutoff υπολογίζεται με βάση το Α/Δ Full Stop.
@@ -3027,6 +3085,16 @@ function setFireMarker() {
         : selectedBaseName;
       const base = bases[fullStopName] || bases[selectedBaseName];
       const ref = airports[base.ref];
+      const now = pzlMissionNow();
+      const dateKey = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+      const cacheKey = `${fullStopName}|${base.ref}|${base.offset}|${dateKey}`;
+
+      if (pzlCutoffCache.key === cacheKey &&
+          pzlCutoffCache.value &&
+          Date.now() - pzlCutoffCache.savedAt < 5 * 60 * 1000) {
+        return pzlCutoffCache.value;
+      }
+
       const url = `https://api.sunrise-sunset.org/json?lat=${ref.lat}&lng=${ref.lon}&formatted=0`;
       const res = await fetch(url);
       const data = await res.json();
@@ -3034,7 +3102,9 @@ function setFireMarker() {
       const sunset = new Date(data.results.sunset);
       const twilight = new Date(sunset.getTime() + twilightAfterSunsetMin*60000);
       const cutoff = new Date(twilight.getTime() - base.offset*60000);
-      return {sunset, twilight, cutoff, refName:base.ref, offset:base.offset, fullStopName};
+      const value = {sunset, twilight, cutoff, refName:base.ref, offset:base.offset, fullStopName};
+      pzlCutoffCache = {key:cacheKey, value:value, savedAt:Date.now()};
+      return value;
     }
 
     let lastCalcId = 0;
@@ -3382,6 +3452,9 @@ function setFireMarker() {
     
     function getEffectiveInitialDelayMin() {
       try {
+        if (pzlHasLiveMissionStarted()) {
+          return isAirborne ? 0 : getRefillTakeoffDelayMin();
+        }
         if (typeof newFireWithWaterMode !== "undefined" && newFireWithWaterMode) return 0;
       } catch(e) {}
       return (typeof getInitialTakeoffDelayMin === "function") ? getInitialTakeoffDelayMin() : 15;
@@ -3511,13 +3584,23 @@ function setFireMarker() {
       const finalReturnRouteD = finalReturnRouteDistanceKm();
       const firstLegDistanceKm = newFireFirstLegDistanceKm();
       const D = (newFireWithWaterMode && firstLegDistanceKm !== null) ? firstLegDistanceKm : normalD;
-      const calcCommandTime = (newFireWithWaterMode && newFireCalcStartTime) ? newFireCalcStartTime : commandTime;
+      const liveMission = pzlHasLiveMissionStarted();
+      const missionNow = pzlMissionNow();
+      const calcCommandTime = liveMission
+        ? missionNow
+        : ((newFireWithWaterMode && newFireCalcStartTime) ? newFireCalcStartTime : commandTime);
+      const calcSpeedKmPerMin = pzlCalculationSpeedKmPerMin();
+      const effectiveInitialDelayMin = getEffectiveInitialDelayMin();
       const fmtUntilFromCalcCommand = (targetTime) => {
-        if (!calcCommandTime || !targetTime) return "-";
-        const mins = Math.max(0, Math.round((targetTime.getTime() - calcCommandTime.getTime()) / 60000));
-        const h = Math.floor(mins / 60);
-        const m = mins % 60;
-        return h > 0 ? `${h}ω ${m}'` : `${m}'`;
+        if (!targetTime) return "-";
+        const countdownNow = pzlMissionNow();
+        const totalSec = Math.max(0, Math.ceil((targetTime.getTime() - countdownNow.getTime()) / 1000));
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        return h > 0
+          ? `${h}ω ${String(m).padStart(2,"0")}' ${String(s).padStart(2,"0")}"`
+          : `${m}' ${String(s).padStart(2,"0")}"`;
       };
 
       updateWindResult();
@@ -3540,18 +3623,22 @@ function setFireMarker() {
         const approachLegD = (approachRouteD !== null) ? approachRouteD : ((newFireWithWaterMode && normalD !== null) ? normalD : D);
         const finalReturnLegD = (finalReturnRouteD !== null) ? finalReturnRouteD : returnLegD;
         const cycleDistanceKm = returnLegD + approachLegD;
-        const cycleMin = returnLegD/speedKmPerMin + getRefillTakeoffDelayMin() + approachLegD/speedKmPerMin;
-        const firstLegMin = D/speedKmPerMin + attackCircuitMin;
-        const finalReturnMin = finalReturnLegD/speedKmPerMin;
-        const firstDrop = addMinutes(calcCommandTime, getEffectiveInitialDelayMin() + D/speedKmPerMin + attackCircuitMin);
-        const firstTakeoff = addMinutes(calcCommandTime, getEffectiveInitialDelayMin());
+        const cycleMin = returnLegD/calcSpeedKmPerMin + getRefillTakeoffDelayMin() + approachLegD/calcSpeedKmPerMin;
+        const firstLegMin = D/calcSpeedKmPerMin + attackCircuitMin;
+        const finalReturnMin = finalReturnLegD/calcSpeedKmPerMin;
+        const firstDrop = addMinutes(calcCommandTime, effectiveInitialDelayMin + D/calcSpeedKmPerMin + attackCircuitMin);
+        const firstTakeoff = addMinutes(calcCommandTime, effectiveInitialDelayMin);
 
         // FIX37D333:
         // Το maxDrops πρέπει να ελέγχεται από την πραγματική ώρα Α/Γ έως την τελική Π/Γ.
         // Πριν, στο newFireWithWaterMode χρησιμοποιούσε "remaining airborne" από άλλη εσωτερική ώρα
         // και μπορούσε να βγάζει: "Ώρα πρώτης ρίψης" αλλά "Μέγιστες ρίψεις: 0".
         const missionStartFor3Hours =
-          (newFireWithWaterMode ? (getStoredOrPromptTakeoffTimeForNewFire(false, true) || firstTakeoff) : firstTakeoff);
+          liveMission
+            ? (pzlActualTakeoffForMission() || firstTakeoff)
+            : (newFireWithWaterMode
+                ? (getStoredOrPromptTakeoffTimeForNewFire(false, true) || firstTakeoff)
+                : firstTakeoff);
 
         function lastLandingForDrops(n) {
           return n > 0 ? addMinutes(firstDrop, (n-1)*cycleMin + finalReturnMin) : null;
@@ -3584,7 +3671,7 @@ function setFireMarker() {
 
         const returnDurationMin = finalReturnMin;
         const lastLanding = lastLandingForDrops(maxDrops);
-        const missionDurationMin = maxDrops>0 ? (lastLanding.getTime() - firstTakeoff.getTime())/60000 : 0;
+        const missionDurationMin = maxDrops>0 ? (lastLanding.getTime() - missionStartFor3Hours.getTime())/60000 : 0;
 
         const returnEta = lastLanding;
 const base = bases[selectedBaseName];
@@ -3610,6 +3697,7 @@ const base = bases[selectedBaseName];
           `${newFireWithWaterMode ? 'Επαναμετάβαση από επαναπλήρωση: ' + approachLegD.toFixed(1) + ' km' + (viaMarkers.length ? ' με 🔥 WPT' : ' direct') + '\n' : ''}` +
           `Τελική επιστροφή προς Full Stop: ${finalReturnLegD.toFixed(1)} km${returnWpMarkers.length ? ' με WPT RTB' : ' direct'}\n` +
           `${newFireWithWaterMode ? 'Ώρα νέας εντολής στον αέρα: ' + fmtTime(calcCommandTime) : 'Ώρα εντολής: ' + fmtTime(commandTime)}\n` +
+          `${liveMission ? 'LIVE επανυπολογισμός: ' + fmtTime(missionNow) + ' | GS: ' + (pzlCurrentGsKmh() !== null ? pzlCurrentGsKmh().toFixed(0) : '180 fallback') + ' km/h\n' : ''}` +
           `${(typeof newFireWithWaterMode !== "undefined" && newFireWithWaterMode) ? "Νέα φωτιά με νερό: χωρίς 15\' αρχικής Α/Γ\n" : ""}` +
           `Χρόνος αρχικής Α/Γ: ${getInitialTakeoffDelayMin()}\'\n` +
           `Χρόνος Α/Γ μετά επαναπλήρωση: ${getRefillTakeoffDelayMin()}\'\n` +
@@ -3685,9 +3773,17 @@ const base = bases[selectedBaseName];
       renderIntermediateLandings();
     }
 
-    function setAutoActualTakeoff(dt) {
-      if (autoActualTakeoffTime) return;
-      autoActualTakeoffTime = dt;
+    function setAutoActualTakeoff(dt, forceActual = false) {
+      if (autoActualTakeoffTime && !forceActual) return;
+      autoActualTakeoffTime = new Date(dt.getTime());
+
+      if (forceActual) {
+        try { if (typeof actualTakeoffTime !== "undefined") actualTakeoffTime = new Date(dt.getTime()); } catch(e) {}
+        try { if (typeof takeoffTime !== "undefined") takeoffTime = new Date(dt.getTime()); } catch(e) {}
+        try { if (typeof newFireActualTakeoffTime !== "undefined") newFireActualTakeoffTime = new Date(dt.getTime()); } catch(e) {}
+        try { window.manualActualTakeoffTimeForNewFire = new Date(dt.getTime()); } catch(e) {}
+      }
+
       const el = document.getElementById("actualTakeoffClock");
       if (el) el.textContent = "Ώρα Α/Γ: " + fmtTime(dt);
     }
@@ -3728,8 +3824,17 @@ const base = bases[selectedBaseName];
       if (speedKmh === null || isNaN(speedKmh)) return;
 
       if (speedKmh > autoTakeoffSpeedKmh) {
+        const firstActualCrossing = !pzlAutoHasBeenAirborne;
         pzlAutoHasBeenAirborne = true;
-        setAutoActualTakeoff(now);
+        setAutoActualTakeoff(now, firstActualCrossing);
+
+        if (firstActualCrossing) {
+          lastHeavyCalcTime = 0;
+          setTimeout(() => {
+            try { drawAll(); } catch(e) {}
+            try { calculate(); } catch(e) {}
+          }, 0);
+        }
 
         if (fullStopTimerId) {
           clearTimeout(fullStopTimerId);
@@ -4702,10 +4807,13 @@ const base = bases[selectedBaseName];
     setInterval(() => {
       try {
         if (typeof firePoint !== "undefined" && firePoint && typeof calculate === "function") {
+          if (pzlHasLiveMissionStarted()) {
+            try { drawAll(); } catch(e) {}
+          }
           calculate();
         }
       } catch(e) {}
-    }, 30000); // RETURN_DISTANCE_GPS_REFRESH_TIMER
+    }, 10000); // LIVE_MISSION_TIMES_AND_DROPS_REFRESH_10S
 
 
     
@@ -6611,7 +6719,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_COORD_GO_DIRECT_COMMIT_FIX_20260630J */
+/* PZL_LIVE_TIMES_10SEC_20260630K */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;

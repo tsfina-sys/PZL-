@@ -1,4 +1,4 @@
-const PZL_BUILD = 'PZL_COORD_GO_DIRECT_COMMIT_FIX_20260630J';
+const PZL_BUILD = 'PZL_LIVE_TIMES_10SEC_20260630K';
 self.addEventListener('install', event => { self.skipWaiting(); });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {

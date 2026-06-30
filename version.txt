@@ -1,7 +1,11 @@
-PZL_COORD_GO_DIRECT_COMMIT_FIX_20260630J
+PZL_LIVE_TIMES_10SEC_20260630K
 Built 2026-06-30
-- GO no longer sends the selected coordinates through the legacy text parser.
-- GO commits the exact numeric latitude and longitude currently shown in preview.
-- DD, DDM and DMS previews therefore remain in exactly the same position after GO.
-- Fire turns grey only after the direct commit.
+- Before takeoff, the “from now/command” countdown decreases every 10 seconds.
+- The first GS > 100 km/h locks the actual takeoff time.
+- After first takeoff, route calculations start automatically from live GPS position.
+- Actual GS is used above 30 km/h; otherwise the 180 km/h fallback is used.
+- Predicted times, first drop, maximum drops and the drop table refresh every 10 seconds.
+- During flight the initial 15-minute delay is removed.
+- After a live landing below 30 km/h, a 10-minute refill/takeoff delay is used.
+- TF/Cutoff is cached for five minutes to avoid repeated internet requests.
 - Cache identifier updated.
