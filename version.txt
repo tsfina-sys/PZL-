@@ -1,20 +1,15 @@
-PZL_FULL_TEST_MODE_20260701R
+PZL_TEST_MODE_COMMAND_TIME_LIMITS_20260701T
 Built 2026-07-01
 
-- Added full interactive Test Mode.
-- Adjustable simulated GS.
-- Quick GS buttons: 0, <30 and >100.
-- Adjustable wind direction, speed and gusts.
-- Time acceleration x1, x2, x5 and x10.
-- AUTO route follows the next active WPT, fire and REFILL.
-- Manual heading mode allows deliberate route deviation.
-- “Tap θέση” moves the simulated aircraft anywhere on the map.
-- Quick teleport to initial airport, fire, REFILL or Full Stop.
-- “Ρίψη τώρα” works normally during Test Mode and updates calculations and mission log.
-- GS >100 records actual/intermediate takeoff.
-- GS <30 records a pending landing.
-- A new GS >100 before 20 simulated minutes turns it into an intermediate landing and records an intermediate takeoff.
-- Twenty simulated minutes without another takeoff turns it into the final landing.
-- Added +5 and +20 simulated minute controls.
-- Mission log and archive remain separate from the panel Reset.
+- Added selectable command date and time in Test Mode.
+- “Νέα test αποστολή” starts from the selected command date/time.
+- Mission log records the selected command date/time.
+- The initial 15-minute readiness is calculated from the selected command time.
+- The 3-hour restriction is calculated from the simulated actual takeoff (GS >100).
+- TF, twilight and cutoff are requested for the selected test date.
+- The sunset API now receives the selected mission date.
+- Manual TF is also stored and calculated for the selected mission date.
+- Stored TF from a different date is not silently reused.
+- Test status displays the active 3-hour/TF restriction and cutoff.
+- IAS/wind-based GS and all previous Test Mode functions remain enabled.
 - Cache identifier updated.

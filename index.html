@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_FULL_TEST_MODE_20260701R">
+<meta name="pzl-build" content="PZL_TEST_MODE_COMMAND_TIME_LIMITS_20260701T">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1211,6 +1211,12 @@ body.pzl-screen-locked #lockMapBtn {
 }
 .pzl-test-grid{
   margin-top:7px;
+}
+.pzl-test-command-time{
+  grid-column:1 / -1;
+}
+#pzlTestCommandDateTime{
+  width:100%;
 }
 .pzl-test-grid label{
   display:block;
@@ -1513,9 +1519,13 @@ body.pzl-screen-locked #lockMapBtn {
         </div>
 
         <div class="grid2 pzl-test-grid">
+          <div class="pzl-test-command-time">
+            <label>Ημερομηνία / ώρα εντολής</label>
+            <input id="pzlTestCommandDateTime" type="datetime-local" step="60">
+          </div>
           <div>
-            <label>GS km/h</label>
-            <input id="pzlTestGs" type="number" min="0" max="400" step="5" value="0">
+            <label>IAS km/h</label>
+            <input id="pzlTestIas" type="number" min="0" max="400" step="5" value="0">
           </div>
           <div>
             <label>Ταχύτητα χρόνου</label>
@@ -1550,11 +1560,11 @@ body.pzl-screen-locked #lockMapBtn {
             <input id="pzlTestWindGust" type="number" min="0" max="120" step="1" value="0">
           </div>
           <div>
-            <label>Γρήγορη GS</label>
+            <label>Γρήγορη IAS</label>
             <div class="pzl-test-quick">
-              <button type="button" data-test-gs="0">0</button>
-              <button type="button" data-test-gs="25">&lt;30</button>
-              <button type="button" data-test-gs="180">&gt;100</button>
+              <button type="button" data-test-ias="0">0</button>
+              <button type="button" data-test-ias="80">80</button>
+              <button type="button" data-test-ias="180">180</button>
             </div>
           </div>
         </div>
@@ -4443,7 +4453,8 @@ function setFireMarker() {
       const base = bases[fullStopName] || bases[selectedBaseName];
       const ref = airports[base.ref];
       const now = pzlMissionNow();
-      const dateKey = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+      const dateKey =
+        `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
       const cacheKey = `${fullStopName}|${base.ref}|${base.offset}|${dateKey}`;
 
       if (pzlCutoffCache.key === cacheKey &&
@@ -4452,7 +4463,7 @@ function setFireMarker() {
         return pzlCutoffCache.value;
       }
 
-      const url = `https://api.sunrise-sunset.org/json?lat=${ref.lat}&lng=${ref.lon}&formatted=0`;
+      const url = `https://api.sunrise-sunset.org/json?lat=${ref.lat}&lng=${ref.lon}&date=${dateKey}&formatted=0`;
       const res = await fetch(url);
       const data = await res.json();
       if (data.status !== "OK") throw new Error("Sunset API error");
@@ -6199,10 +6210,205 @@ const base = bases[selectedBaseName];
       return Number.isFinite(value) ? value : fallback;
     }
 
+    function pzlTestModePad2(value) {
+      return String(value).padStart(2, "0");
+    }
+
+    function pzlTestModeToLocalDateTimeValue(dt) {
+      const d = dt instanceof Date ? dt : new Date(dt || Date.now());
+      return `${d.getFullYear()}-${pzlTestModePad2(d.getMonth() + 1)}-${pzlTestModePad2(d.getDate())}` +
+        `T${pzlTestModePad2(d.getHours())}:${pzlTestModePad2(d.getMinutes())}`;
+    }
+
+    function pzlTestModeReadCommandDateTime() {
+      const input = document.getElementById("pzlTestCommandDateTime");
+      if (!input || !input.value) return new Date();
+
+      const dt = new Date(input.value);
+      if (!Number.isFinite(dt.getTime())) return new Date();
+      return dt;
+    }
+
+    function pzlTestModeSetDefaultCommandDateTime(force = false) {
+      const input = document.getElementById("pzlTestCommandDateTime");
+      if (!input) return;
+      if (force || !input.value) {
+        input.value = pzlTestModeToLocalDateTimeValue(new Date());
+      }
+    }
+
     function pzlTestModeNormalizeHeading(value) {
       value = Number(value);
       if (!Number.isFinite(value)) value = 0;
       return ((value % 360) + 360) % 360;
+    }
+
+    let pzlTestModeLastSolution = {
+      ias:0,
+      gs:0,
+      heading:0,
+      track:0,
+      windKmh:0,
+      windFrom:0,
+      crab:0
+    };
+
+    function pzlTestModeVectorFromSpeed(speed, directionDeg) {
+      const rad = pzlTestModeNormalizeHeading(directionDeg) * Math.PI / 180;
+      return {
+        north:Number(speed) * Math.cos(rad),
+        east:Number(speed) * Math.sin(rad)
+      };
+    }
+
+    function pzlTestModeHeadingFromVector(north, east) {
+      if (!Number.isFinite(north) || !Number.isFinite(east)) return 0;
+      return pzlTestModeNormalizeHeading(Math.atan2(east, north) * 180 / Math.PI);
+    }
+
+    function pzlTestModeWindVector() {
+      const windFrom = pzlTestModeNormalizeHeading(
+        pzlTestModeInputNumber("pzlTestWindDir", 0)
+      );
+      const windKts = Math.max(
+        0,
+        pzlTestModeInputNumber("pzlTestWindSpeed", 0)
+      );
+      const windKmh = windKts * 1.852;
+      const toward = pzlTestModeNormalizeHeading(windFrom + 180);
+      const vector = pzlTestModeVectorFromSpeed(windKmh, toward);
+      return {
+        from:windFrom,
+        kmh:windKmh,
+        north:vector.north,
+        east:vector.east
+      };
+    }
+
+    function pzlTestModeManualWindSolution(ias, heading) {
+      ias = Math.max(0, Number(ias) || 0);
+      heading = pzlTestModeNormalizeHeading(heading);
+      const wind = pzlTestModeWindVector();
+
+      // IAS 0 means the aircraft is stationary on the ground.
+      if (ias <= 0.01) {
+        return {
+          ias:0,
+          gs:0,
+          heading:heading,
+          track:heading,
+          windKmh:wind.kmh,
+          windFrom:wind.from,
+          crab:0
+        };
+      }
+
+      const air = pzlTestModeVectorFromSpeed(ias, heading);
+      const groundNorth = air.north + wind.north;
+      const groundEast = air.east + wind.east;
+      const gs = Math.hypot(groundNorth, groundEast);
+      const track = pzlTestModeHeadingFromVector(groundNorth, groundEast);
+
+      return {
+        ias:ias,
+        gs:gs,
+        heading:heading,
+        track:track,
+        windKmh:wind.kmh,
+        windFrom:wind.from,
+        crab:pzlTestModeNormalizeHeading(heading - track + 180) - 180
+      };
+    }
+
+    function pzlTestModeAutoWindSolution(ias, desiredTrack) {
+      ias = Math.max(0, Number(ias) || 0);
+      desiredTrack = pzlTestModeNormalizeHeading(desiredTrack);
+      const wind = pzlTestModeWindVector();
+
+      if (ias <= 0.01) {
+        return {
+          ias:0,
+          gs:0,
+          heading:desiredTrack,
+          track:desiredTrack,
+          windKmh:wind.kmh,
+          windFrom:wind.from,
+          crab:0
+        };
+      }
+
+      const tr = desiredTrack * Math.PI / 180;
+      const trackNorth = Math.cos(tr);
+      const trackEast = Math.sin(tr);
+      const rightNorth = -Math.sin(tr);
+      const rightEast = Math.cos(tr);
+
+      const windAlong =
+        wind.north * trackNorth +
+        wind.east * trackEast;
+      const windCross =
+        wind.north * rightNorth +
+        wind.east * rightEast;
+
+      // Aircraft cancels crosswind so that the ground track remains on route.
+      const requiredAirCross = -windCross;
+      if (Math.abs(requiredAirCross) >= ias) {
+        // Wind too strong to maintain the selected route: keep nose on route
+        // and allow the resulting drift to be visible.
+        return pzlTestModeManualWindSolution(ias, desiredTrack);
+      }
+
+      const airAlong = Math.sqrt(
+        Math.max(0, ias * ias - requiredAirCross * requiredAirCross)
+      );
+      const airNorth =
+        airAlong * trackNorth +
+        requiredAirCross * rightNorth;
+      const airEast =
+        airAlong * trackEast +
+        requiredAirCross * rightEast;
+
+      const heading = pzlTestModeHeadingFromVector(airNorth, airEast);
+      const gs = Math.max(0, airAlong + windAlong);
+
+      return {
+        ias:ias,
+        gs:gs,
+        heading:heading,
+        track:desiredTrack,
+        windKmh:wind.kmh,
+        windFrom:wind.from,
+        crab:pzlTestModeNormalizeHeading(heading - desiredTrack + 180) - 180
+      };
+    }
+
+    function pzlTestModeComputeSolution() {
+      const ias = Math.max(
+        0,
+        pzlTestModeInputNumber("pzlTestIas", 0)
+      );
+      const heading = pzlTestModeNormalizeHeading(
+        pzlTestModeInputNumber("pzlTestHeading", 0)
+      );
+      const navModeEl = document.getElementById("pzlTestNavMode");
+      const autoNav = !navModeEl || navModeEl.value === "auto";
+
+      if (autoNav && currentGps) {
+        const target = pzlTestModeTarget();
+        if (target) {
+          const desiredTrack = bearingDeg(
+            {lat:currentGps.lat, lon:currentGps.lon},
+            target
+          );
+          pzlTestModeLastSolution =
+            pzlTestModeAutoWindSolution(ias, desiredTrack);
+          return pzlTestModeLastSolution;
+        }
+      }
+
+      pzlTestModeLastSolution =
+        pzlTestModeManualWindSolution(ias, heading);
+      return pzlTestModeLastSolution;
     }
 
     function pzlTestModeSetBadge(state) {
@@ -6226,8 +6432,11 @@ const base = bases[selectedBaseName];
       const el = document.getElementById("pzlTestStatus");
       if (!el) return;
 
-      const gs = pzlTestModeInputNumber("pzlTestGs", 0);
-      const hdg = pzlTestModeNormalizeHeading(pzlTestModeInputNumber("pzlTestHeading", 0));
+      const solution = pzlTestModeComputeSolution();
+      const ias = solution.ias;
+      const gs = solution.gs;
+      const hdg = solution.heading;
+      const track = solution.track;
       const rate = Math.max(1, pzlTestModeInputNumber("pzlTestRate", 1));
       const nav = document.getElementById("pzlTestNavMode");
       const navText = nav && nav.value === "manual" ? "MANUAL" : "AUTO";
@@ -6242,8 +6451,10 @@ const base = bases[selectedBaseName];
 
       el.textContent =
         `TEST ${pzlTestModePaused ? "PAUSE" : "RUN"} | ${pzlMissionLogFormatDateTime(now)}\n` +
-        `GS ${gs.toFixed(0)} km/h | HDG ${String(Math.round(hdg)).padStart(3,"0")}° | ${navText} | x${rate}\n` +
-        `Φάση: ${phase} | Αναμονή τελευταίας Π/Γ: ${landingText}` +
+        `IAS ${ias.toFixed(0)} | GS ${gs.toFixed(0)} km/h | HDG ${String(Math.round(hdg)).padStart(3,"0")}° | TRK ${String(Math.round(track)).padStart(3,"0")}°\n` +
+        `Άνεμος ${String(Math.round(solution.windFrom)).padStart(3,"0")}°/${(solution.windKmh / 1.852).toFixed(0)} KT | Crab ${solution.crab.toFixed(1)}° | ${navText} | x${rate}\n` +
+        `Φάση: ${phase} | Αναμονή τελευταίας Π/Γ: ${landingText}\n` +
+        `3ωρο/ΤΦ: ${(document.getElementById("dashLimit")?.textContent || "-")} | Cutoff: ${(document.getElementById("dashCutoff")?.textContent || "-")}` +
         (extra ? `\n${extra}` : "");
     }
 
@@ -6283,12 +6494,14 @@ const base = bases[selectedBaseName];
       return null;
     }
 
-    function pzlTestModeUpdateMarker(lat, lon, heading, gs) {
+    function pzlTestModeUpdateMarker(lat, lon, heading, gs, track = heading) {
       currentGps = {
         lat:Number(lat),
         lon:Number(lon),
         speedMps:Number(gs) / 3.6,
         heading:pzlTestModeNormalizeHeading(heading),
+        track:pzlTestModeNormalizeHeading(track),
+        course:pzlTestModeNormalizeHeading(track),
         altitudeM:1000,
         accuracy:5
       };
@@ -6317,7 +6530,8 @@ const base = bases[selectedBaseName];
       if (gpsResult) {
         gpsResult.textContent =
           `TEST MODE GPS\n${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}\n` +
-          `GS: ${Number(gs).toFixed(0)} km/h | HDG: ${String(Math.round(currentGps.heading)).padStart(3,"0")}°`;
+          `IAS: ${pzlTestModeLastSolution.ias.toFixed(0)} km/h | GS: ${Number(gs).toFixed(0)} km/h\n` +
+          `HDG: ${String(Math.round(currentGps.heading)).padStart(3,"0")}° | TRK: ${String(Math.round(currentGps.track)).padStart(3,"0")}°`;
       }
 
       try { setText("dashGS", `${Number(gs).toFixed(0)} km/h`); } catch(e) {}
@@ -6325,9 +6539,14 @@ const base = bases[selectedBaseName];
     }
 
     function pzlTestModeSetPosition(lat, lon, centerMap = false) {
-      const hdg = pzlTestModeNormalizeHeading(pzlTestModeInputNumber("pzlTestHeading", 0));
-      const gs = Math.max(0, pzlTestModeInputNumber("pzlTestGs", 0));
-      pzlTestModeUpdateMarker(lat, lon, hdg, gs);
+      const solution = pzlTestModeComputeSolution();
+      pzlTestModeUpdateMarker(
+        lat,
+        lon,
+        solution.heading,
+        solution.gs,
+        solution.track
+      );
       if (centerMap) {
         try { map.setView([lat, lon], Math.max(Number(map.getZoom()) || 0, 11)); } catch(e) {}
       }
@@ -6406,46 +6625,60 @@ const base = bases[selectedBaseName];
     }
 
     function pzlTestModeMove(simSeconds) {
-      if (!currentGps) return;
+      if (!currentGps) return pzlTestModeComputeSolution();
 
-      const gs = Math.max(0, pzlTestModeInputNumber("pzlTestGs", 0));
-      const navModeEl = document.getElementById("pzlTestNavMode");
-      const autoNav = !navModeEl || navModeEl.value === "auto";
-      let heading = pzlTestModeNormalizeHeading(pzlTestModeInputNumber("pzlTestHeading", 0));
+      const solution = pzlTestModeComputeSolution();
+      const headingEl = document.getElementById("pzlTestHeading");
+      if (headingEl) headingEl.value = String(Math.round(solution.heading));
 
-      if (autoNav) {
-        const target = pzlTestModeTarget();
-        if (target) {
-          heading = bearingDeg(
-            {lat:currentGps.lat, lon:currentGps.lon},
-            target
+      const target = pzlTestModeTarget();
+
+      // Calculated GS below 30 is treated as ground/landing state:
+      // simulated time continues, but the aircraft remains at the airport.
+      if (solution.gs < 30) {
+        pzlTestModeUpdateMarker(
+          currentGps.lat,
+          currentGps.lon,
+          solution.heading,
+          solution.gs,
+          solution.track
+        );
+        return solution;
+      }
+
+      const stepKm = solution.gs * simSeconds / 3600;
+
+      if (target) {
+        const distKm = haversineKm(
+          {lat:currentGps.lat, lon:currentGps.lon},
+          target
+        );
+        if (distKm <= stepKm) {
+          pzlTestModeUpdateMarker(
+            target.lat,
+            target.lon,
+            solution.heading,
+            solution.gs,
+            solution.track
           );
-          const headingEl = document.getElementById("pzlTestHeading");
-          if (headingEl) headingEl.value = String(Math.round(heading));
-
-          if (gs >= 30) {
-            const stepKm = gs * simSeconds / 3600;
-            const distKm = haversineKm(
-              {lat:currentGps.lat, lon:currentGps.lon},
-              target
-            );
-            if (distKm <= stepKm) {
-              pzlTestModeUpdateMarker(target.lat, target.lon, heading, gs);
-              return;
-            }
-          }
+          return solution;
         }
       }
 
-      // GS <30 is treated as ground speed: clock runs but the aircraft stays at the airport.
-      if (gs < 30) {
-        pzlTestModeUpdateMarker(currentGps.lat, currentGps.lon, heading, gs);
-        return;
-      }
-
-      const stepKm = gs * simSeconds / 3600;
-      const next = endpointFromBearing(currentGps.lat, currentGps.lon, heading, stepKm);
-      pzlTestModeUpdateMarker(next.lat, next.lon, heading, gs);
+      const next = endpointFromBearing(
+        currentGps.lat,
+        currentGps.lon,
+        solution.track,
+        stepKm
+      );
+      pzlTestModeUpdateMarker(
+        next.lat,
+        next.lon,
+        solution.heading,
+        solution.gs,
+        solution.track
+      );
+      return solution;
     }
 
     function pzlTestModeTick() {
@@ -6460,11 +6693,8 @@ const base = bases[selectedBaseName];
       const simSeconds = realDeltaSec * rate;
       pzlTestModeAdvanceClock(simSeconds);
       pzlTestModeApplyWind();
-      pzlTestModeMove(simSeconds);
-
-      const gs = Math.max(0, pzlTestModeInputNumber("pzlTestGs", 0));
-      const heading = pzlTestModeNormalizeHeading(pzlTestModeInputNumber("pzlTestHeading", 0));
-      pzlTestModeFeedSystems(gs, heading);
+      const solution = pzlTestModeMove(simSeconds);
+      pzlTestModeFeedSystems(solution.gs, solution.heading);
 
       if (realNow - pzlTestModeLastCalcRealMs >= 1000) {
         pzlTestModeLastCalcRealMs = realNow;
@@ -6489,11 +6719,29 @@ const base = bases[selectedBaseName];
       } catch(e) {}
 
       if (newMission || !commandTime) {
-        const commandBtn = document.getElementById("takeoffBtn");
-        if (commandBtn) commandBtn.click();
+        const selectedCommandTime = pzlTestModeReadCommandDateTime();
+        commandTime = new Date(selectedCommandTime.getTime());
+
+        pzlStartDropCountdown(commandTime);
+        pzlResetOperationalProgress(true);
+        window.pzlManualCommandTimeActive = false;
+        window.manualNewFireCommandTime = null;
+
+        gpsTestModeASimNow = new Date(commandTime.getTime());
+        gpsTestModeATakeoffSimTime = new Date(
+          commandTime.getTime() + getInitialTakeoffDelayMin() * 60000
+        );
+
+        gpsTestModeAResetFlightState();
+        setTakeoffModeButtons("command");
+        resetAutoTakeoffFullStopDisplays();
+        pzlMissionLogBegin(commandTime, false);
+
+        const manualTimeEl = document.getElementById("manualTime");
+        if (manualTimeEl) manualTimeEl.value = toHHMM(commandTime);
       }
 
-      if (!commandTime) commandTime = new Date();
+      if (!commandTime) commandTime = pzlTestModeReadCommandDateTime();
 
       pzlTestModeActive = true;
       pzlTestModePaused = false;
@@ -6509,8 +6757,8 @@ const base = bases[selectedBaseName];
         try { map.setView([base.lat, base.lon], Math.max(Number(map.getZoom()) || 0, 9)); } catch(e) {}
       }
 
-      const gsEl = document.getElementById("pzlTestGs");
-      if (gsEl) gsEl.value = "0";
+      const iasEl = document.getElementById("pzlTestIas");
+      if (iasEl) iasEl.value = "0";
 
       pzlTestModeApplyWind();
       pzlTestModeSetBadge("on");
@@ -6521,7 +6769,7 @@ const base = bases[selectedBaseName];
       if (pzlTestModeTimer) clearInterval(pzlTestModeTimer);
       pzlTestModeTimer = setInterval(pzlTestModeTick, 250);
 
-      pzlTestModeSetStatus("Έτοιμο. Βάλε GS >100 για πραγματική Α/Γ.");
+      pzlTestModeSetStatus(`Εντολή: ${pzlMissionLogFormatDateTime(commandTime)}. Οι περιορισμοί 3 ωρών και ΤΦ υπολογίζονται για αυτή την ημερομηνία.`);
     }
 
     function pzlTestModeToggleRun() {
@@ -6583,8 +6831,8 @@ const base = bases[selectedBaseName];
       if (!pzlTestModeActive) pzlTestModeStart(false);
       pzlTestModeAdvanceClock(Number(minutes) * 60);
 
-      const gs = Math.max(0, pzlTestModeInputNumber("pzlTestGs", 0));
-      pzlTestModeFeedSystems(gs, pzlTestModeInputNumber("pzlTestHeading", 0));
+      const solution = pzlTestModeComputeSolution();
+      pzlTestModeFeedSystems(solution.gs, solution.heading);
       try { calculate(); } catch(e) {}
       pzlTestModeSetStatus(`Μετακινήθηκε ο χρόνος κατά +${minutes}′.`);
     }
@@ -6616,23 +6864,60 @@ const base = bases[selectedBaseName];
       bind("pzlTestPlus5Btn", () => pzlTestModeJumpMinutes(5));
       bind("pzlTestPlus20Btn", () => pzlTestModeJumpMinutes(20));
 
-      document.querySelectorAll("[data-test-gs]").forEach(btn => {
+      function pzlTestModeRefreshPreview() {
+        pzlTestModeApplyWind();
+        const solution = pzlTestModeComputeSolution();
+
+        if (currentGps) {
+          pzlTestModeUpdateMarker(
+            currentGps.lat,
+            currentGps.lon,
+            solution.heading,
+            solution.gs,
+            solution.track
+          );
+        }
+        pzlTestModeSetStatus();
+      }
+
+      document.querySelectorAll("[data-test-ias]").forEach(btn => {
         if (btn.dataset.testBound) return;
         btn.dataset.testBound = "1";
         btn.addEventListener("click", () => {
-          const gsEl = document.getElementById("pzlTestGs");
-          if (gsEl) gsEl.value = btn.getAttribute("data-test-gs");
-          pzlTestModeSetStatus();
+          const iasEl = document.getElementById("pzlTestIas");
+          if (iasEl) iasEl.value = btn.getAttribute("data-test-ias");
+          pzlTestModeRefreshPreview();
         });
       });
 
-      ["pzlTestWindDir", "pzlTestWindSpeed", "pzlTestWindGust"].forEach(id => {
+      [
+        "pzlTestIas",
+        "pzlTestHeading",
+        "pzlTestNavMode",
+        "pzlTestWindDir",
+        "pzlTestWindSpeed",
+        "pzlTestWindGust"
+      ].forEach(id => {
         const el = document.getElementById(id);
         if (el && !el.dataset.testBound) {
           el.dataset.testBound = "1";
-          el.addEventListener("input", pzlTestModeApplyWind);
+          el.addEventListener("input", pzlTestModeRefreshPreview);
+          el.addEventListener("change", pzlTestModeRefreshPreview);
         }
       });
+
+      const commandDateTimeEl = document.getElementById("pzlTestCommandDateTime");
+      pzlTestModeSetDefaultCommandDateTime(false);
+      if (commandDateTimeEl && !commandDateTimeEl.dataset.testBound) {
+        commandDateTimeEl.dataset.testBound = "1";
+        commandDateTimeEl.addEventListener("change", function(){
+          if (!pzlTestModeActive) {
+            pzlTestModeSetStatus(
+              `Επιλεγμένη εντολή: ${pzlMissionLogFormatDateTime(pzlTestModeReadCommandDateTime())}`
+            );
+          }
+        });
+      }
 
       pzlTestModeSetBadge("off");
       pzlTestModeSetStatus();
@@ -7067,11 +7352,31 @@ const base = bases[selectedBaseName];
   function pzlTfStorageKey(refName, fullStopName){ return 'pzl_tf_'+String(refName||'')+'_'+String(fullStopName||''); }
   function pzlBuildTfFromHHMM(hhmm, refName, fullStopName, offset, source, sourceDate){
     const parts = String(hhmm).split(':');
-    const now = new Date();
-    const twilight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), Number(parts[0]), Number(parts[1]), 0, 0);
+    const missionNow = (typeof pzlMissionNow === 'function') ? pzlMissionNow() : new Date();
+    const baseDate = sourceDate
+      ? new Date(sourceDate + 'T12:00:00')
+      : missionNow;
+    const twilight = new Date(
+      baseDate.getFullYear(),
+      baseDate.getMonth(),
+      baseDate.getDate(),
+      Number(parts[0]),
+      Number(parts[1]),
+      0,
+      0
+    );
     const sunset = new Date(twilight.getTime() - twilightAfterSunsetMin*60000);
     const cutoff = new Date(twilight.getTime() - offset*60000);
-    return {sunset, twilight, cutoff, refName, offset, fullStopName, tfSource:source, tfSourceDate:sourceDate || pzlDateKey(now)};
+    return {
+      sunset,
+      twilight,
+      cutoff,
+      refName,
+      offset,
+      fullStopName,
+      tfSource:source,
+      tfSourceDate:sourceDate || pzlDateKey(missionNow)
+    };
   }
   function pzlSetTfStatus(msg){ const el=document.getElementById('tfDataStatus'); if(el) el.textContent=msg; }
   window.pzlSetManualTfForCurrentFullStop = function(){
@@ -7083,9 +7388,11 @@ const base = bases[selectedBaseName];
     const fullStopName = (typeof selectedFullStopBaseName !== 'undefined' && selectedFullStopBaseName) ? selectedFullStopBaseName : selectedBaseName;
     const base = bases[fullStopName] || bases[selectedBaseName];
     const refName = base.ref;
-    const item = {hhmm, date:pzlDateKey(new Date()), refName, fullStopName, offset:base.offset, source:'manual'};
+    const missionNow = (typeof pzlMissionNow === 'function') ? pzlMissionNow() : new Date();
+    const missionDateKey = pzlDateKey(missionNow);
+    const item = {hhmm, date:missionDateKey, refName, fullStopName, offset:base.offset, source:'manual'};
     try { localStorage.setItem(pzlTfStorageKey(refName, fullStopName), JSON.stringify(item)); } catch(e) {}
-    pzlSetTfStatus('Manual ΤΦ '+refName+': '+hhmm+' για '+pzlGreekDate(new Date())+'.');
+    pzlSetTfStatus('Manual ΤΦ '+refName+': '+hhmm+' για '+pzlGreekDate(missionNow)+'.');
     if (typeof calculate === 'function') calculate();
   };
   window.getCutoffTime = async function() {
@@ -7093,9 +7400,10 @@ const base = bases[selectedBaseName];
     const base = bases[fullStopName] || bases[selectedBaseName];
     const ref = airports[base.ref];
     const key = pzlTfStorageKey(base.ref, fullStopName);
-    const todayKey = pzlDateKey(new Date());
+    const missionNow = (typeof pzlMissionNow === 'function') ? pzlMissionNow() : new Date();
+    const todayKey = pzlDateKey(missionNow);
     try {
-      const url = `https://api.sunrise-sunset.org/json?lat=${ref.lat}&lng=${ref.lon}&formatted=0`;
+      const url = `https://api.sunrise-sunset.org/json?lat=${ref.lat}&lng=${ref.lon}&date=${todayKey}&formatted=0`;
       const res = await fetch(url, {cache:'no-store'});
       const data = await res.json();
       if (data.status !== 'OK') throw new Error('Sunset API error');
@@ -7104,14 +7412,25 @@ const base = bases[selectedBaseName];
       const cutoff = new Date(twilight.getTime() - base.offset*60000);
       const hhmm = pzlPad2(twilight.getHours())+':'+pzlPad2(twilight.getMinutes());
       try { localStorage.setItem(key, JSON.stringify({hhmm, date:todayKey, refName:base.ref, fullStopName, offset:base.offset, source:'auto'})); } catch(e) {}
-      pzlSetTfStatus('ΤΦ '+base.ref+': αυτόματο σημερινό ('+pzlGreekDate(new Date())+').');
+      pzlSetTfStatus('ΤΦ '+base.ref+': αυτόματο για '+pzlGreekDate(missionNow)+'.');
       return {sunset, twilight, cutoff, refName:base.ref, offset:base.offset, fullStopName, tfSource:'auto', tfSourceDate:todayKey};
     } catch(err) {
       let stored = null;
       try { stored = JSON.parse(localStorage.getItem(key) || 'null'); } catch(e) { stored = null; }
-      if (stored && stored.hhmm) {
-        const info = pzlBuildTfFromHHMM(stored.hhmm, base.ref, fullStopName, base.offset, stored.source === 'manual' ? 'manual-cache' : 'old-cache', stored.date);
-        pzlSetTfStatus('Δεν πήρα νέο ΤΦ. Χρησιμοποιείται ΤΦ '+base.ref+' '+stored.hhmm+' της '+pzlGreekDate(new Date(stored.date+'T12:00:00'))+'. Μπορείς να βάλεις Manual ΤΦ.');
+      if (stored && stored.hhmm && stored.date === todayKey) {
+        const info = pzlBuildTfFromHHMM(
+          stored.hhmm,
+          base.ref,
+          fullStopName,
+          base.offset,
+          stored.source === 'manual' ? 'manual-cache' : 'old-cache',
+          stored.date
+        );
+        pzlSetTfStatus(
+          'Δεν πήρα νέο ΤΦ. Χρησιμοποιείται ΤΦ '+base.ref+' '+stored.hhmm+
+          ' της '+pzlGreekDate(new Date(stored.date+'T12:00:00'))+
+          '. Μπορείς να βάλεις Manual ΤΦ.'
+        );
         return info;
       }
       const t = prompt('Δεν μπόρεσα να πάρω αυτόματα ΤΦ για '+base.ref+'.\nΒάλε Manual ΤΦ σε μορφή HH:MM, π.χ. 20:47');
@@ -7119,7 +7438,7 @@ const base = bases[selectedBaseName];
       if (!hhmm) throw new Error('Δεν υπάρχει αυτόματο ή manual ΤΦ.');
       const item = {hhmm, date:todayKey, refName:base.ref, fullStopName, offset:base.offset, source:'manual'};
       try { localStorage.setItem(key, JSON.stringify(item)); } catch(e) {}
-      pzlSetTfStatus('Manual ΤΦ '+base.ref+': '+hhmm+' για '+pzlGreekDate(new Date())+'.');
+      pzlSetTfStatus('Manual ΤΦ '+base.ref+': '+hhmm+' για '+pzlGreekDate(missionNow)+'.');
       return pzlBuildTfFromHHMM(hhmm, base.ref, fullStopName, base.offset, 'manual', todayKey);
     }
   };
@@ -8663,7 +8982,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_FULL_TEST_MODE_20260701R */
+/* PZL_TEST_MODE_COMMAND_TIME_LIMITS_20260701T */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
