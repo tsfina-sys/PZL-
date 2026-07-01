@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_DCT_CURRENT_POSITION_LABEL_20260701AB">
+<meta name="pzl-build" content="PZL_OFFLINE_READY_20260701AD">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1284,6 +1284,34 @@ body.pzl-screen-locked #lockMapBtn {
 }
 </style>
 
+
+<style id="pzl-offline-ready-css">
+#pzlNetBadge{
+  position:absolute;
+  left:7px;
+  bottom:7px;
+  z-index:9998;
+  padding:4px 7px;
+  border-radius:8px;
+  font-size:10px;
+  font-weight:900;
+  line-height:1.05;
+  color:#fff;
+  background:rgba(71,85,105,.92);
+  border:1px solid rgba(255,255,255,.65);
+  box-shadow:0 1px 5px rgba(0,0,0,.28);
+  pointer-events:none;
+  max-width:170px;
+  text-align:center;
+}
+#pzlNetBadge.online{background:rgba(21,115,71,.94);}
+#pzlNetBadge.offline{background:rgba(180,83,9,.96);}
+#pzlNetBadge.preparing{background:rgba(71,85,105,.94);}
+@media(max-width:700px){
+  #pzlNetBadge{font-size:8.5px;padding:3px 5px;bottom:5px;left:5px;max-width:145px;}
+}
+</style>
+
 </head>
 
 <style id="fix37d46-metar-final-css">
@@ -1445,7 +1473,9 @@ body.pzl-screen-locked #lockMapBtn {
   <div id="mapWrap">
     <header><span>PZL Mission Tool v8.2 D76</span><span>Cockpit</span></header>
     <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><div class="splitControl topGpsSplit"><button id="gpsBtn">GPS</button><button id="useGpsAsStartBtn" class="secondary">Αφετηρία</button></div><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="toggleActionsBtn" class="secondary" title="Εμφάνιση/απόκρυψη δεξιού πάνελ">PNL</button><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button></div>
-<div id="map"></div><div id="metarWindStatus"></div>
+<div id="map"></div>
+    <div id="pzlNetBadge" class="preparing" title="Η εφαρμογή αποθηκεύεται για offline χρήση">ONLINE · προετοιμασία offline</div>
+    <div id="metarWindStatus"></div>
     <div id="hsiHud" aria-label="HSI HUD">
       <div class="hsiDial" id="hsiDial">
         <div class="hsiRose" id="hsiRose"></div>
@@ -5172,10 +5202,12 @@ function setFireMarker() {
         const approachLegD = (approachRouteD !== null) ? approachRouteD : ((newFireWithWaterMode && normalD !== null) ? normalD : D);
         const finalReturnLegD = (finalReturnRouteD !== null) ? finalReturnRouteD : returnLegD;
         const cycleDistanceKm = returnLegD + approachLegD;
+        // Κάθε επόμενη εκτιμώμενη ρίψη απαιτεί ξανά 5' πάνω από τη φωτιά.
         const cycleMin =
           returnLegD / calcSpeedKmPerMin +
           getRefillTakeoffDelayMin() +
-          approachLegD / calcSpeedKmPerMin;
+          approachLegD / calcSpeedKmPerMin +
+          attackCircuitMin;
         const firstLegMin = D / calcSpeedKmPerMin + attackCircuitMin;
         const finalReturnMin = finalReturnLegD / calcSpeedKmPerMin;
 
@@ -5289,6 +5321,7 @@ const base = bases[selectedBaseName];
           `${(typeof newFireWithWaterMode !== "undefined" && newFireWithWaterMode) ? "Νέα φωτιά με νερό: χωρίς 15\' αρχικής Α/Γ\n" : ""}` +
           `Χρόνος αρχικής Α/Γ: ${getInitialTakeoffDelayMin()}\'\n` +
           `Χρόνος Α/Γ μετά επαναπλήρωση: ${getRefillTakeoffDelayMin()}\'\n` +
+          `Χρόνος πάνω από φωτιά ανά ρίψη: ${attackCircuitMin}\'\n` +
           `Ώρα πρώτης ρίψης: ${fmtTime(firstDrop)} (σε ${fmtUntilFromCalcCommand(firstDrop)} από τώρα)\n` +
           `Πραγματοποιημένες ρίψεις: ${completedDrops}\n` +
           `Επόμενες δυνατές ρίψεις: ${maxDrops}\n` +
@@ -7443,11 +7476,82 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
       try { updateReturnToGpsDistanceBox(); } catch(e) {}
     }, 1000); // RETURN_TO_GPS_DISTANCE_BOX_TIMER
 
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("service-worker.js").catch(() => {});
+    (function pzlInstallOfflineSupport(){
+      const badge = document.getElementById("pzlNetBadge");
+      let offlineReady = false;
+      let reloadingForWorker = false;
+
+      function updateBadge() {
+        if (!badge) return;
+
+        if (!navigator.onLine) {
+          badge.className = "offline";
+          badge.textContent = "OFFLINE · GPS / υπολογισμοί";
+          badge.title =
+            "Offline λειτουργία: GPS, υπολογισμοί, Test Mode και αποθηκευμένοι χάρτες. " +
+            "METAR, αναζήτηση και νέο αυτόματο ΤΦ χρειάζονται internet.";
+          return;
+        }
+
+        if (offlineReady) {
+          badge.className = "online";
+          badge.textContent = "ONLINE · OFFLINE READY";
+          badge.title =
+            "Η εφαρμογή είναι έτοιμη να ξανανοίξει χωρίς internet. " +
+            "Οι περιοχές χάρτη που βλέπεις online αποθηκεύονται αυτόματα.";
+        } else {
+          badge.className = "preparing";
+          badge.textContent = "ONLINE · προετοιμασία offline";
+          badge.title = "Περίμενε λίγα δευτερόλεπτα πριν κλείσεις το internet.";
+        }
+      }
+
+      window.addEventListener("online", updateBadge);
+      window.addEventListener("offline", updateBadge);
+      updateBadge();
+
+      if (!("serviceWorker" in navigator)) {
+        if (badge) {
+          badge.className = navigator.onLine ? "online" : "offline";
+          badge.textContent = navigator.onLine ? "ONLINE" : "OFFLINE";
+        }
+        return;
+      }
+
+      navigator.serviceWorker.addEventListener("message", event => {
+        if (!event.data) return;
+        if (event.data.type === "PZL_OFFLINE_READY") {
+          offlineReady = true;
+          updateBadge();
+        }
       });
-    }
+
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (reloadingForWorker) return;
+        reloadingForWorker = true;
+        location.reload();
+      });
+
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("service-worker.js", {scope:"./"})
+          .then(() => navigator.serviceWorker.ready)
+          .then(registration => {
+            offlineReady = true;
+            updateBadge();
+
+            try {
+              if (registration.active) {
+                registration.active.postMessage({type:"PZL_CHECK_OFFLINE_READY"});
+              }
+            } catch(e) {}
+          })
+          .catch(() => {
+            offlineReady = false;
+            updateBadge();
+          });
+      });
+    })();
 
     updateFuelGauges(356,356);
     updateWindResult();
@@ -9382,7 +9486,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_DCT_CURRENT_POSITION_LABEL_20260701AB */
+/* PZL_OFFLINE_READY_20260701AD */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;

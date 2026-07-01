@@ -1,8 +1,13 @@
-PZL_DCT_CURRENT_POSITION_LABEL_20260701AB
+PZL_OFFLINE_READY_20260701AD
 Built 2026-07-01
 
-- The informational return-to-current-position box now says:
-  “Η απόσταση DCT προς παρούσα θέση (δεν υπολογίζεται)”.
-- The displayed distance is strictly DCT from the fire to the current GPS position.
-- Return WPTs are no longer included in this informational value.
-- The value remains excluded from mission, drop, 3-hour and TF calculations.
+- Full offline-first service worker.
+- Application shell is pre-cached.
+- Leaflet JS/CSS are cached during first online installation.
+- Greece/Balkans overview map tiles at zoom 5-6 are cached during installation.
+- Every map tile viewed online is automatically cached for later offline use.
+- Uncached high-zoom tiles show an OFFLINE grid instead of breaking the map.
+- GPS, HUD, calculations, WPTs, routes, Test Mode and mission log remain usable offline.
+- METAR, search and fresh automatic TF remain online-only.
+- Stored same-date TF or Manual TF is used when offline.
+- Connectivity badge shows when offline preparation is complete.
