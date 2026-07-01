@@ -1,11 +1,8 @@
-PZL_RETURN_REVERSE_OUTBOUND_WPTS_20260701AA
+PZL_DCT_CURRENT_POSITION_LABEL_20260701AB
 Built 2026-07-01
 
-- If explicit WPT RTB exist, they continue to define the return route.
-- If no WPT RTB exist and outbound WPTs exist, return is automatically calculated through the outbound WPTs in reverse order.
-- This fallback is used for return distance, drop feasibility, final landing and TF/3-hour calculations.
-- During live/test return, waypoint sequencing follows the reversed outbound WPTs.
-- The active return route is drawn through the reversed outbound WPTs instead of DCT.
-- Passed reverse-route WPTs become translucent.
-- UI status explicitly reports when reverse outbound WPT fallback is active.
-- Existing Fire toggle, Test Mode and mission log remain unchanged.
+- The informational return-to-current-position box now says:
+  “Η απόσταση DCT προς παρούσα θέση (δεν υπολογίζεται)”.
+- The displayed distance is strictly DCT from the fire to the current GPS position.
+- Return WPTs are no longer included in this informational value.
+- The value remains excluded from mission, drop, 3-hour and TF calculations.

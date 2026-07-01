@@ -1,4 +1,4 @@
-const PZL_BUILD = 'PZL_RETURN_REVERSE_OUTBOUND_WPTS_20260701AA';
+const PZL_BUILD = 'PZL_DCT_CURRENT_POSITION_LABEL_20260701AB';
 self.addEventListener('install', event => { self.skipWaiting(); });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {

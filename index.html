@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_RETURN_REVERSE_OUTBOUND_WPTS_20260701AA">
+<meta name="pzl-build" content="PZL_DCT_CURRENT_POSITION_LABEL_20260701AB">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1678,7 +1678,7 @@ body.pzl-screen-locked #lockMapBtn {
 <div id="result" class="result">Αναμονή δεδομένων...</div>
 
 <div id="returnToGpsDistanceBox" class="result" style="background:#f0f9ff;border:1px solid #38bdf8;margin-top:6px">
-<b>Απόσταση επιστροφής προς παρούσα θέση:</b> -
+<b>Η απόσταση DCT προς παρούσα θέση (δεν υπολογίζεται):</b> -
 </div>
 <div id="drops" class="drop-list"></div></details>
 
@@ -5055,21 +5055,29 @@ function setFireMarker() {
         const box = document.getElementById("returnToGpsDistanceBox");
         if (!box) return;
 
+        const label =
+          "<b>Η απόσταση DCT προς παρούσα θέση (δεν υπολογίζεται):</b> ";
+
         if (typeof firePoint === "undefined" || !firePoint) {
-          box.innerHTML = "<b>Απόσταση επιστροφής προς παρούσα θέση:</b> -";
+          box.innerHTML = label + "-";
           return;
         }
 
         const gps = pzlGetCurrentGpsPoint();
         if (!gps) {
-          box.innerHTML = "<b>Απόσταση επιστροφής προς παρούσα θέση:</b> -";
+          box.innerHTML = label + "-";
           return;
         }
 
-        const pts = [firePoint, ...pzlGetReturnWpPointsForDistance(), gps];
-        const km = pzlRouteDistanceKm(pts);
-        const wpCount = Math.max(0, pts.length - 2);
-        box.innerHTML = `<b>Απόσταση επιστροφής προς παρούσα θέση:</b> ${km !== null ? km.toFixed(1) + " km" : "-"}${wpCount ? " μέσω " + wpCount + " WP επιστροφής" : ""}`;
+        // Μόνο η DCT απόσταση φωτιά → παρούσα θέση.
+        // Είναι πληροφοριακή και δεν συμμετέχει στους επιχειρησιακούς υπολογισμούς.
+        const km = haversineKm(
+          {lat:Number(firePoint.lat), lon:Number(firePoint.lon)},
+          {lat:Number(gps.lat), lon:Number(gps.lon)}
+        );
+
+        box.innerHTML =
+          label + (Number.isFinite(km) ? km.toFixed(1) + " km" : "-");
       } catch(e) {}
     }
 
@@ -9374,7 +9382,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_RETURN_REVERSE_OUTBOUND_WPTS_20260701AA */
+/* PZL_DCT_CURRENT_POSITION_LABEL_20260701AB */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
