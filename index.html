@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_NAV_MODE_ROUTE_VISIBLE_180_20260701AM">
+<meta name="pzl-build" content="PZL_NAV_MODE_DOUBLE_PRESS_FIRE_LOCK_20260701AO">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1529,6 +1529,7 @@ body.pzl-screen-locked #lockMapBtn {
   .nav-mode-live{display:inline-block;padding:2px 7px;border-radius:999px;background:#065f46;color:#fff;font-size:11px;font-weight:900}
   .nav-empty{color:#64748b;font-size:12px;padding:8px 2px}
   #navModeBtn.active{background:#065f46!important;color:#fff!important;box-shadow:0 0 0 2px rgba(6,95,70,.18) inset}
+  #navModeBtn.armed{background:#b45309!important;color:#fff!important;box-shadow:0 0 0 2px rgba(180,83,9,.18) inset}
   .navSplit button{font-size:15px!important}
   #hudNavCdi{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);width:84px;height:26px;pointer-events:none;display:none;z-index:4}
   #hudNavCdi .cdi-track{position:absolute;left:0;right:0;top:11px;border-top:1px dashed rgba(255,255,255,.55)}
@@ -1723,7 +1724,7 @@ body.pzl-screen-locked #lockMapBtn {
         <div id="hudFireArrow" class="hsiArrow hsiFire"></div>
         <div id="hudFixArrow" class="hsiArrow hsiFix" hidden></div>
         <div id="hudNavCdi" hidden><div class="cdi-track"></div><div class="cdi-center"></div><div id="hudNavCdiNeedle" class="cdi-needle"></div><div id="hudNavCdiText" class="cdi-text">LEG</div></div>
-        <div class="hsiLabel refill">REFILL<span id="hudRefillName" class="hsiAirport">-</span><span id="hudRefillBrg">---</span>°<span class="hsiMetric">| <span id="hudRefillKm">-</span> km</span><span class="hsiMetric">| <span id="hudRefillEta">-</span></span></div>
+        <div class="hsiLabel refill"><span id="hudRefillRoleLabel">REFILL</span><span id="hudRefillName" class="hsiAirport">-</span><span id="hudRefillBrg">---</span>°<span class="hsiMetric">| <span id="hudRefillKm">-</span> km</span><span class="hsiMetric">| <span id="hudRefillEta">-</span></span></div>
         <div class="hsiLabel full">FULL STOP<span id="hudFullName" class="hsiAirport">-</span><span id="hudFullBrg">---</span>°<span class="hsiMetric">| <span id="hudFullKm">-</span> km</span><span class="hsiMetric">| <span id="hudFullEta">-</span></span></div>
         <div class="hsiLabel fire"><span id="hudFireBrg">---</span>°<br><span class="hsiMetric"><span id="hudFireKm">-</span> km / <span id="hudFireEta">-</span></span></div>
         <div class="hsiPos"><span id="hudLat">N--°--.--'</span><br><span id="hudLon">E---°--.--'</span></div>
@@ -4051,6 +4052,8 @@ function setFireMarker() {
       const refillName = (typeof selectedRefillBaseName !== "undefined" && selectedRefillBaseName) ? selectedRefillBaseName : selectedBaseName;
       const fullName = (typeof selectedFullStopBaseName !== "undefined" && selectedFullStopBaseName) ? selectedFullStopBaseName : selectedBaseName;
       setHudText("hudRefillName", refillName || "-");
+      const refillRole = document.getElementById('hudRefillRoleLabel');
+      if (refillRole) refillRole.textContent = 'REFILL';
       setHudText("hudFullName", fullName || "-");
       const refPt = hudPointForAirport(refillName);
       const fullPt = hudPointForAirport(fullName);
@@ -9724,7 +9727,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_NAV_MODE_ROUTE_VISIBLE_180_20260701AM */
+/* PZL_NAV_MODE_DOUBLE_PRESS_FIRE_LOCK_20260701AO */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
@@ -10284,6 +10287,12 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
         mode = "none";
         try { setViaWptArmed(false); } catch(e) {}
       } else {
+        try {
+          if (typeof window.pzlNavHasRoute === 'function' && window.pzlNavHasRoute()) {
+            alert('Για να ενεργοποιήσεις Fire πρέπει πρώτα να κάνεις CLR NAV ή Reset.');
+            return;
+          }
+        } catch(e) {}
         try { exitReturnWpModeForNormalMode(); } catch(e) {}
         mode = "fire";
         fireSelectionArmed = true;
@@ -10591,6 +10600,8 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 (function(){
   const MAX_NAV_POINTS = 8;
   let pzlNavModeActive = false;
+  let pzlNavArmActive = false;
+  let pzlNavArmTimer = null;
   let pzlNavRoutePoints = [];
   let pzlNavPassedIndex = 0;
   let pzlNavPlanStartPoint = null;
@@ -10625,11 +10636,35 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
   }
   function navAlternatePoint(){
     if (typeof bases === 'undefined' || typeof airports === 'undefined') return null;
-    const destBase = bases[navDestinationName()];
-    if (!destBase) return null;
-    const altName = destBase.alt || destBase.ref;
-    const p = airports[altName] || bases[altName];
-    return p ? {lat:Number(p.lat), lon:Number(p.lon), name:altName} : null;
+    const pos = navStartPos();
+    if (!pos) return null;
+    const speed = navSpeedKmh() || 180;
+    const candidates = [];
+    const seen = new Set();
+    Object.keys(bases || {}).forEach(name => {
+      const b = bases[name];
+      if (!b) return;
+      if (!seen.has(name)) {
+        seen.add(name);
+        candidates.push({lat:Number(b.lat), lon:Number(b.lon), name, source:'base'});
+      }
+      const altName = b.alt || b.ref;
+      const altPoint = airports[altName] || bases[altName];
+      if (altName && altPoint && !seen.has(altName)) {
+        seen.add(altName);
+        candidates.push({lat:Number(altPoint.lat), lon:Number(altPoint.lon), name:altName, source:'alt'});
+      }
+    });
+    let best = null;
+    candidates.forEach(c => {
+      const d = navDistanceKm(pos, c);
+      if (d === null || !isFinite(d)) return;
+      const timeMin = (d / speed) * 60;
+      if (!best || timeMin < best.timeMin - 1e-9 || (Math.abs(timeMin - best.timeMin) < 1e-9 && d < best.distKm)) {
+        best = {...c, distKm:d, timeMin};
+      }
+    });
+    return best;
   }
   function navBearing(a,b){ return (a&&b&&typeof bearingDeg==='function') ? Number(bearingDeg(a,b)) : null; }
   function navDistanceKm(a,b){ return (a&&b&&typeof haversineKm==='function') ? Number(haversineKm(a,b)) : null; }
@@ -10897,6 +10932,8 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     const cdi = document.getElementById('hudNavCdi');
     const cdiNeedle = document.getElementById('hudNavCdiNeedle');
     const cdiText = document.getElementById('hudNavCdiText');
+    const refillRole = document.getElementById('hudRefillRoleLabel');
+    if (refillRole) refillRole.textContent = pzlNavModeActive ? 'ALTR' : 'REFILL';
     if (!pzlNavModeActive || !info || !info.pos || !info.dest) {
       if (cdi) { cdi.hidden = true; cdi.style.display = 'none'; }
       return;
@@ -10981,6 +11018,32 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     if (!pzlNavModeActive || !latlng) return false;
     return navAddPoint(latlng.lat, latlng.lng) === true;
   };
+  window.pzlNavHasRoute = function(){ return Array.isArray(pzlNavRoutePoints) && pzlNavRoutePoints.length > 0; };
+  function navClearArm(){
+    pzlNavArmActive = false;
+    if (pzlNavArmTimer) { clearTimeout(pzlNavArmTimer); pzlNavArmTimer = null; }
+  }
+  function navRefreshButton(){
+    const btn = document.getElementById('navModeBtn');
+    if (!btn) return;
+    btn.classList.toggle('active', pzlNavModeActive);
+    btn.classList.toggle('armed', !pzlNavModeActive && pzlNavArmActive);
+    if (pzlNavModeActive) btn.textContent = '🧭 NAV ON';
+    else if (pzlNavArmActive) btn.textContent = '🧭 NAV ?';
+    else btn.textContent = '🧭 NAV';
+  }
+  function navRequestEnable(){
+    if (pzlNavModeActive) return navSetMode(false);
+    if (!pzlNavArmActive) {
+      pzlNavArmActive = true;
+      navRefreshButton();
+      if (pzlNavArmTimer) clearTimeout(pzlNavArmTimer);
+      pzlNavArmTimer = setTimeout(function(){ pzlNavArmActive = false; navRefreshButton(); pzlNavArmTimer = null; }, 2500);
+      return;
+    }
+    navClearArm();
+    navSetMode(true);
+  }
   function navPopulateDestinations(){
     const sel = document.getElementById('navDestSelect');
     if (!sel || typeof bases === 'undefined') return;
@@ -10992,15 +11055,13 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
   }
   function navSetMode(flag){
     pzlNavModeActive = !!flag;
-    const btn = document.getElementById('navModeBtn');
-    if (btn) {
-      btn.classList.toggle('active', pzlNavModeActive);
-      btn.textContent = pzlNavModeActive ? '🧭 NAV ON' : '🧭 NAV';
-    }
+    navClearArm();
+    navRefreshButton();
     if (pzlNavModeActive) {
       if (!pzlNavPlanStartPoint) pzlNavPlanStartPoint = navStartPos();
       try { if (typeof mode !== 'undefined') mode = 'navroute'; } catch(e){}
       try { if (typeof fireSelectionArmed !== 'undefined') fireSelectionArmed = false; } catch(e){}
+      try { if (typeof updateFireModeButtonState === 'function') updateFireModeButtonState(); } catch(e){}
     } else {
       try { if (typeof mode !== 'undefined' && mode === 'navroute') mode = 'none'; } catch(e){}
     }
@@ -11010,6 +11071,10 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     pzlNavRoutePoints = [];
     pzlNavPassedIndex = 0;
     pzlNavPlanStartPoint = navStartPos();
+    navClearArm();
+    pzlNavModeActive = false;
+    try { if (typeof mode !== 'undefined' && mode === 'navroute') mode = 'none'; } catch(e){}
+    navRefreshButton();
     navRenderAll(true);
   }
 
@@ -11042,10 +11107,11 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     const sel = document.getElementById('navDestSelect');
     if (sel) sel.addEventListener('change', function(){ navRenderAll(true); });
     const navBtn = document.getElementById('navModeBtn');
-    if (navBtn) navBtn.addEventListener('click', function(ev){ ev.preventDefault(); navSetMode(!pzlNavModeActive); });
+    if (navBtn) navBtn.addEventListener('click', function(ev){ ev.preventDefault(); navRequestEnable(); });
     const clrBtn = document.getElementById('clearNavBtn');
     if (clrBtn) clrBtn.addEventListener('click', function(ev){ ev.preventDefault(); navClearAll(); });
     if (typeof map !== 'undefined' && map) navEnsureMapPanes();
+    navRefreshButton();
     navRenderAll(true);
     setInterval(function(){ try { navUpdateProgress(); navRenderAll(false); } catch(e){} }, 3000);
   });

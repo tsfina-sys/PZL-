@@ -1,9 +1,7 @@
-PZL_NAV_MODE_ROUTE_VISIBLE_180_20260701AM
+PZL_NAV_MODE_DOUBLE_PRESS_FIRE_LOCK_20260701AO
 Built 2026-07-01
 
-- NAV map taps now use the primary map click handler, eliminating the duplicate-handler race.
-- NAV route and waypoint layers use dedicated high-z-index Leaflet panes and remain visible after each new point.
-- Before actual takeoff, NAV calculations always use 180 km/h.
-- After actual takeoff, current GS is used when available.
-- The NAV summary explicitly marks “180 km/h (πριν την Α/Γ)”.
-- All previous NAV, MFIX, HUD, offline and splitter features remain unchanged.
+- NAV ενεργοποίηση με 2 πατήματα: 1ο πάτημα = arm (γκρι/πορτοκαλί προειδοποίηση), 2ο πάτημα = NAV ON.
+- Αν το NAV είναι ήδη πράσινο, 1 πάτημα το ξανακάνει γκρι χωρίς να σβήνει τη διαδρομή.
+- Με ενεργή ή αποθηκευμένη διαδρομή NAV δεν επιτρέπεται ενεργοποίηση Fire. Απαιτείται CLR NAV ή Reset.
+- Το CLR NAV σβήνει πλήρως τη διαδρομή και τα σημεία της και απενεργοποιεί το NAV, ώστε μετά να λειτουργούν κανονικά οι Fire αποστολές και το HUD.
