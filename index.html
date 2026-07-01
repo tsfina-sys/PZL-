@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_OFFLINE_READY_20260701AD">
+<meta name="pzl-build" content="PZL_MOBILE_RESIZABLE_MAP_PANEL_20260701AF">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1312,6 +1312,147 @@ body.pzl-screen-locked #lockMapBtn {
 }
 </style>
 
+
+<style id="pzl-ipad-resizable-panel-css">
+#pzlSplitHandle{
+  display:none;
+  box-sizing:border-box;
+  background:#d7dee5;
+  border:0;
+  position:relative;
+  z-index:12000;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+  touch-action:none;
+  flex-shrink:0;
+}
+#pzlSplitHandle .pzlSplitGrip{
+  display:block;
+  position:absolute;
+  border-radius:99px;
+  background:#667085;
+  box-shadow:0 0 0 1px rgba(255,255,255,.65);
+}
+#pzlSplitHandle.pzl-resizing{
+  background:#b9c8d6;
+}
+#pzlSplitHandle:focus-visible{
+  outline:3px solid #2563eb;
+  outline-offset:-3px;
+}
+
+/* Phone + iPad portrait / medium-width screens: map above, panel below. */
+@media (max-width:899px){
+  html,body{
+    height:100dvh!important;
+    overflow:hidden!important;
+  }
+  #app{
+    --pzl-map-height:55dvh;
+    height:100dvh!important;
+    min-height:0!important;
+    overflow:hidden!important;
+    display:flex!important;
+    flex-direction:column!important;
+  }
+  #mapWrap{
+    flex:0 0 var(--pzl-map-height)!important;
+    height:var(--pzl-map-height)!important;
+    min-height:0!important;
+    max-height:none!important;
+    width:100%!important;
+  }
+  #pzlSplitHandle{
+    display:block!important;
+    flex:0 0 18px!important;
+    width:100%!important;
+    height:18px!important;
+    min-height:18px!important;
+    cursor:row-resize;
+  }
+  #pzlSplitHandle .pzlSplitGrip{
+    width:70px;
+    height:5px;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+  }
+  .bottom-sheet{
+    flex:1 1 auto!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:auto!important;
+    border-radius:0!important;
+  }
+}
+@media (max-width:700px){
+  #app{
+    --pzl-map-height:50dvh;
+  }
+  #pzlSplitHandle{
+    flex-basis:16px!important;
+    height:16px!important;
+    min-height:16px!important;
+  }
+  #pzlSplitHandle .pzlSplitGrip{
+    width:56px;
+    height:4px;
+  }
+}
+
+/* iPad landscape / desktop: map left, panel right. */
+@media (min-width:900px){
+  html,body{
+    height:100dvh!important;
+    overflow:hidden!important;
+  }
+  #app{
+    --pzl-panel-width:440px;
+    height:100dvh!important;
+    min-height:0!important;
+    overflow:hidden!important;
+    display:flex!important;
+    flex-direction:row!important;
+  }
+  #mapWrap{
+    flex:1 1 auto!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+  }
+  #pzlSplitHandle{
+    display:block!important;
+    flex:0 0 18px!important;
+    width:18px!important;
+    min-width:18px!important;
+    height:100dvh!important;
+    cursor:col-resize;
+  }
+  #pzlSplitHandle .pzlSplitGrip{
+    width:5px;
+    height:70px;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+  }
+  .bottom-sheet{
+    flex:0 0 var(--pzl-panel-width)!important;
+    width:var(--pzl-panel-width)!important;
+    min-width:260px!important;
+    max-width:72vw!important;
+    height:100dvh!important;
+    max-height:100dvh!important;
+    overflow:auto!important;
+    border-radius:0!important;
+  }
+}
+</style>
+
 </head>
 
 <style id="fix37d46-metar-final-css">
@@ -1505,6 +1646,13 @@ body.pzl-screen-locked #lockMapBtn {
       <button id="dropNowBtn" class="drop-now-btn" type="button" disabled>💧 Ρίψη τώρα</button>
       <button id="generalResetBtn" class="danger">🔄 Reset <span class="x2-mark">x2</span></button>
     </div>
+  </div>
+  <div id="pzlSplitHandle"
+       role="separator"
+       aria-label="Μεταβολή μεγέθους χάρτη και πάνελ"
+       aria-orientation="horizontal"
+       tabindex="0">
+    <span class="pzlSplitGrip" aria-hidden="true"></span>
   </div>
   <div class="bottom-sheet">
     <details class="collapsible-panel">
@@ -9486,7 +9634,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_OFFLINE_READY_20260701AD */
+/* PZL_MOBILE_RESIZABLE_MAP_PANEL_20260701AF */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
@@ -10113,6 +10261,238 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     if (Date.now() - lastToggleAt < 500) return;
     toggleFire();
   }, true);
+})();
+</script>
+
+
+<script id="pzl-ipad-resizable-panel-js">
+(function(){
+  const app = document.getElementById("app");
+  const handle = document.getElementById("pzlSplitHandle");
+  const mapWrap = document.getElementById("mapWrap");
+  const panel = document.querySelector(".bottom-sheet");
+
+  if (!app || !handle || !mapWrap || !panel) return;
+
+  const WIDTH_KEY = "pzl_resizable_panel_width_v2";
+  const HEIGHT_KEY = "pzl_resizable_map_height_tablet_v2";
+  const MOBILE_HEIGHT_KEY = "pzl_resizable_map_height_mobile_v2";
+  let drag = null;
+  let rafId = 0;
+
+  function isEnabled(){
+    return true;
+  }
+
+  function isSideBySide(){
+    return window.matchMedia("(min-width:900px)").matches;
+  }
+
+  function isMobileStack(){
+    return window.matchMedia("(max-width:700px)").matches;
+  }
+
+  function clamp(value, min, max){
+    return Math.min(Math.max(value, min), max);
+  }
+
+  function refreshMap(){
+    if (rafId) return;
+    rafId = requestAnimationFrame(function(){
+      rafId = 0;
+      try {
+        if (typeof map !== "undefined" && map && map.invalidateSize) {
+          map.invalidateSize(false);
+        }
+      } catch(e) {}
+      try { drawAll(); } catch(e) {}
+    });
+  }
+
+  function applyStoredSize(){
+    if (!isEnabled()) return;
+
+    const appRect = app.getBoundingClientRect();
+
+    if (isSideBySide()) {
+      handle.setAttribute("aria-orientation", "vertical");
+
+      const stored = Number(localStorage.getItem(WIDTH_KEY));
+      const maxPanel = Math.max(300, appRect.width - 330);
+      const width = Number.isFinite(stored)
+        ? clamp(stored, 280, maxPanel)
+        : clamp(440, 280, maxPanel);
+
+      app.style.setProperty("--pzl-panel-width", width + "px");
+      handle.setAttribute("aria-valuemin", "280");
+      handle.setAttribute("aria-valuemax", String(Math.round(maxPanel)));
+      handle.setAttribute("aria-valuenow", String(Math.round(width)));
+    } else {
+      handle.setAttribute("aria-orientation", "horizontal");
+
+      const storeKey = isMobileStack() ? MOBILE_HEIGHT_KEY : HEIGHT_KEY;
+      const stored = Number(localStorage.getItem(storeKey));
+      const minMap = isMobileStack()
+        ? Math.max(170, appRect.height * 0.24)
+        : Math.max(250, appRect.height * 0.32);
+      const maxMap = isMobileStack()
+        ? Math.max(minMap + 20, appRect.height - 170)
+        : Math.max(minMap + 20, appRect.height - 190);
+      const defaultHeight = isMobileStack()
+        ? appRect.height * 0.50
+        : appRect.height * 0.55;
+
+      const height = Number.isFinite(stored)
+        ? clamp(stored, minMap, maxMap)
+        : clamp(defaultHeight, minMap, maxMap);
+
+      app.style.setProperty("--pzl-map-height", height + "px");
+      handle.setAttribute("aria-valuemin", String(Math.round(minMap)));
+      handle.setAttribute("aria-valuemax", String(Math.round(maxMap)));
+      handle.setAttribute("aria-valuenow", String(Math.round(height)));
+    }
+
+    refreshMap();
+  }
+
+  function setFromPointer(clientX, clientY, save){
+    const rect = app.getBoundingClientRect();
+
+    if (isSideBySide()) {
+      const minPanel = 280;
+      const maxPanel = Math.max(300, rect.width - 330);
+      const width = clamp(rect.right - clientX, minPanel, maxPanel);
+
+      app.style.setProperty("--pzl-panel-width", width + "px");
+      handle.setAttribute("aria-valuenow", String(Math.round(width)));
+      if (save) localStorage.setItem(WIDTH_KEY, String(Math.round(width)));
+    } else {
+      const minMap = isMobileStack()
+        ? Math.max(170, rect.height * 0.24)
+        : Math.max(250, rect.height * 0.32);
+      const maxMap = isMobileStack()
+        ? Math.max(minMap + 20, rect.height - 170)
+        : Math.max(minMap + 20, rect.height - 190);
+      const height = clamp(clientY - rect.top, minMap, maxMap);
+      const storeKey = isMobileStack() ? MOBILE_HEIGHT_KEY : HEIGHT_KEY;
+
+      app.style.setProperty("--pzl-map-height", height + "px");
+      handle.setAttribute("aria-valuenow", String(Math.round(height)));
+      if (save) localStorage.setItem(storeKey, String(Math.round(height)));
+    }
+
+    refreshMap();
+  }
+
+  handle.addEventListener("pointerdown", function(event){
+    if (!isEnabled()) return;
+
+    drag = {
+      pointerId:event.pointerId
+    };
+
+    handle.classList.add("pzl-resizing");
+    try { handle.setPointerCapture(event.pointerId); } catch(e) {}
+    event.preventDefault();
+  });
+
+  handle.addEventListener("pointermove", function(event){
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    setFromPointer(event.clientX, event.clientY, false);
+    event.preventDefault();
+  });
+
+  function endDrag(event){
+    if (!drag || event.pointerId !== drag.pointerId) return;
+
+    setFromPointer(event.clientX, event.clientY, true);
+    try { handle.releasePointerCapture(event.pointerId); } catch(e) {}
+    handle.classList.remove("pzl-resizing");
+    drag = null;
+    event.preventDefault();
+  }
+
+  handle.addEventListener("pointerup", endDrag);
+  handle.addEventListener("pointercancel", function(event){
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    handle.classList.remove("pzl-resizing");
+    drag = null;
+  });
+
+  /* Double tap/click resets the proportion. */
+  handle.addEventListener("dblclick", function(event){
+    if (!isEnabled()) return;
+
+    if (isSideBySide()) {
+      localStorage.removeItem(WIDTH_KEY);
+    } else {
+      localStorage.removeItem(HEIGHT_KEY);
+      localStorage.removeItem(MOBILE_HEIGHT_KEY);
+    }
+
+    applyStoredSize();
+    event.preventDefault();
+  });
+
+  /* Keyboard adjustment when the handle is focused. */
+  handle.addEventListener("keydown", function(event){
+    if (!isEnabled()) return;
+
+    const rect = app.getBoundingClientRect();
+    const step = event.shiftKey ? 40 : 15;
+    let handled = false;
+
+    if (isSideBySide()) {
+      const current =
+        parseFloat(getComputedStyle(app).getPropertyValue("--pzl-panel-width")) ||
+        panel.getBoundingClientRect().width;
+
+      if (event.key === "ArrowLeft") {
+        const targetX = rect.right - (current + step);
+        setFromPointer(targetX, rect.top, true);
+        handled = true;
+      } else if (event.key === "ArrowRight") {
+        const targetX = rect.right - (current - step);
+        setFromPointer(targetX, rect.top, true);
+        handled = true;
+      }
+    } else {
+      const current = mapWrap.getBoundingClientRect().height;
+
+      if (event.key === "ArrowUp") {
+        setFromPointer(rect.left, rect.top + current - step, true);
+        handled = true;
+      } else if (event.key === "ArrowDown") {
+        setFromPointer(rect.left, rect.top + current + step, true);
+        handled = true;
+      }
+    }
+
+    if (event.key === "Home") {
+      if (isSideBySide()) {
+        localStorage.removeItem(WIDTH_KEY);
+      } else {
+        localStorage.removeItem(HEIGHT_KEY);
+        localStorage.removeItem(MOBILE_HEIGHT_KEY);
+      }
+      applyStoredSize();
+      handled = true;
+    }
+
+    if (handled) event.preventDefault();
+  });
+
+  let resizeTimer = null;
+  window.addEventListener("resize", function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(applyStoredSize, 120);
+  });
+
+  window.addEventListener("orientationchange", function(){
+    setTimeout(applyStoredSize, 250);
+  });
+
+  applyStoredSize();
 })();
 </script>
 

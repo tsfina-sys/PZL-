@@ -1,13 +1,9 @@
-PZL_OFFLINE_READY_20260701AD
+PZL_MOBILE_RESIZABLE_MAP_PANEL_20260701AF
 Built 2026-07-01
 
-- Full offline-first service worker.
-- Application shell is pre-cached.
-- Leaflet JS/CSS are cached during first online installation.
-- Greece/Balkans overview map tiles at zoom 5-6 are cached during installation.
-- Every map tile viewed online is automatically cached for later offline use.
-- Uncached high-zoom tiles show an OFFLINE grid instead of breaking the map.
-- GPS, HUD, calculations, WPTs, routes, Test Mode and mission log remain usable offline.
-- METAR, search and fresh automatic TF remain online-only.
-- Stored same-date TF or Manual TF is used when offline.
-- Connectivity badge shows when offline preparation is complete.
+- The draggable separator now also works on mobile phones.
+- On phones and portrait tablets, drag the separator up/down to change the map and panel space.
+- On wider screens, left/right resizing remains available.
+- Mobile and tablet heights are saved separately.
+- Double tap the separator to restore the default size.
+- Offline support and all previous mission features remain unchanged.
