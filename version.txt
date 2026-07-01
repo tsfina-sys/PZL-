@@ -1,8 +1,6 @@
-PZL_MOBILE_HANDLE_FULL_DOWN_20260701AG
+PZL_BADGE_METAR_NO_OVERLAP_20260701AH
 Built 2026-07-01
 
-- On mobile, the grey splitter handle can now go much lower.
-- The map can expand much more, leaving only a minimal lower panel area visible.
-- Mobile minimum map height was reduced and maximum map height was increased.
-- The lower panel can shrink almost completely on phones.
-- All previous offline, iPad and mission features remain unchanged.
+- On mobile, the ONLINE / OFFLINE READY badge was moved higher.
+- This avoids covering the bottom-left METAR status box.
+- All previous mobile/iPad splitter and offline features remain unchanged.

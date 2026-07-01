@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_MOBILE_HANDLE_FULL_DOWN_20260701AG">
+<meta name="pzl-build" content="PZL_BADGE_METAR_NO_OVERLAP_20260701AH">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1308,7 +1308,14 @@ body.pzl-screen-locked #lockMapBtn {
 #pzlNetBadge.offline{background:rgba(180,83,9,.96);}
 #pzlNetBadge.preparing{background:rgba(71,85,105,.94);}
 @media(max-width:700px){
-  #pzlNetBadge{font-size:8.5px;padding:3px 5px;bottom:5px;left:5px;max-width:145px;}
+  /* Στο κινητό σηκώνουμε το badge πιο ψηλά ώστε να μη σκεπάζει το METAR status. */
+  #pzlNetBadge{
+    font-size:8.5px;
+    padding:3px 5px;
+    bottom:42px;
+    left:5px;
+    max-width:145px;
+  }
 }
 </style>
 
@@ -9639,7 +9646,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_MOBILE_HANDLE_FULL_DOWN_20260701AG */
+/* PZL_BADGE_METAR_NO_OVERLAP_20260701AH */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
