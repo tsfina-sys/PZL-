@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_NAV_BUTTONS_ABOVE_FIRE_20260701AR">
+<meta name="pzl-build" content="PZL_EMPTY_BASE_SELECTS_FIXED_20260701AS">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -3596,10 +3596,27 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
 
 
     function updateBaseMarker() {
+      if (baseMarker) {
+        try { map.removeLayer(baseMarker); } catch(e) {}
+        baseMarker = null;
+      }
+
       const b = bases[selectedBaseName];
-      if (baseMarker) map.removeLayer(baseMarker);
-      baseMarker = L.circleMarker([b.lat,b.lon], {radius:10,color:"blue",fillColor:"blue",fillOpacity:.5}).addTo(map).bindPopup("Επιλεγμένο: " + selectedBaseName);
-      document.getElementById("runwayHeading").value = String(b.rwy).padStart(3,"0");
+      const rwyInput = document.getElementById("runwayHeading");
+
+      if (!b) {
+        if (rwyInput) rwyInput.value = "";
+        drawAll();
+        try { updateHsiHud(); } catch(e) {}
+        return;
+      }
+
+      baseMarker = L.circleMarker(
+        [b.lat,b.lon],
+        {radius:10,color:"blue",fillColor:"blue",fillOpacity:.5}
+      ).addTo(map).bindPopup("Επιλεγμένο: " + selectedBaseName);
+
+      if (rwyInput) rwyInput.value = String(b.rwy).padStart(3,"0");
       map.setView([b.lat,b.lon], 8);
       drawAll();
     }
@@ -3791,7 +3808,7 @@ function setFireMarker() {
         fullMiddle = pzlAllReturnPoints();
         fullEnd = pzlReturnDestination(false);
       } else {
-        const b = bases[selectedBaseName];
+        const b = bases[selectedBaseName] || null;
         if (live) {
           start = pzlCurrentOperationalPoint(pzlOutboundOrigin());
           middle = pzlRemainingOutboundPoints();
@@ -3800,7 +3817,7 @@ function setFireMarker() {
             ? {lat:newFireStartPoint.lat, lon:newFireStartPoint.lon}
             : ((useGpsAsStart && currentGps)
                 ? {lat:currentGps.lat, lon:currentGps.lon}
-                : {lat:b.lat, lon:b.lon});
+                : (b ? {lat:b.lat, lon:b.lon} : null));
           middle = viaPoints;
         }
         end = {lat:firePoint.lat, lon:firePoint.lon};
@@ -4161,10 +4178,18 @@ function setFireMarker() {
     }
 
     function drawRunwayAndWind() {
-      if (rwyLine) map.removeLayer(rwyLine);
-      if (windLine) map.removeLayer(windLine);
+      if (rwyLine) {
+        try { map.removeLayer(rwyLine); } catch(e) {}
+        rwyLine = null;
+      }
+      if (windLine) {
+        try { map.removeLayer(windLine); } catch(e) {}
+        windLine = null;
+      }
 
       const b = bases[selectedBaseName];
+      if (!b) return;
+
       const rwy = Number(document.getElementById("runwayHeading").value || b.rwy);
       const p1 = endpointFromBearing(b.lat,b.lon,(rwy+180)%360,1.2);
       const p2 = endpointFromBearing(b.lat,b.lon,rwy,1.2);
@@ -4800,12 +4825,19 @@ function setFireMarker() {
             }
           }
 
-          const base = bases[selectedBaseName];
-          const alt = airports[base.alt];
-          const dAlt = haversineKm({lat:c.latitude, lon:c.longitude}, alt);
-          text += `Direct έως εναλλακτικό ${base.alt}: ${dAlt.toFixed(1)} km\n`;
-          if (speedKmh && speedKmh > 20) {
-            text += `ETA εναλλακτικού με GPS GS: ${(dAlt / speedKmh * 60).toFixed(0)}'`;
+          const base = bases[selectedBaseName] || null;
+          const alt = base ? airports[base.alt] : null;
+
+          if (base && alt) {
+            const dAlt = haversineKm(
+              {lat:c.latitude, lon:c.longitude},
+              alt
+            );
+            text += `Direct έως εναλλακτικό ${base.alt}: ${dAlt.toFixed(1)} km\n`;
+
+            if (speedKmh && speedKmh > 20) {
+              text += `ETA εναλλακτικού με GPS GS: ${(dAlt / speedKmh * 60).toFixed(0)}'`;
+            }
           }
 
           document.getElementById("gpsResult").textContent = text;
@@ -4894,14 +4926,22 @@ function setFireMarker() {
         return pzlRemainingOutboundDistanceKm();
       }
 
-      const b = bases[selectedBaseName];
+      const b = bases[selectedBaseName] || null;
       const start = (useGpsAsStart && currentGps)
         ? {lat:currentGps.lat, lon:currentGps.lon}
-        : {lat:b.lat, lon:b.lon};
+        : (b ? {lat:b.lat, lon:b.lon} : null);
+
+      if (!start) return null;
       return pzlDistanceThrough(start, viaPoints, firePoint);
     }
+
     function alternateDistanceKm() {
-      const b = bases[selectedBaseName], alt = airports[b.alt];
+      const b = bases[selectedBaseName] || null;
+      if (!b) return null;
+
+      const alt = airports[b.alt];
+      if (!alt) return null;
+
       return haversineKm({lat:b.lat,lon:b.lon}, alt);
     }
 
@@ -4915,7 +4955,14 @@ function setFireMarker() {
         ? selectedFullStopBaseName
         : selectedBaseName;
       const base = bases[fullStopName] || bases[selectedBaseName];
+      if (!base) {
+        throw new Error("Επίλεξε πρώτα Α/Δ Full Stop.");
+      }
+
       const ref = airports[base.ref];
+      if (!ref) {
+        throw new Error("Δεν βρέθηκε το αεροδρόμιο αναφοράς ΤΦ.");
+      }
       const now = pzlMissionNow();
       const dateKey =
         `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
@@ -5416,6 +5463,40 @@ function setFireMarker() {
       const calcId = ++lastCalcId;
       const result = document.getElementById("result"), dropsDiv = document.getElementById("drops");
       const fuelResult = document.getElementById("fuelResult");
+
+      const missingAirportSelections = [];
+      if (!selectedBaseName || !bases[selectedBaseName]) {
+        missingAirportSelections.push("Αρχική Α/Γ");
+      }
+      if (!selectedRefillBaseName || !bases[selectedRefillBaseName]) {
+        missingAirportSelections.push("Επαναπλήρωση");
+      }
+      if (!selectedFullStopBaseName || !bases[selectedFullStopBaseName]) {
+        missingAirportSelections.push("Full Stop");
+      }
+
+      if (missingAirportSelections.length) {
+        result.textContent =
+          "Επίλεξε πρώτα: " +
+          missingAirportSelections.join(", ") +
+          ".";
+
+        dropsDiv.innerHTML = "";
+        if (fuelResult) fuelResult.textContent = "Αναμονή επιλογής αεροδρομίων...";
+
+        setText("dashBase", "-");
+        setText("dashAlt", "-");
+        setText("dashDrops", "-");
+        setText("dashFirstDrop", "-");
+        setText("dashCutoff", "-");
+        setText("dashLastLanding", "-");
+        setText("dashFireDist", "-");
+        setText("dashLimit", "-");
+
+        try { pzlUpdateDropNowButton(); } catch(e) {}
+        return;
+      }
+
       const liveMission = pzlHasLiveMissionStarted();
       if (liveMission) pzlUpdateWaypointProgress();
 
@@ -8189,6 +8270,10 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
     input.value = hhmm;
     const fullStopName = (typeof selectedFullStopBaseName !== 'undefined' && selectedFullStopBaseName) ? selectedFullStopBaseName : selectedBaseName;
     const base = bases[fullStopName] || bases[selectedBaseName];
+    if (!base) {
+      alert("Επίλεξε πρώτα Α/Δ Full Stop.");
+      return;
+    }
     const refName = base.ref;
     const missionNow = (typeof pzlMissionNow === 'function') ? pzlMissionNow() : new Date();
     const missionDateKey = pzlDateKey(missionNow);
@@ -8200,7 +8285,15 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
   window.getCutoffTime = async function() {
     const fullStopName = (typeof selectedFullStopBaseName !== 'undefined' && selectedFullStopBaseName) ? selectedFullStopBaseName : selectedBaseName;
     const base = bases[fullStopName] || bases[selectedBaseName];
+    if (!base) {
+      throw new Error("Επίλεξε πρώτα Α/Δ Full Stop.");
+    }
+
     const ref = airports[base.ref];
+    if (!ref) {
+      throw new Error("Δεν βρέθηκε το αεροδρόμιο αναφοράς ΤΦ.");
+    }
+
     const key = pzlTfStorageKey(base.ref, fullStopName);
     const missionNow = (typeof pzlMissionNow === 'function') ? pzlMissionNow() : new Date();
     const todayKey = pzlDateKey(missionNow);
@@ -9794,7 +9887,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_NAV_BUTTONS_ABOVE_FIRE_20260701AR */
+/* PZL_EMPTY_BASE_SELECTS_FIXED_20260701AS */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
