@@ -1505,7 +1505,7 @@ body.pzl-screen-locked #lockMapBtn {
   z-index:700 !important;
 }
 #hsiHud{
-  z-index:850 !important;
+  z-index:13000 !important; /* πάνω από Leaflet panes/controls */
 }
 .map-actions{
   z-index:800 !important;
@@ -1736,7 +1736,7 @@ body.pzl-screen-locked #lockMapBtn {
 
     <div class="map-actions">
       <button id="lockMapBtn" class="secondary">🔓</button>
-      <div class="splitControl fireSplit"><button id="fireModeBtn" class="active">🔥 Fire</button><button id="toggleFireCirclesBtn" class="secondary" title="Εμφάνιση/απόκρυψη 3 κύκλων φωτιάς"><span class="fire-circles-icon" aria-hidden="true"><span class="ring-red"></span><span class="ring-black"></span><span class="flame">🔥</span></span></button></div><div class="splitControl navSplit"><button id="navModeBtn" class="secondary">🧭 NAV</button><button id="clearNavBtn" class="danger">CLR NAV <span class="x2-mark">x2</span></button></div><div class="searchStack"><div class="searchCombo searchNameRow"><input id="searchBox" disabled placeholder="Περιοχή" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" /><button id="searchBtn" type="button" disabled>SRCH</button></div><button id="coordToggleBtn" type="button" class="secondary" disabled aria-expanded="false">Coord</button><div id="coordEntryPanel" class="coordEntryPanel" hidden><div class="coordRawRow"><label class="coordInputLine" for="coordLatRaw"><span>LAT</span><input id="coordLatRaw" type="text" inputmode="numeric" maxlength="14" placeholder="390315" aria-label="Latitude χωρίς σύμβολα" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></label><label class="coordInputLine" for="coordLonRaw"><span>LON</span><input id="coordLonRaw" type="text" inputmode="numeric" maxlength="15" placeholder="0263626" aria-label="Longitude χωρίς σύμβολα" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></label><button id="coordSearchBtn" type="button" disabled>GO</button></div><input id="coordBox" type="hidden"><select id="searchInputMode" hidden aria-label="Επιλεγμένη μορφή συντεταγμένων"><option value="dd">DD</option><option value="ddm" selected>DDM</option><option value="dms">DMS</option></select><button type="button" class="coordFormatRow" data-format="dd"><span class="coordFormatName">DD</span><span id="coordDDValue" class="coordFormatValue">—</span></button><button type="button" class="coordFormatRow selected" data-format="ddm"><span class="coordFormatName">DDM</span><span id="coordDDMValue" class="coordFormatValue">—</span></button><button type="button" class="coordFormatRow" data-format="dms"><span class="coordFormatName">DMS</span><span id="coordDMSValue" class="coordFormatValue">—</span></button></div></div>
+      <div class="splitControl fireSplit"><button id="fireModeBtn" class="active">🔥 Fire</button><button id="toggleFireCirclesBtn" class="secondary" title="Εμφάνιση/απόκρυψη 3 κύκλων φωτιάς"><span class="fire-circles-icon" aria-hidden="true"><span class="ring-red"></span><span class="ring-black"></span><span class="flame">🔥</span></span></button></div><div class="splitControl navSplit"><button id="navModeBtn" class="secondary">🧭 NAV</button><button id="clearNavBtn" class="danger">CLR NAV <span class="x2-mark">x2</span></button></div><button id="clearFireBtn" class="danger">CLR FIRE <span class="x2-mark">x2</span></button><div class="searchStack"><div class="searchCombo searchNameRow"><input id="searchBox" disabled placeholder="Περιοχή" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" /><button id="searchBtn" type="button" disabled>SRCH</button></div><button id="coordToggleBtn" type="button" class="secondary" disabled aria-expanded="false">Coord</button><div id="coordEntryPanel" class="coordEntryPanel" hidden><div class="coordRawRow"><label class="coordInputLine" for="coordLatRaw"><span>LAT</span><input id="coordLatRaw" type="text" inputmode="numeric" maxlength="14" placeholder="390315" aria-label="Latitude χωρίς σύμβολα" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></label><label class="coordInputLine" for="coordLonRaw"><span>LON</span><input id="coordLonRaw" type="text" inputmode="numeric" maxlength="15" placeholder="0263626" aria-label="Longitude χωρίς σύμβολα" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></label><button id="coordSearchBtn" type="button" disabled>GO</button></div><input id="coordBox" type="hidden"><select id="searchInputMode" hidden aria-label="Επιλεγμένη μορφή συντεταγμένων"><option value="dd">DD</option><option value="ddm" selected>DDM</option><option value="dms">DMS</option></select><button type="button" class="coordFormatRow" data-format="dd"><span class="coordFormatName">DD</span><span id="coordDDValue" class="coordFormatValue">—</span></button><button type="button" class="coordFormatRow selected" data-format="ddm"><span class="coordFormatName">DDM</span><span id="coordDDMValue" class="coordFormatValue">—</span></button><button type="button" class="coordFormatRow" data-format="dms"><span class="coordFormatName">DMS</span><span id="coordDMSValue" class="coordFormatValue">—</span></button></div></div>
       <div class="splitControl wptSplit"><button id="viaModeBtn" class="secondary">🔥 WPT</button><button id="clearViaBtn" class="danger">🔥 CLR <span class="x2-mark">x2</span></button></div>
       <div class="splitControl rtbSplit"><button id="returnWpBtn" class="secondary">WPT RTB</button><button id="clearReturnWpBtn" class="danger">CLR RTB <span class="x2-mark">x2</span></button></div><div class="splitControl commandSplit"><button id="takeoffBtn">☎️ Εντολή <span class="x2-mark">x2</span></button><button class="secondary" id="setManualTimeBtn">Manual Practice <span class="x2-mark">x2</span></button></div><button id="newFireWithWaterBtn" class="secondary">Airborne Full Tank <span class="x2-mark">x2</span></button>
       <button id="dropNowBtn" class="drop-now-btn" type="button" disabled>💧 Ρίψη τώρα</button>
@@ -4304,10 +4304,57 @@ function setFireMarker() {
       btn.title = active ? "WPT RTB ενεργό — πάτησε στον χάρτη για 1 σημείο επιστροφής" : "WPT RTB: πάτησε για ενεργοποίηση πριν βάλεις σημείο στον χάρτη";
     }
 
+    function clearFireMissionState() {
+      if (typeof isPzlMapLockedForClear === 'function' && isPzlMapLockedForClear()) return;
+      try {
+        if (typeof fireMarker !== 'undefined' && fireMarker) { try { map.removeLayer(fireMarker); } catch(e) {} }
+        fireMarker = null;
+      } catch(e) {}
+      try { firePoint = null; } catch(e) {}
+      try { clearFireCircles(); } catch(e) {}
+      try { if (typeof clearViaMarkers === 'function') clearViaMarkers(); } catch(e) {}
+      try { if (typeof clearReturnWaypointsSafe === 'function') clearReturnWaypointsSafe(); } catch(e) {}
+      try { if (typeof fireWindLine !== 'undefined' && fireWindLine) { map.removeLayer(fireWindLine); fireWindLine = null; } } catch(e) {}
+      try { if (typeof routeLine !== 'undefined' && routeLine) { map.removeLayer(routeLine); routeLine = null; } } catch(e) {}
+      try { if (typeof routeGhostLine !== 'undefined' && routeGhostLine) { map.removeLayer(routeGhostLine); routeGhostLine = null; } } catch(e) {}
+      try { if (typeof altLine !== 'undefined' && altLine) { map.removeLayer(altLine); altLine = null; } } catch(e) {}
+      try {
+        mode = 'none';
+        fireSelectionArmed = false;
+      } catch(e) {}
+      try { originalFirePoint = null; previewActive = false; } catch(e) {}
+      try {
+        const searchBox = document.getElementById('searchBox');
+        const coordLat = document.getElementById('coordLatRaw');
+        const coordLon = document.getElementById('coordLonRaw');
+        const coordHidden = document.getElementById('coordBox');
+        const coordPanel = document.getElementById('coordEntryPanel');
+        const coordToggle = document.getElementById('coordToggleBtn');
+        if (searchBox) searchBox.value = '';
+        if (coordLat) coordLat.value = '';
+        if (coordLon) coordLon.value = '';
+        if (coordHidden) coordHidden.value = '';
+        if (coordPanel) coordPanel.hidden = true;
+        if (coordToggle) { coordToggle.classList.remove('coord-open'); coordToggle.setAttribute('aria-expanded','false'); }
+      } catch(e) {}
+      try {
+        const drops = document.getElementById('drops');
+        if (drops) drops.innerHTML = '';
+      } catch(e) {}
+      try { updateFireModeButtonState(); } catch(e) {}
+      try { drawAll(); } catch(e) {}
+      try { calculate(); } catch(e) {}
+      try { if (typeof navRenderAll === 'function') navRenderAll(true); } catch(e) {}
+    }
+
     const toggleFireCirclesBtn = document.getElementById("toggleFireCirclesBtn");
     if (toggleFireCirclesBtn) {
       toggleFireCirclesBtn.addEventListener("click", toggleFireCircles);
       updateFireCirclesButton();
+    }
+    const clearFireBtn = document.getElementById("clearFireBtn");
+    if (clearFireBtn) {
+      clearFireBtn.addEventListener("click", function(){ clearFireMissionState(); });
     }
     updateFireModeButtonState();
 
@@ -8855,6 +8902,7 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
   const labels = {
     clearViaBtn: "CLR x2",
     clearReturnWpBtn: "CLR RTB x2",
+    clearFireBtn: "CLR FIRE x2",
     generalResetBtn: "Reset x2",
     takeoffBtn: "Εντολή x2",
     setManualTimeBtn: "Manual Practice x2",
@@ -8863,7 +8911,7 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
   const lastTap = Object.create(null);
 
   function installX2Guard(){
-    ["clearViaBtn","clearReturnWpBtn","generalResetBtn","takeoffBtn","setManualTimeBtn","newFireWithWaterBtn"].forEach(function(id){
+    ["clearViaBtn","clearReturnWpBtn","clearFireBtn","generalResetBtn","takeoffBtn","setManualTimeBtn","newFireWithWaterBtn"].forEach(function(id){
       const btn = document.getElementById(id);
       if(!btn || btn.dataset.pzlX2Guard === "1") return;
       btn.dataset.pzlX2Guard = "1";
@@ -8951,7 +8999,7 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
 #topMapGpsBar .topGpsSplit #useGpsAsStartBtn{border-radius:0 8px 8px 0!important;}
 #newFireWithWaterBtn{font-weight:800!important;}
 #newFireWithWaterBtn .x2-mark{display:inline!important;font-size:.82em!important;font-weight:900!important;margin-left:3px!important;}
-#newFireWithWaterBtn.x2-pending,#takeoffBtn.x2-pending,#setManualTimeBtn.x2-pending,#clearViaBtn.x2-pending,#clearReturnWpBtn.x2-pending,#generalResetBtn.x2-pending{filter:brightness(1.28)!important;box-shadow:0 0 0 2px #ffd24a,0 1px 6px rgba(0,0,0,.3)!important;}
+#newFireWithWaterBtn.x2-pending,#takeoffBtn.x2-pending,#setManualTimeBtn.x2-pending,#clearViaBtn.x2-pending,#clearReturnWpBtn.x2-pending,#clearFireBtn.x2-pending,#generalResetBtn.x2-pending{filter:brightness(1.28)!important;box-shadow:0 0 0 2px #ffd24a,0 1px 6px rgba(0,0,0,.3)!important;}
 @media(max-width:700px){
   #topMapGpsBar{gap:4px!important;left:70px!important;}
   #topMapGpsBar .topGpsSplit{flex-basis:160px!important;width:160px!important;}
@@ -8967,7 +9015,7 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
 /* FIX37D60 final: x2 Airborne + Manual Practice enter behavior */
 (function(){
   const WINDOW_MS=500;
-  const ids=["clearViaBtn","clearReturnWpBtn","generalResetBtn","takeoffBtn","newFireWithWaterBtn"];
+  const ids=["clearViaBtn","clearReturnWpBtn","clearFireBtn","generalResetBtn","takeoffBtn","newFireWithWaterBtn"];
   const last=Object.create(null);
   function markAirborne(){
     const b=document.getElementById('newFireWithWaterBtn');
