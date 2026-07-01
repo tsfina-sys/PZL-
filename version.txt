@@ -1,6 +1,6 @@
-PZL_BADGE_METAR_NO_OVERLAP_20260701AH
+PZL_LEAFLET_ATTRIBUTION_NOT_CLICKABLE_20260701AI
 Built 2026-07-01
 
-- On mobile, the ONLINE / OFFLINE READY badge was moved higher.
-- This avoids covering the bottom-left METAR status box.
-- All previous mobile/iPad splitter and offline features remain unchanged.
+- The Leaflet / OpenStreetMap attribution remains visible.
+- Its links are no longer clickable or tappable on the map.
+- All previous offline, mobile and panel-resizing features remain unchanged.

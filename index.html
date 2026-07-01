@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_BADGE_METAR_NO_OVERLAP_20260701AH">
+<meta name="pzl-build" content="PZL_LEAFLET_ATTRIBUTION_NOT_CLICKABLE_20260701AI">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1462,6 +1462,18 @@ body.pzl-screen-locked #lockMapBtn {
     overflow:auto!important;
     border-radius:0!important;
   }
+}
+</style>
+
+
+<style id="pzl-leaflet-attribution-no-click-css">
+/* Η ένδειξη Leaflet / OpenStreetMap παραμένει ορατή,
+   αλλά δεν μπορεί να πατηθεί κατά λάθος πάνω στον χάρτη. */
+.leaflet-control-attribution,
+.leaflet-control-attribution a{
+  pointer-events:none !important;
+  cursor:default !important;
+  text-decoration:none !important;
 }
 </style>
 
@@ -9646,7 +9658,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_BADGE_METAR_NO_OVERLAP_20260701AH */
+/* PZL_LEAFLET_ATTRIBUTION_NOT_CLICKABLE_20260701AI */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
