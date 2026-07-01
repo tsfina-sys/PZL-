@@ -872,6 +872,59 @@ body.pzl-screen-locked #lockMapBtn {
   .orb-node-sub{font-size:10px}
 }
 
+
+/* 3D sphere panel */
+.orb3d-shell{margin:0 0 10px;border:1px solid #d7e0ef;border-radius:20px;background:linear-gradient(180deg,#f8fbff 0%,#edf4ff 100%);padding:10px;box-shadow:0 6px 18px rgba(15,23,42,.08), inset 0 1px 0 rgba(255,255,255,.85)}
+.orb3d-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.orb3d-title{font-weight:900;color:#0f172a;font-size:18px}
+.orb3d-tag{font-size:12px;font-weight:900;color:#1e3a8a;background:#fff;border:1px solid #cbd5e1;border-radius:999px;padding:4px 8px;white-space:nowrap}
+.orb3d-help{margin-top:8px;color:#475569;font-size:12px;line-height:1.35}
+.orb3d-viewport{position:relative;height:980px;border-radius:18px;overflow:hidden;touch-action:none;perspective:1400px;background:radial-gradient(circle at 50% 50%, rgba(148,163,184,.06) 0%, rgba(191,219,254,.18) 24%, rgba(226,232,240,.45) 48%, rgba(248,250,252,.98) 100%)}
+.orb3d-viewport::before,.orb3d-viewport::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none}
+.orb3d-viewport::before{width:340px;height:340px;border:1px dashed rgba(59,130,246,.18);box-shadow:0 0 0 26px rgba(255,255,255,.22),0 0 0 56px rgba(59,130,246,.06)}
+.orb3d-viewport::after{width:520px;height:520px;border:1px dashed rgba(30,64,175,.12)}
+.orb3d-scene{position:absolute;inset:0;transform-style:preserve-3d;transform-origin:50% 50%}
+.orb3d-core{position:absolute;left:50%;top:50%;width:168px;height:168px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;transform:translate(-50%,-50%);background:radial-gradient(circle at 35% 35%, #dbeafe 0%, #60a5fa 18%, #2563eb 45%, #1e3a8a 72%, #0f172a 100%);color:#fff;box-shadow:0 22px 45px rgba(37,99,235,.28), inset 0 3px 14px rgba(255,255,255,.35);font-weight:900;letter-spacing:.3px;pointer-events:none;z-index:50}
+.orb3d-core span{font-size:18px;line-height:1.05}
+.orb3d-core small{display:block;margin-top:8px;font-size:11px;font-weight:700;line-height:1.2;opacity:.92}
+.orb3d-card{position:absolute;left:50%;top:50%;width:min(86vw,320px);max-height:290px;overflow:auto;transform-style:preserve-3d;border-radius:18px;background:rgba(255,255,255,.95);border:1px solid rgba(148,163,184,.48);box-shadow:0 16px 35px rgba(15,23,42,.12);backdrop-filter:blur(4px);padding:8px 9px 10px;color:#0f172a}
+.orb3d-card::-webkit-scrollbar{width:6px;height:6px}.orb3d-card::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}
+.orb3d-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 2px 8px;margin-bottom:2px;border-bottom:1px solid #e5e7eb}
+.orb3d-card-title{font-size:16px;font-weight:900;color:#1e3a8a;line-height:1.15}
+.orb3d-card-sub{font-size:10px;font-weight:900;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:999px;padding:3px 6px;white-space:nowrap}
+.orb3d-card .collapsible-panel,.orb3d-card #fixPanel,.orb3d-card .mission-log-panel,.orb3d-card .nav-panel,.orb3d-card .pzl-test-panel{margin:0!important;border:0!important;box-shadow:none!important;background:transparent!important;padding:0!important}
+.orb3d-card details{display:block!important}
+.orb3d-card details>summary,.orb3d-card #fixPanel>summary{display:none!important}
+.orb3d-card .collapsible-body{padding-top:4px!important}
+.orb3d-card .dashboard{gap:6px!important}
+.orb3d-card .dash-card{min-height:auto!important;padding:8px!important}
+.orb3d-card .dash-card .value{font-size:18px!important}
+.orb3d-card .row{margin:6px 0!important}
+.orb3d-card .section-title{margin:8px 0 6px!important}
+.orb3d-card .result,.orb3d-card .small{font-size:12px!important}
+.orb3d-card .nav-leg{margin:8px 0 0!important}
+.orb3d-card .test-row,.orb3d-card .test-row-2col{gap:6px!important}
+.orb3d-card .test-quick-row,.orb3d-card .test-action-row{display:flex;flex-wrap:wrap;gap:6px!important}
+.orb3d-card .test-btn,.orb3d-card .btn,.orb3d-card button{min-height:38px}
+.orb3d-card .mission-log-actions{display:flex;flex-wrap:wrap;gap:8px}
+.orb3d-card .mission-log-actions button{flex:1 1 140px}
+.orb3d-card .fix-row{grid-template-columns:52px minmax(0,1fr) 42px 32px!important}
+.orb3d-card .fix-title{margin-bottom:6px!important}
+.orb3d-card table{font-size:13px!important}
+.orb3d-card.active{box-shadow:0 0 0 3px rgba(37,99,235,.18), 0 18px 42px rgba(15,23,42,.18);border-color:#2563eb}
+.orb3d-source-hidden{display:none!important}
+@media (max-width:700px){
+  .orb3d-viewport{height:940px}
+  .orb3d-core{width:132px;height:132px}
+  .orb3d-core span{font-size:15px}
+  .orb3d-card{width:min(82vw,280px);max-height:250px;padding:7px 8px 9px}
+  .orb3d-card-title{font-size:15px}
+}
+@media (min-width:900px){
+  .orb3d-viewport{height:1100px}
+  .orb3d-card{width:320px;max-height:300px}
+}
+
 </style>
 
 <style id="fix37d9-panel-visible">
@@ -1777,22 +1830,17 @@ body.pzl-screen-locked #lockMapBtn {
     <span class="pzlSplitGrip" aria-hidden="true"></span>
   </div>
   <div class="bottom-sheet">
-  <div id="orbPanelShell" class="orb-panel-shell">
-    <div class="orb-panel-head"><span>🪐 Orbital panel</span><span id="orbScaleTag" class="orb-tag">Zoom x1.00</span></div>
-    <div id="orbPanelViewport" class="orb-panel-viewport" aria-label="Σφαιρικός πλοηγός πεδίων panel">
-      <div id="orbPanelScene" class="orb-panel-scene">
-        <div class="orb-core">PZL<br>Panel<span class="orb-core-small">σύρε • περιστροφή<br>pinch • zoom</span></div>
-        <button type="button" class="orb-node" data-target="#summaryPanel"><span class="orb-node-title">Σύνοψη</span><span class="orb-node-sub">χρόνοι • GPS</span></button>
-        <button type="button" class="orb-node" data-target="#fixPanel"><span class="orb-node-title">FIX</span><span class="orb-node-sub">GPS & Manual FIX</span></button>
-        <button type="button" class="orb-node" data-target="#reportsPanel"><span class="orb-node-title">Αναφορές</span><span class="orb-node-sub">θέση • ενδιάμεσα</span></button>
-        <button type="button" class="orb-node" data-target="#navPanel"><span class="orb-node-title">NAV</span><span class="orb-node-sub">ναυτιλία • προσγείωση</span></button>
-        <button type="button" class="orb-node" data-target="#pzlTestModePanel"><span class="orb-node-title">Test Mode</span><span class="orb-node-sub">IAS • άνεμος • ρυθμός</span></button>
-        <button type="button" class="orb-node" data-target="#missionLogPanel"><span class="orb-node-title">Ημερολόγιο</span><span class="orb-node-sub">καταγραφές αποστολής</span></button>
-        <button type="button" class="orb-node" data-target="#dropsPanel"><span class="orb-node-title">Ρίψεις</span><span class="orb-node-sub">εκτιμήσεις • DCT</span></button>
-        <button type="button" class="orb-node" data-target="#windPanel"><span class="orb-node-title">Άνεμος</span><span class="orb-node-sub">διάδρομος • όρια</span></button>
+  <div id="orb3dShell" class="orb3d-shell">
+    <div class="orb3d-head">
+      <div class="orb3d-title">🔵 3D σφαίρα panel</div>
+      <div id="orb3dScaleTag" class="orb3d-tag">Zoom x1.00</div>
+    </div>
+    <div id="orb3dViewport" class="orb3d-viewport" aria-label="3D σφαίρα panel">
+      <div id="orb3dScene" class="orb3d-scene">
+        <div class="orb3d-core">PZL<br><span>3D PANEL</span><small>σύρε για περιστροφή<br>pinch για zoom</small></div>
       </div>
     </div>
-    <div class="orb-panel-help">Σύρε μέσα στο πλαίσιο για να περιστρέψεις τη «σφαίρα». Κάνε pinch ή wheel για zoom. Άγγιξε ένα πεδίο για να ανοίξει το αντίστοιχο section πιο κάτω.</div>
+    <div class="orb3d-help">Περιστρέφεις τη σφαίρα με το δάκτυλο. Κάθε κάρτα είναι ανοιχτό πεδίο του panel. Δεν εμφανίζονται ξανά πιο κάτω.</div>
   </div>
     <details id="summaryPanel" class="collapsible-panel">
       <summary>Σύνοψη / χρόνοι</summary>
@@ -8216,7 +8264,113 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
     syncActive('#summaryPanel');
   }
 
-  document.addEventListener('DOMContentLoaded', function(){ try { initOrbPanel(); } catch(e){} });
+
+  function initOrb3DPanel(){
+    const shell = document.getElementById('orb3dShell');
+    const viewport = document.getElementById('orb3dViewport');
+    const scene = document.getElementById('orb3dScene');
+    const tag = document.getElementById('orb3dScaleTag');
+    if (!shell || !viewport || !scene || scene.dataset.bound === '1') return;
+    scene.dataset.bound = '1';
+
+    const defs = [
+      { id:'summaryPanel', title:'Σύνοψη / χρόνοι', short:'χρόνοι • GPS' },
+      { id:'fixPanel', title:'FIX σημεία', short:'GPS & Manual FIX' },
+      { id:'reportsPanel', title:'Αναφορές / ενδιάμεσα', short:'θέση • ενδιάμεσα' },
+      { id:'navPanel', title:'Ναυτιλία / προσγείωση', short:'NAV • legs • ALTR' },
+      { id:'pzlTestModePanel', title:'Test Mode', short:'IAS • άνεμος • ρυθμός' },
+      { id:'missionLogPanel', title:'Ημερολόγιο αποστολής', short:'καταγραφές' },
+      { id:'dropsPanel', title:'Αποστολή / Ρίψεις', short:'ρίψεις • DCT' },
+      { id:'windPanel', title:'Άνεμος / Διάδρομος', short:'άνεμος • όρια' }
+    ];
+
+    const cards = [];
+    defs.forEach(function(def, idx){
+      const panel = document.getElementById(def.id);
+      if (!panel) return;
+      panel.open = true;
+      panel.classList.add('orb-embedded-panel');
+      const card = document.createElement('div');
+      card.className = 'orb3d-card';
+      card.dataset.index = String(idx);
+      card.innerHTML = '<div class="orb3d-card-head"><div class="orb3d-card-title">'+def.title+'</div><div class="orb3d-card-sub">'+def.short+'</div></div>';
+      card.appendChild(panel);
+      scene.appendChild(card);
+      cards.push(card);
+      card.addEventListener('click', function(ev){
+        const interactive = ev.target.closest('input,button,select,textarea,label,summary,a');
+        if (!interactive) { angle = -idx * step; render(); }
+      });
+    });
+
+    // hide any now-empty direct children after the shell
+    Array.from(shell.parentElement.children).forEach(function(el){
+      if (el !== shell && !scene.contains(el) && (el.matches?.('details') || (el.nodeType===1 && !el.textContent.trim()))) {
+        el.classList.add('orb3d-source-hidden');
+      }
+    });
+
+    let angle = -90;
+    let zoom = 1;
+    let pointerDown = false;
+    let lastX = 0;
+    let moved = false;
+    let pinchDist = null;
+    let pinchZoom = 1;
+    const step = 360 / Math.max(cards.length,1);
+    function clamp(v,min,max){ return Math.max(min, Math.min(max,v)); }
+    function dist(t1,t2){ const dx=t2.clientX-t1.clientX, dy=t2.clientY-t1.clientY; return Math.hypot(dx,dy); }
+    function render(){
+      const rect = viewport.getBoundingClientRect();
+      const cx = rect.width/2;
+      const cy = rect.height/2;
+      const radius = Math.max(135, Math.min(220, rect.width * 0.48));
+      const lift = Math.max(110, Math.min(175, rect.height * 0.16));
+      cards.forEach(function(card, idx){
+        const deg = angle + idx * step;
+        const rad = deg * Math.PI / 180;
+        const x = Math.cos(rad) * radius;
+        const z = Math.sin(rad) * radius;
+        const y = Math.sin(rad * 2) * lift;
+        const depth = (z + radius) / (2 * radius);
+        const scale = 0.72 + depth * 0.34;
+        card.style.left = cx + 'px';
+        card.style.top = cy + 'px';
+        card.style.transform = 'translate(-50%, -50%) translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,' + z.toFixed(1) + 'px) scale(' + scale.toFixed(3) + ')';
+        card.style.opacity = (0.42 + depth * 0.58).toFixed(2);
+        card.style.zIndex = String(10 + Math.round(depth * 100));
+        card.classList.toggle('active', depth > 0.86);
+      });
+      scene.style.transform = 'scale(' + zoom.toFixed(3) + ')';
+      if (tag) tag.textContent = 'Zoom x' + zoom.toFixed(2);
+    }
+
+    viewport.addEventListener('pointerdown', function(ev){
+      pointerDown = true; moved = false; lastX = ev.clientX;
+      try { viewport.setPointerCapture(ev.pointerId); } catch(e){}
+    });
+    viewport.addEventListener('pointermove', function(ev){
+      if (!pointerDown) return;
+      if (ev.target.closest('.orb3d-card input,.orb3d-card textarea,.orb3d-card select')) return;
+      const dx = ev.clientX - lastX;
+      if (Math.abs(dx) > 1) moved = true;
+      lastX = ev.clientX;
+      angle += dx * 0.45;
+      render();
+    });
+    function endPtr(ev){ pointerDown = false; setTimeout(function(){ moved=false; }, 20); try { viewport.releasePointerCapture(ev.pointerId); } catch(e){} }
+    viewport.addEventListener('pointerup', endPtr);
+    viewport.addEventListener('pointercancel', endPtr);
+    viewport.addEventListener('wheel', function(ev){ ev.preventDefault(); zoom = clamp(zoom + (ev.deltaY < 0 ? 0.06 : -0.06), 0.82, 1.36); render(); }, {passive:false});
+    viewport.addEventListener('touchstart', function(ev){ if (ev.touches.length === 2){ pinchDist = dist(ev.touches[0], ev.touches[1]); pinchZoom = zoom; } }, {passive:false});
+    viewport.addEventListener('touchmove', function(ev){ if (ev.touches.length === 2 && pinchDist){ ev.preventDefault(); zoom = clamp(pinchZoom * (dist(ev.touches[0], ev.touches[1]) / pinchDist), 0.82, 1.36); render(); } }, {passive:false});
+    viewport.addEventListener('touchend', function(ev){ if (!ev.touches || ev.touches.length < 2) pinchDist = null; });
+
+    render();
+    const frontCard = cards[0]; if (frontCard) frontCard.classList.add('active');
+  }
+
+document.addEventListener('DOMContentLoaded', function(){ try { initOrb3DPanel(); } catch(e){}; /* old orb disabled */ });
 })();
 </script>
 
