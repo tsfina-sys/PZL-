@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_FIRE_TOGGLE_ROBUST_20260701Z">
+<meta name="pzl-build" content="PZL_RETURN_REVERSE_OUTBOUND_WPTS_20260701AA">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -2705,15 +2705,34 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
       return viaPoints.slice(Math.max(0, pzlOutboundWpIndex));
     }
 
+    function pzlReturnUsesReversedOutbound() {
+      return returnWpMarkers.length === 0 && viaPoints.length > 0;
+    }
+
     function pzlAllReturnPoints() {
-      return returnWpMarkers.map(pzlLatLonFromMarker).filter(Boolean);
+      if (returnWpMarkers.length > 0) {
+        return returnWpMarkers
+          .map(pzlLatLonFromMarker)
+          .filter(Boolean);
+      }
+
+      // Αν δεν υπάρχουν WPT RTB, η επιστροφή ακολουθεί αυτόματα
+      // τα WPT μετάβασης με αντίστροφη σειρά.
+      return viaPoints
+        .slice()
+        .reverse()
+        .map(point => ({lat:Number(point.lat), lon:Number(point.lon)}));
     }
 
     function pzlRemainingReturnPoints() {
-      return returnWpMarkers
-        .slice(Math.max(0, pzlReturnWpIndex))
-        .map(pzlLatLonFromMarker)
-        .filter(Boolean);
+      return pzlAllReturnPoints()
+        .slice(Math.max(0, pzlReturnWpIndex));
+    }
+
+    function pzlReturnRouteDescription() {
+      if (returnWpMarkers.length > 0) return "με WPT RTB";
+      if (viaPoints.length > 0) return "μέσω ανάστροφων WPT μετάβασης";
+      return "direct";
     }
 
     function pzlCurrentOperationalPoint(fallback) {
@@ -2763,9 +2782,18 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
     function pzlStyleWaypointMarkers() {
       viaMarkers.forEach((marker, index) => {
         try {
-          marker.setOpacity(index < pzlOutboundWpIndex ? 0.34 : 1);
+          let passed;
+          if (pzlMissionPhase === "to_refill" && pzlReturnUsesReversedOutbound()) {
+            // Στην ανάστροφη επιστροφή, το τελευταίο outbound WPT περνιέται πρώτο.
+            const reversePosition = viaMarkers.length - 1 - index;
+            passed = reversePosition < pzlReturnWpIndex;
+          } else {
+            passed = index < pzlOutboundWpIndex;
+          }
+
+          marker.setOpacity(passed ? 0.34 : 1);
           const el = marker.getElement && marker.getElement();
-          if (el) el.classList.toggle("pzl-wpt-passed", index < pzlOutboundWpIndex);
+          if (el) el.classList.toggle("pzl-wpt-passed", passed);
         } catch(e) {}
       });
 
@@ -2783,10 +2811,16 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
       if (!el) return;
 
       if (pzlMissionPhase === "to_refill") {
-        const total = returnWpMarkers.length;
+        const total = pzlAllReturnPoints().length;
         const next = Math.min(total, pzlReturnWpIndex + 1);
+        const fallback = pzlReturnUsesReversedOutbound();
+
         el.textContent = total > 0 && pzlReturnWpIndex < total
-          ? `Ενεργό σκέλος: προς REFILL — επόμενο WPT RTB ${next}/${total}`
+          ? (
+              fallback
+                ? `Ενεργό σκέλος: προς REFILL — ανάστροφο WPT ${next}/${total}`
+                : `Ενεργό σκέλος: προς REFILL — επόμενο WPT RTB ${next}/${total}`
+            )
           : "Ενεργό σκέλος: προς REFILL";
       } else if (pzlMissionPhase === "refill_ground") {
         el.textContent = "Ενεργό σκέλος: στο REFILL — αναμονή επόμενης Α/Γ";
@@ -2827,8 +2861,12 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
 
     function pzlRouteOriginForIndex(kind, index) {
       if (kind === "return") {
-        if (index <= 0) return firePoint ? {lat:firePoint.lat, lon:firePoint.lon} : null;
-        return pzlLatLonFromMarker(returnWpMarkers[index - 1]);
+        if (index <= 0) {
+          return firePoint
+            ? {lat:firePoint.lat, lon:firePoint.lon}
+            : null;
+        }
+        return pzlAllReturnPoints()[index - 1] || null;
       }
       if (index <= 0) return pzlOutboundOrigin();
       return viaPoints[index - 1] || null;
@@ -2836,7 +2874,10 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
 
     function pzlAdvanceWaypoint(kind) {
       if (kind === "return") {
-        pzlReturnWpIndex = Math.min(returnWpMarkers.length, pzlReturnWpIndex + 1);
+        pzlReturnWpIndex = Math.min(
+          pzlAllReturnPoints().length,
+          pzlReturnWpIndex + 1
+        );
         pzlReturnPrevDistanceKm = null;
         pzlReturnIncreasingCount = 0;
       } else {
@@ -2854,7 +2895,7 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
 
       const isReturn = kind === "return";
       const points = isReturn
-        ? returnWpMarkers.map(pzlLatLonFromMarker).filter(Boolean)
+        ? pzlAllReturnPoints()
         : viaPoints;
       let index = isReturn ? pzlReturnWpIndex : pzlOutboundWpIndex;
       if (index >= points.length) return false;
@@ -3380,6 +3421,7 @@ function setFireMarker() {
       viaMarkers = [];
       viaPoints = [];
       pzlResetOutboundProgress();
+      updateReturnWpStatus();
       drawAll();
       calculate();
     }
@@ -4714,8 +4756,17 @@ function setFireMarker() {
     function updateReturnWpStatus() {
       const el = document.getElementById("returnWpStatus");
       if (!el) return;
+
       const n = returnWpMarkers.length;
-      el.textContent = `Ενδιάμεσα επιστροφής: ${n} ${n===1 ? "σημείο" : "σημεία"}`;
+      if (n > 0) {
+        el.textContent =
+          `Ενδιάμεσα επιστροφής: ${n} ${n===1 ? "σημείο" : "σημεία"}`;
+      } else if (viaPoints.length > 0) {
+        el.textContent =
+          `Επιστροφή: αυτόματα μέσω ${viaPoints.length} WPT μετάβασης ανάποδα`;
+      } else {
+        el.textContent = "Ενδιάμεσα επιστροφής: 0 σημεία";
+      }
     }
 
     function addReturnWaypoint(lat, lng) {
@@ -4749,28 +4800,21 @@ function setFireMarker() {
     function refillRouteDistanceKm() {
       if (!firePoint) return null;
 
-      const refillName = (typeof selectedRefillBaseName !== "undefined" && selectedRefillBaseName)
-        ? selectedRefillBaseName
-        : selectedBaseName;
+      const refillName =
+        (typeof selectedRefillBaseName !== "undefined" && selectedRefillBaseName)
+          ? selectedRefillBaseName
+          : selectedBaseName;
 
       const refillBase = bases[refillName];
       if (!refillBase) return null;
 
-      let total = 0;
-      let prev = {lat: firePoint.lat, lon: firePoint.lon};
+      const points = [
+        {lat:firePoint.lat, lon:firePoint.lon},
+        ...pzlAllReturnPoints(),
+        {lat:refillBase.lat, lon:refillBase.lon}
+      ];
 
-      if (returnWpMarkers && returnWpMarkers.length > 0) {
-        returnWpMarkers.forEach(m => {
-          const ll = m.getLatLng();
-          const p = {lat: ll.lat, lon: ll.lng};
-          total += haversineKm(prev, p);
-          prev = p;
-        });
-      }
-
-      total += haversineKm(prev, {lat: refillBase.lat, lon: refillBase.lon});
-
-      return total;
+      return pzlRouteDistanceKm(points);
     }
 
 
@@ -4779,28 +4823,21 @@ function setFireMarker() {
     function finalReturnRouteDistanceKm() {
       if (!firePoint) return null;
 
-      const fullStopName = (typeof selectedFullStopBaseName !== "undefined" && selectedFullStopBaseName)
-        ? selectedFullStopBaseName
-        : selectedBaseName;
+      const fullStopName =
+        (typeof selectedFullStopBaseName !== "undefined" && selectedFullStopBaseName)
+          ? selectedFullStopBaseName
+          : selectedBaseName;
 
       const fullStopBase = bases[fullStopName];
       if (!fullStopBase) return null;
 
-      let total = 0;
-      let prev = {lat: firePoint.lat, lon: firePoint.lon};
+      const points = [
+        {lat:firePoint.lat, lon:firePoint.lon},
+        ...pzlAllReturnPoints(),
+        {lat:fullStopBase.lat, lon:fullStopBase.lon}
+      ];
 
-      // Χρησιμοποιεί τα WPT RTB και για το τελικό Full Stop, αν έχουν οριστεί.
-      if (returnWpMarkers && returnWpMarkers.length > 0) {
-        returnWpMarkers.forEach(m => {
-          const ll = m.getLatLng();
-          const p = {lat: ll.lat, lon: ll.lng};
-          total += haversineKm(prev, p);
-          prev = p;
-        });
-      }
-
-      total += haversineKm(prev, {lat: fullStopBase.lat, lon: fullStopBase.lon});
-      return total;
+      return pzlRouteDistanceKm(points);
     }
 
     function approachRouteDistanceKm() {
@@ -5235,10 +5272,10 @@ const base = bases[selectedBaseName];
           `CUT OFF: ${fmtTime(cutoffInfo.cutoff)} (βάσει Full Stop ${cutoffInfo.fullStopName} / ΤΦ ${cutoffInfo.refName} - ${cutoffInfo.offset}')\n` +
           `Απόσταση διαδρομής προς φωτιά: ${D.toFixed(1)} km${newFireWithWaterMode ? ' (Νέα φωτιά με νερό: GPS → 🔥 WPT → φωτιά)' : (useGpsAsStart ? ' (αφετηρία GPS)' : '')}\n` +
           `${viaPoints.length ? 'WPT μετάβασης: περασμένα ' + pzlOutboundWpIndex + '/' + viaPoints.length + '\n' : ''}` +
-          `${returnWpMarkers.length ? 'WPT RTB: περασμένα ' + pzlReturnWpIndex + '/' + returnWpMarkers.length + '\n' : ''}` +
-          `${newFireWithWaterMode ? 'Επιστροφή προς επαναπλήρωση: ' + returnLegD.toFixed(1) + ' km' + (returnWpMarkers.length ? ' με WPT RTB' : ' direct') + '\n' : ''}` +
+          `${pzlAllReturnPoints().length ? (pzlReturnUsesReversedOutbound() ? 'Ανάστροφα WPT μετάβασης: περασμένα ' : 'WPT RTB: περασμένα ') + pzlReturnWpIndex + '/' + pzlAllReturnPoints().length + '\n' : ''}` +
+          `${newFireWithWaterMode ? 'Επιστροφή προς επαναπλήρωση: ' + returnLegD.toFixed(1) + ' km ' + pzlReturnRouteDescription() + '\n' : ''}` +
           `${newFireWithWaterMode ? 'Επαναμετάβαση από επαναπλήρωση: ' + approachLegD.toFixed(1) + ' km' + (viaMarkers.length ? ' με 🔥 WPT' : ' direct') + '\n' : ''}` +
-          `Τελική επιστροφή προς Full Stop: ${finalReturnLegD.toFixed(1)} km${returnWpMarkers.length ? ' με WPT RTB' : ' direct'}\n` +
+          `Τελική επιστροφή προς Full Stop: ${finalReturnLegD.toFixed(1)} km ${pzlReturnRouteDescription()}\n` +
           `${newFireWithWaterMode ? 'Ώρα νέας εντολής στον αέρα: ' + fmtTime(calcCommandTime) : 'Ώρα εντολής: ' + fmtTime(commandTime)}\n` +
           `${liveMission ? 'LIVE επανυπολογισμός: ' + fmtTime(missionNow) + ' | GS: ' + (pzlCurrentGsKmh() !== null ? pzlCurrentGsKmh().toFixed(0) : '180 fallback') + ' km/h\n' : ''}` +
           `${(typeof newFireWithWaterMode !== "undefined" && newFireWithWaterMode) ? "Νέα φωτιά με νερό: χωρίς 15\' αρχικής Α/Γ\n" : ""}` +
@@ -9337,7 +9374,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_FIRE_TOGGLE_ROBUST_20260701Z */
+/* PZL_RETURN_REVERSE_OUTBOUND_WPTS_20260701AA */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;

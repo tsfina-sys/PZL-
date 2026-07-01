@@ -1,4 +1,4 @@
-const PZL_BUILD = 'PZL_FIRE_TOGGLE_ROBUST_20260701Z';
+const PZL_BUILD = 'PZL_RETURN_REVERSE_OUTBOUND_WPTS_20260701AA';
 self.addEventListener('install', event => { self.skipWaiting(); });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {

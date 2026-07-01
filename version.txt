@@ -1,9 +1,11 @@
-PZL_FIRE_TOGGLE_ROBUST_20260701Z
+PZL_RETURN_REVERSE_OUTBOUND_WPTS_20260701AA
 Built 2026-07-01
 
-- Reworked Fire as a robust true toggle.
-- First tap: green/on.
-- Second tap: grey/off without selecting a fire.
-- Uses capture-phase pointer handling so it works inside the draggable mobile panel.
-- A real drag of the panel does not toggle Fire.
-- Existing fire position remains unchanged when Fire is switched off.
+- If explicit WPT RTB exist, they continue to define the return route.
+- If no WPT RTB exist and outbound WPTs exist, return is automatically calculated through the outbound WPTs in reverse order.
+- This fallback is used for return distance, drop feasibility, final landing and TF/3-hour calculations.
+- During live/test return, waypoint sequencing follows the reversed outbound WPTs.
+- The active return route is drawn through the reversed outbound WPTs instead of DCT.
+- Passed reverse-route WPTs become translucent.
+- UI status explicitly reports when reverse outbound WPT fallback is active.
+- Existing Fire toggle, Test Mode and mission log remain unchanged.
