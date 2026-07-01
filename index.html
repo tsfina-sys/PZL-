@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_MFIX_HUD_NAV_20260701AJ">
+<meta name="pzl-build" content="PZL_SPLITTER_UNDER_HUD_PANEL_20260701AK">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1497,6 +1497,21 @@ body.pzl-screen-locked #lockMapBtn {
 #hsiHud .hsiFixReadout[hidden]{display:none!important}
 @media(max-width:700px){#manualFixBtn::after{content:'MFIX'!important}#hsiHud .hsiFixReadout{font-size:7.5px;padding:1px 3px;margin-top:0}#fixPanel .fix-row{grid-template-columns:47px minmax(0,1fr) 38px 29px!important;gap:3px!important}#fixPanel .fix-hud-select{font-size:8px!important}}
 </style>
+
+<style id="pzl-splitter-under-overlays-css">
+/* Η γκρι λαβή παραμένει μετακινούμενη, αλλά περνά κάτω από
+   το HUD και το δεξί πάνελ κουμπιών όταν συναντιούνται. */
+#pzlSplitHandle{
+  z-index:700 !important;
+}
+#hsiHud{
+  z-index:850 !important;
+}
+.map-actions{
+  z-index:800 !important;
+}
+</style>
+
 </head>
 
 <style id="fix37d46-metar-final-css">
@@ -9648,7 +9663,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_MFIX_HUD_NAV_20260701AJ */
+/* PZL_SPLITTER_UNDER_HUD_PANEL_20260701AK */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;

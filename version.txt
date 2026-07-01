@@ -1,7 +1,7 @@
-PZL_MFIX_HUD_NAV_20260701AJ
+PZL_SPLITTER_UNDER_HUD_PANEL_20260701AK
 Built 2026-07-01
 
-- FIX/MFIX bearing, distance and ETA.
-- Up to 5 Manual FIX points.
-- One selectable FIX/MFIX for fourth black HUD needle.
-- Offline/mobile features retained.
+- The draggable grey separator now passes underneath the HUD.
+- It also passes underneath the floating right-side controls panel.
+- The separator remains draggable in all uncovered parts.
+- MFIX, fourth HUD needle, offline support and all prior features remain unchanged.

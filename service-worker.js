@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_MFIX_HUD_NAV_20260701AJ";
+const PZL_BUILD = "PZL_SPLITTER_UNDER_HUD_PANEL_20260701AK";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";
