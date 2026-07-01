@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_NAV_ROUTE_STAYS_METAR_20260701AQ";
+const PZL_BUILD = "PZL_NAV_BUTTONS_ABOVE_FIRE_20260701AR";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";
