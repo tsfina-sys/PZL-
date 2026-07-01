@@ -1755,7 +1755,7 @@ body.pzl-screen-locked #lockMapBtn {
       <summary>Σύνοψη / χρόνοι</summary>
       <div class="collapsible-body">
     <div class="dashboard">
-      <div class="dash-card good" style="display:none"><div class="label">Κλιμάκιο</div><div id="dashBase" class="value">ΜΥΤΙΛΗΝΗ</div></div>
+      <div class="dash-card good" style="display:none"><div class="label">Κλιμάκιο</div><div id="dashBase" class="value">-</div></div>
       <div class="dash-card" style="display:none"><div class="label">Εναλλακτικό</div><div id="dashAlt" class="value">ΧΙΟΣ</div></div>
       <div class="dash-card" style="display:none"><div class="label">GS</div><div id="dashGS" class="value">-</div></div>
       <div class="dash-card"><div class="label">Airborne</div><div id="dashAirborne" class="value">00:00</div><div id="dashAirborneState" class="label">ΟΧΙ</div></div>
@@ -2350,9 +2350,9 @@ function getRemainingAirborneMinutesForNewFire() {
     }
 
 
-    let selectedBaseName = "ΜΥΤΙΛΗΝΗ";
-    let selectedRefillBaseName = selectedBaseName;
-    let selectedFullStopBaseName = selectedBaseName;
+    let selectedBaseName = "";
+    let selectedRefillBaseName = "";
+    let selectedFullStopBaseName = "";
     let commandTime = null;
     let firePoint = null;
     let viaPoints = [];
@@ -3492,6 +3492,12 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
 
 
     const baseSelect = document.getElementById("baseSelect");
+    {
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "";
+      baseSelect.appendChild(placeholder);
+    }
     Object.keys(bases).forEach(name => {
       const opt = document.createElement("option");
       opt.value = name; opt.textContent = name;
@@ -3501,7 +3507,7 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
         selectedBaseName = name; baseSelect.value = name; updateBaseMarker(); calculate(); try { updateHsiHud(); } catch(e) {}
       });
     });
-    baseSelect.value = selectedBaseName;
+    baseSelect.value = selectedBaseName || "";
 
     Object.keys(airports).forEach(name => {
       const a = airports[name];
@@ -3514,6 +3520,10 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
       if (!sel || !bases) return;
 
       sel.innerHTML = "";
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "";
+      sel.appendChild(placeholder);
       Object.keys(bases).forEach(name => {
         const opt = document.createElement("option");
         opt.value = name;
@@ -3521,16 +3531,15 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
         sel.appendChild(opt);
       });
 
-      selectedRefillBaseName = selectedBaseName;
-      sel.value = selectedRefillBaseName;
+      sel.value = selectedRefillBaseName || "";
 
       const status = document.getElementById("refillBaseStatus");
-      if (status) status.textContent = "Επαναπλήρωση: " + selectedRefillBaseName;
+      if (status) status.textContent = "Επαναπλήρωση: " + (selectedRefillBaseName || "-");
 
       sel.addEventListener("change", () => {
-        selectedRefillBaseName = sel.value;
+        selectedRefillBaseName = sel.value || "";
         const st = document.getElementById("refillBaseStatus");
-        if (st) st.textContent = "Επαναπλήρωση: " + selectedRefillBaseName;
+        if (st) st.textContent = "Επαναπλήρωση: " + (selectedRefillBaseName || "-");
         drawAll();
         calculate();
         try { updateHsiHud(); } catch(e) {}
@@ -3544,6 +3553,10 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
       if (!sel || !bases) return;
 
       sel.innerHTML = "";
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "";
+      sel.appendChild(placeholder);
       Object.keys(bases).forEach(name => {
         const opt = document.createElement("option");
         opt.value = name;
@@ -3551,11 +3564,10 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
         sel.appendChild(opt);
       });
 
-      selectedFullStopBaseName = selectedBaseName;
-      sel.value = selectedFullStopBaseName;
+      sel.value = selectedFullStopBaseName || "";
 
       sel.addEventListener("change", () => {
-        selectedFullStopBaseName = sel.value;
+        selectedFullStopBaseName = sel.value || "";
         drawAll();
         calculate();
         try { updateHsiHud(); } catch(e) {}
@@ -3565,22 +3577,21 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
     function syncFullStopBaseWithSelectedBase() {
       const sel = document.getElementById("fullStopBaseSelect");
       if (!sel) return;
-      if (!selectedFullStopBaseName || !bases[selectedFullStopBaseName]) {
-        selectedFullStopBaseName = selectedBaseName;
+      if (selectedFullStopBaseName && !bases[selectedFullStopBaseName]) {
+        selectedFullStopBaseName = "";
       }
-      sel.value = selectedFullStopBaseName;
+      sel.value = selectedFullStopBaseName || "";
     }
 
     function syncRefillBaseWithSelectedBase() {
       const sel = document.getElementById("refillBaseSelect");
       if (!sel) return;
-      // Αν δεν έχει επιλεγεί ξεχωριστό κλιμάκιο επαναπλήρωσης, ακολουθεί το κλιμάκιο απογείωσης.
-      if (!selectedRefillBaseName || !bases[selectedRefillBaseName]) {
-        selectedRefillBaseName = selectedBaseName;
-        sel.value = selectedRefillBaseName;
+      if (selectedRefillBaseName && !bases[selectedRefillBaseName]) {
+        selectedRefillBaseName = "";
       }
+      sel.value = selectedRefillBaseName || "";
       const st = document.getElementById("refillBaseStatus");
-      if (st) st.textContent = "Επαναπλήρωση: " + selectedRefillBaseName;
+      if (st) st.textContent = "Επαναπλήρωση: " + (selectedRefillBaseName || "-");
     }
 
 
@@ -4178,9 +4189,8 @@ function setFireMarker() {
       fireWindLine = drawArrow(start, end, "green", "Άνεμος φωτιάς από " + windFrom + "°");
     }
 
-    baseSelect.addEventListener("change", () => { selectedBaseName = baseSelect.value;
+    baseSelect.addEventListener("change", () => { selectedBaseName = baseSelect.value || "";
       syncRefillBaseWithSelectedBase();
-      selectedFullStopBaseName = selectedBaseName;
       syncFullStopBaseWithSelectedBase();
       updateBaseMarker(); calculate(); try { updateHsiHud(); } catch(e) {} });
     document.getElementById("takeoffBtn").addEventListener("click", () => {
