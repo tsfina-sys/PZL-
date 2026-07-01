@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_LEAFLET_ATTRIBUTION_NOT_CLICKABLE_20260701AI";
+const PZL_BUILD = "PZL_MFIX_HUD_NAV_20260701AJ";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";

@@ -1,6 +1,7 @@
-PZL_LEAFLET_ATTRIBUTION_NOT_CLICKABLE_20260701AI
+PZL_MFIX_HUD_NAV_20260701AJ
 Built 2026-07-01
 
-- The Leaflet / OpenStreetMap attribution remains visible.
-- Its links are no longer clickable or tappable on the map.
-- All previous offline, mobile and panel-resizing features remain unchanged.
+- FIX/MFIX bearing, distance and ETA.
+- Up to 5 Manual FIX points.
+- One selectable FIX/MFIX for fourth black HUD needle.
+- Offline/mobile features retained.

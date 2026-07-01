@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_LEAFLET_ATTRIBUTION_NOT_CLICKABLE_20260701AI">
+<meta name="pzl-build" content="PZL_MFIX_HUD_NAV_20260701AJ">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1477,6 +1477,26 @@ body.pzl-screen-locked #lockMapBtn {
 }
 </style>
 
+<style id="pzl-mfix-hud-nav-css">
+.topFixSplit{min-width:0!important}
+#manualFixBtn.manual-fix-active{background:#157347!important;color:#fff!important;border-color:#0f5f39!important;box-shadow:0 0 0 2px rgba(21,115,71,.28)!important}
+.manual-fix-marker{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#111827;color:#fff;border:2px solid #fff;font-size:9px;font-weight:900;box-shadow:0 2px 5px rgba(0,0,0,.65)}
+#fixPanel .fix-group-title{margin-top:6px;padding:4px 0 2px;font-size:11px;font-weight:900;color:#7c2d12;border-bottom:1px solid rgba(251,146,60,.35)}
+#fixPanel .fix-row{grid-template-columns:52px minmax(0,1fr) 42px 32px!important;gap:5px!important;align-items:center!important}
+#fixPanel .fix-row.active-hud-fix{background:rgba(17,24,39,.10);border-radius:7px;padding-left:3px;padding-right:3px}
+#fixPanel .fix-coord{min-width:0;overflow-wrap:anywhere}
+#fixPanel .fix-nav{display:block;margin-top:2px;font-weight:900;color:#0f3d5e;line-height:1.15}
+#fixPanel .fix-hud-select{padding:3px 2px!important;min-width:0!important;font-size:9px!important;border:0!important;background:#6b7280;color:#fff}
+#fixPanel .fix-hud-select.selected{background:#111827!important;color:#fff!important;box-shadow:0 0 0 2px rgba(17,24,39,.22)}
+#fixPanel .fix-del{width:30px!important;min-width:30px!important}
+#fixPanel .fix-empty-line{color:#9ca3af;padding:5px 0;font-size:11px}
+#hsiHud .hsiFix{color:#050505!important;background:#050505!important;z-index:5!important;filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 2px #fff)!important}
+#hsiHud .hsiFix::after{filter:drop-shadow(0 0 1px #fff)!important}
+#hsiHud .hsiFix[hidden]{display:none!important}
+#hsiHud .hsiFixReadout{margin:1px auto 0;width:max-content;max-width:96%;padding:2px 5px;border-radius:6px;background:rgba(255,255,255,.88);color:#050505;border:1px solid rgba(0,0,0,.65);font-size:9px;line-height:1.05;font-weight:800;text-align:center;white-space:nowrap;text-shadow:none;pointer-events:none}
+#hsiHud .hsiFixReadout[hidden]{display:none!important}
+@media(max-width:700px){#manualFixBtn::after{content:'MFIX'!important}#hsiHud .hsiFixReadout{font-size:7.5px;padding:1px 3px;margin-top:0}#fixPanel .fix-row{grid-template-columns:47px minmax(0,1fr) 38px 29px!important;gap:3px!important}#fixPanel .fix-hud-select{font-size:8px!important}}
+</style>
 </head>
 
 <style id="fix37d46-metar-final-css">
@@ -1637,7 +1657,7 @@ body.pzl-screen-locked #lockMapBtn {
 <div id="app">
   <div id="mapWrap">
     <header><span>PZL Mission Tool v8.2 D76</span><span>Cockpit</span></header>
-    <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><div class="splitControl topGpsSplit"><button id="gpsBtn">GPS</button><button id="useGpsAsStartBtn" class="secondary">Αφετηρία</button></div><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="toggleActionsBtn" class="secondary" title="Εμφάνιση/απόκρυψη δεξιού πάνελ">PNL</button><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button></div>
+    <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><div class="splitControl topGpsSplit"><button id="gpsBtn">GPS</button><button id="useGpsAsStartBtn" class="secondary">Αφετηρία</button></div><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="toggleActionsBtn" class="secondary" title="Εμφάνιση/απόκρυψη δεξιού πάνελ">PNL</button><div class="splitControl topFixSplit"><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button><button id="manualFixBtn" class="secondary" title="Manual FIX: πάτησε και μετά διάλεξε σημείο στον χάρτη">MFIX</button></div></div>
 <div id="map"></div>
     <div id="pzlNetBadge" class="preparing" title="Η εφαρμογή αποθηκεύεται για offline χρήση">ONLINE · προετοιμασία offline</div>
     <div id="metarWindStatus"></div>
@@ -1653,11 +1673,13 @@ body.pzl-screen-locked #lockMapBtn {
         <div id="hudRefillArrow" class="hsiArrow hsiRefill"></div>
         <div id="hudFullArrow" class="hsiArrow hsiFull"></div>
         <div id="hudFireArrow" class="hsiArrow hsiFire"></div>
+        <div id="hudFixArrow" class="hsiArrow hsiFix" hidden></div>
         <div class="hsiLabel refill">REFILL<span id="hudRefillName" class="hsiAirport">-</span><span id="hudRefillBrg">---</span>°<span class="hsiMetric">| <span id="hudRefillKm">-</span> km</span><span class="hsiMetric">| <span id="hudRefillEta">-</span></span></div>
         <div class="hsiLabel full">FULL STOP<span id="hudFullName" class="hsiAirport">-</span><span id="hudFullBrg">---</span>°<span class="hsiMetric">| <span id="hudFullKm">-</span> km</span><span class="hsiMetric">| <span id="hudFullEta">-</span></span></div>
         <div class="hsiLabel fire"><span id="hudFireBrg">---</span>°<br><span class="hsiMetric"><span id="hudFireKm">-</span> km / <span id="hudFireEta">-</span></span></div>
         <div class="hsiPos"><span id="hudLat">N--°--.--'</span><br><span id="hudLon">E---°--.--'</span></div>
       </div>
+      <div id="hudFixReadout" class="hsiFixReadout" hidden><b id="hudFixName">FIX</b> <span id="hudFixBrg">---</span>° · <span id="hudFixKm">-</span> km · <span id="hudFixEta">-</span></div>
       <div class="hsiControls"><button id="hudGpsAltBtn" type="button">GPS</button><button id="hudBaroAltBtn" type="button">BARO</button></div>
       <div class="qnhBox" id="hudQnhBox">QNH <input id="hudQnh" value="1013" inputmode="numeric"> hPa</div>
     </div>
@@ -3386,8 +3408,14 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
     const altIcon = L.divIcon({className:"", html:"🟣", iconSize:[24,24], iconAnchor:[12,12]});
     const gpsIcon = L.divIcon({className:"gps-aircraft-marker", html:'<span class="gps-plane-symbol"><img src="data:image/png;base64,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" alt=""></span>', iconSize:[58,58], iconAnchor:[29,29]});
     const fixSavedIcon = (n) => L.divIcon({className:"", html:`<div class="fix-saved-marker fix-color-${n}">${n}</div>`, iconSize:[18,18], iconAnchor:[9,9]});
+    const manualFixSavedIcon = (n) => L.divIcon({className:"", html:`<div class="manual-fix-marker">M${n}</div>`, iconSize:[24,24], iconAnchor:[12,12]});
     let savedFixPoints = [];
     let savedFixMarkers = [];
+    let manualFixPoints = [];
+    let manualFixMarkers = [];
+    let manualFixMode = false;
+    let activeHudFixId = null;
+    let pzlFixIdCounter = 0;
 
 
     const baseSelect = document.getElementById("baseSelect");
@@ -3503,6 +3531,15 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
         pzlTestModePickPosition = false;
         const pickBtn = document.getElementById("pzlTestPickBtn");
         if (pickBtn) pickBtn.classList.remove("active");
+        return;
+      }
+      if (manualFixMode) {
+        if (typeof mapLocked !== "undefined" && mapLocked) {
+          alert("Ξεκλείδωσε πρώτα τον χάρτη για να τοποθετήσεις Manual FIX.");
+          pzlSetManualFixMode(false);
+          return;
+        }
+        saveManualFixPoint(e.latlng.lat, e.latlng.lng);
         return;
       }
       if (typeof mapLocked !== "undefined" && mapLocked) { return; }
@@ -3784,89 +3821,26 @@ function setFireMarker() {
       const pad = isLat ? String(deg).padStart(2,"0") : String(deg).padStart(3,"0");
       return `${hemi}${pad}°${min.toFixed(2).padStart(5,"0")}'`;
     }
-
-    function loadSavedFixPoints(){
-      // Κάθε νέο άνοιγμα της εφαρμογής ξεκινά χωρίς αποθηκευμένα FIX.
-      savedFixPoints = [];
-      try { localStorage.removeItem("pzlSavedFixPoints"); } catch(e) {}
-    }
-
-    function saveSavedFixPoints(){
-      // Τα FIX μένουν μόνο για την τρέχουσα χρήση. Δεν αποθηκεύονται για επόμενο άνοιγμα.
-    }
-
-    function updateFixClearButtonVisibility(){
-      const btn = document.getElementById("clearFixBtn");
-      const panel = document.getElementById("fixPanel");
-      if (!btn || !panel) return;
-      const shouldShow = panel.open && Array.isArray(savedFixPoints) && savedFixPoints.length > 0;
-      btn.classList.toggle("fix-clear-hidden", !shouldShow);
-    }
-
-    function renderSavedFixPanel(){
-      const list = document.getElementById("fixPanelList");
-      if (!list) return;
-      let html = "";
-      for (let i=0; i<5; i++) {
-        const p = savedFixPoints[i];
-        const n = i + 1;
-        if (p) {
-          html += `<div class="fix-row"><b>FIX ${n}</b><span>${fixFormatCoord(p.lat,true)}<br>${fixFormatCoord(p.lon,false)}${p.time ? `<br>${p.time}` : ""}</span><button class="fix-del" data-fix-del="${i}" type="button">✕</button></div>`;
-        } else {
-          html += `<div class="fix-row fix-empty"><b>FIX ${n}</b><span>-</span><span></span></div>`;
-        }
-      }
-      list.innerHTML = html;
-      list.querySelectorAll("[data-fix-del]").forEach(btn => {
-        btn.onclick = () => {
-          const idx = Number(btn.getAttribute("data-fix-del"));
-          if (!isNaN(idx)) {
-            savedFixPoints.splice(idx, 1);
-            saveSavedFixPoints();
-            renderSavedFixPoints();
-          }
-        };
-      });
-      updateFixClearButtonVisibility();
-    }
-
-    function renderSavedFixPoints(){
-      if (typeof map !== "undefined") {
-        savedFixMarkers.forEach(m => { try { map.removeLayer(m); } catch(e){} });
-        savedFixMarkers = [];
-        savedFixPoints.forEach((p, i) => {
-          const n = i + 1;
-          const m = L.marker([p.lat, p.lon], {icon:fixSavedIcon(n)}).addTo(map);
-          m.on("click", () => { try { map.setView([p.lat, p.lon], Math.max(map.getZoom(), 10)); } catch(e){} });
-          savedFixMarkers.push(m);
-        });
-      }
-      renderSavedFixPanel();
-      const btn = document.getElementById("fixBtn");
-      if (btn) {
-        btn.classList.toggle("fix-active", savedFixPoints.length > 0);
-        btn.title = `Αποθηκευμένα FIX: ${savedFixPoints.length}/5`;
-      }
-    }
-
-    function saveCurrentFixPoint(){
-      if (!currentGps || isNaN(Number(currentGps.lat)) || isNaN(Number(currentGps.lon))) {
-        alert("Δεν υπάρχει GPS θέση. Άνοιξε πρώτα το GPS και περίμενε να πάρει θέση.");
-        return;
-      }
-      const now = new Date();
-      if (savedFixPoints.length >= 5) savedFixPoints.shift();
-      savedFixPoints.push({
-        lat: Number(currentGps.lat),
-        lon: Number(currentGps.lon),
-        accuracy: currentGps.accuracy ? Number(currentGps.accuracy) : null,
-        time: now.toLocaleTimeString("el-GR", {hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false})
-      });
-      saveSavedFixPoints();
-      renderSavedFixPoints();
-      const last = savedFixMarkers[savedFixMarkers.length - 1];
-      if (last && typeof map !== "undefined") { try { map.panTo(last.getLatLng()); } catch(e){} }
-    }
+    function pzlNewFixId(prefix){pzlFixIdCounter+=1;return `${prefix}-${Date.now()}-${pzlFixIdCounter}`;}
+    function pzlEnsureFixIds(){savedFixPoints.forEach(p=>{if(!p.id)p.id=pzlNewFixId("fix")});manualFixPoints.forEach(p=>{if(!p.id)p.id=pzlNewFixId("mfix")});}
+    function pzlAllFixEntries(){pzlEnsureFixIds();return savedFixPoints.map((point,index)=>({id:point.id,type:"fix",index,label:`FIX ${index+1}`,point})).concat(manualFixPoints.map((point,index)=>({id:point.id,type:"mfix",index,label:`MFix${index+1}`,point})));}
+    function pzlActiveFixEntry(){return activeHudFixId?pzlAllFixEntries().find(e=>e.id===activeHudFixId)||null:null;}
+    function pzlFixAircraftPosition(){if(typeof currentGps!=="undefined"&&currentGps&&Number.isFinite(Number(currentGps.lat))&&Number.isFinite(Number(currentGps.lon)))return {lat:Number(currentGps.lat),lon:Number(currentGps.lon)};return null;}
+    function pzlFixAircraftGsKmh(){try{if(typeof currentGps!=="undefined"&&currentGps&&Number.isFinite(Number(currentGps.speedMps)))return Number(currentGps.speedMps)*3.6}catch(e){}return null;}
+    function pzlFixNavData(point,position=pzlFixAircraftPosition(),gsKmh=pzlFixAircraftGsKmh()){if(!point||!position)return {bearing:null,km:null,etaMin:null};const target={lat:Number(point.lat),lon:Number(point.lon)};const bearing=bearingDeg(position,target);const km=haversineKm(position,target);const speed=Number.isFinite(gsKmh)&&gsKmh>30?gsKmh:180;return {bearing,km,etaMin:Number.isFinite(km)?km/speed*60:null};}
+    function pzlFormatFixNav(nav){const brg=nav&&Number.isFinite(nav.bearing)?fmtHudDeg(nav.bearing):"---";const km=nav&&Number.isFinite(nav.km)?fmtHudKm(nav.km):"-";const eta=nav&&Number.isFinite(nav.etaMin)?fmtHudEta(nav.etaMin):"-";return `BRG ${brg}° · ${km} km · ${eta}`;}
+    function loadSavedFixPoints(){savedFixPoints=[];manualFixPoints=[];activeHudFixId=null;manualFixMode=false;try{localStorage.removeItem("pzlSavedFixPoints");localStorage.removeItem("pzlManualFixPoints")}catch(e){}}
+    function saveSavedFixPoints(){}
+    function updateFixClearButtonVisibility(){const btn=document.getElementById("clearFixBtn"),panel=document.getElementById("fixPanel");if(!btn||!panel)return;btn.classList.toggle("fix-clear-hidden",!(panel.open&&(savedFixPoints.length||manualFixPoints.length)));}
+    function pzlSetManualFixMode(enabled){manualFixMode=!!enabled;const btn=document.getElementById("manualFixBtn");if(btn){btn.classList.toggle("manual-fix-active",manualFixMode);btn.classList.toggle("secondary",!manualFixMode);btn.title=manualFixMode?`MFIX ενεργό — πάτησε στον χάρτη (${manualFixPoints.length}/5)`:`Manual FIX: πάτησε και μετά διάλεξε σημείο στον χάρτη (${manualFixPoints.length}/5)`}if(manualFixMode){try{if(typeof returnWpMode!=="undefined")returnWpMode=false;if(typeof setReturnWptArmed==="function")setReturnWptArmed(false)}catch(e){}try{mode="none";fireSelectionArmed=false;if(typeof updateFireModeButtonState==="function")updateFireModeButtonState();if(typeof setViaWptArmed==="function")setViaWptArmed(false)}catch(e){}}}
+    function pzlSelectHudFix(id){activeHudFixId=activeHudFixId===id?null:id;renderSavedFixPanel();updateHsiHud();}
+    function pzlDeleteFix(type,index){const list=type==="mfix"?manualFixPoints:savedFixPoints;const point=list[index];if(point&&point.id===activeHudFixId)activeHudFixId=null;list.splice(index,1);renderSavedFixPoints();updateHsiHud();}
+    function pzlFixRowHtml(entry){const p=entry.point,nav=pzlFixNavData(p),selected=entry.id===activeHudFixId;return `<div class="fix-row${selected?" active-hud-fix":""}"><b>${entry.label}</b><span class="fix-coord">${fixFormatCoord(p.lat,true)}<br>${fixFormatCoord(p.lon,false)}${p.time?`<br>${p.time}`:""}<span class="fix-nav" data-fix-nav-id="${entry.id}">${pzlFormatFixNav(nav)}</span></span><button class="fix-hud-select${selected?" selected":""}" data-fix-select="${entry.id}" type="button">${selected?"ON":"HUD"}</button><button class="fix-del" data-fix-type="${entry.type}" data-fix-del="${entry.index}" type="button">✕</button></div>`;}
+    function renderSavedFixPanel(){const list=document.getElementById("fixPanelList");if(!list)return;pzlEnsureFixIds();let out=`<div class="fix-group-title">GPS FIX (${savedFixPoints.length}/5)</div>`;if(savedFixPoints.length)savedFixPoints.forEach((point,index)=>out+=pzlFixRowHtml({id:point.id,type:"fix",index,label:`FIX ${index+1}`,point}));else out+=`<div class="fix-empty-line">Δεν υπάρχει GPS FIX.</div>`;out+=`<div class="fix-group-title">Manual FIX (${manualFixPoints.length}/5)</div>`;if(manualFixPoints.length)manualFixPoints.forEach((point,index)=>out+=pzlFixRowHtml({id:point.id,type:"mfix",index,label:`MFix${index+1}`,point}));else out+=`<div class="fix-empty-line">Πάτησε MFIX και μετά σημείο στον χάρτη.</div>`;list.innerHTML=out;list.querySelectorAll("[data-fix-select]").forEach(btn=>btn.onclick=()=>pzlSelectHudFix(btn.getAttribute("data-fix-select")));list.querySelectorAll("[data-fix-del]").forEach(btn=>btn.onclick=()=>{const idx=Number(btn.getAttribute("data-fix-del"));if(!isNaN(idx))pzlDeleteFix(btn.getAttribute("data-fix-type"),idx)});updateFixClearButtonVisibility();}
+    function updateFixNavigationReadouts(position=pzlFixAircraftPosition(),gsKmh=pzlFixAircraftGsKmh()){pzlAllFixEntries().forEach(entry=>{const el=document.querySelector(`[data-fix-nav-id="${entry.id}"]`);if(el)el.textContent=pzlFormatFixNav(pzlFixNavData(entry.point,position,gsKmh))});}
+    function renderSavedFixPoints(){if(typeof map!=="undefined"){savedFixMarkers.forEach(m=>{try{map.removeLayer(m)}catch(e){}});manualFixMarkers.forEach(m=>{try{map.removeLayer(m)}catch(e){}});savedFixMarkers=[];manualFixMarkers=[];savedFixPoints.forEach((p,i)=>{const m=L.marker([p.lat,p.lon],{icon:fixSavedIcon(i+1)}).addTo(map);m.on("click",()=>{pzlSelectHudFix(p.id);try{map.setView([p.lat,p.lon],Math.max(map.getZoom(),10))}catch(e){}});savedFixMarkers.push(m)});manualFixPoints.forEach((p,i)=>{const m=L.marker([p.lat,p.lon],{icon:manualFixSavedIcon(i+1)}).addTo(map);m.on("click",()=>{pzlSelectHudFix(p.id);try{map.setView([p.lat,p.lon],Math.max(map.getZoom(),10))}catch(e){}});manualFixMarkers.push(m)})}renderSavedFixPanel();const btn=document.getElementById("fixBtn");if(btn){btn.classList.toggle("fix-active",savedFixPoints.length>0);btn.title=`Αποθηκευμένα GPS FIX: ${savedFixPoints.length}/5`}pzlSetManualFixMode(manualFixMode);}
+    function saveCurrentFixPoint(){if(!currentGps||isNaN(Number(currentGps.lat))||isNaN(Number(currentGps.lon))){alert("Δεν υπάρχει GPS θέση. Άνοιξε πρώτα το GPS και περίμενε να πάρει θέση.");return}const now=new Date();if(savedFixPoints.length>=5){const removed=savedFixPoints.shift();if(removed&&removed.id===activeHudFixId)activeHudFixId=null}savedFixPoints.push({id:pzlNewFixId("fix"),lat:Number(currentGps.lat),lon:Number(currentGps.lon),accuracy:currentGps.accuracy?Number(currentGps.accuracy):null,time:now.toLocaleTimeString("el-GR",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false})});renderSavedFixPoints();const last=savedFixMarkers[savedFixMarkers.length-1];if(last&&typeof map!=="undefined")try{map.panTo(last.getLatLng())}catch(e){}}
+    function saveManualFixPoint(lat,lon){if(manualFixPoints.length>=5){alert("Έχεις ήδη 5 Manual FIX. Διέγραψε ένα για να προσθέσεις άλλο.");pzlSetManualFixMode(false);return false}const now=new Date();manualFixPoints.push({id:pzlNewFixId("mfix"),lat:Number(lat),lon:Number(lon),time:now.toLocaleTimeString("el-GR",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false})});pzlSetManualFixMode(false);renderSavedFixPoints();const panel=document.getElementById("fixPanel");if(panel)panel.open=true;updateFixClearButtonVisibility();return true;}
 
     function hudPointForAirport(name){
       const b = (bases && bases[name]) ? bases[name] : ((typeof airports !== "undefined" && airports && airports[name]) ? airports[name] : null);
@@ -4022,20 +3996,36 @@ function setFireMarker() {
       setHudText("hudFullEta", fullKm !== null ? fmtHudEta((fullKm / etaSpeed) * 60) : "-");
       setHudText("hudFireEta", fireKm !== null ? fmtHudEta((fireKm / etaSpeed) * 60) : "-");
       
+      
+      const activeFix = pzlActiveFixEntry();
+      const activeFixNav = activeFix ? pzlFixNavData(activeFix.point, pos, gs) : {bearing:null, km:null, etaMin:null};
+      setHudText("hudFixName", activeFix ? activeFix.label : "FIX");
+      setHudText("hudFixBrg", fmtHudDeg(activeFixNav.bearing));
+      setHudText("hudFixKm", fmtHudKm(activeFixNav.km));
+      setHudText("hudFixEta", fmtHudEta(activeFixNav.etaMin));
+      const fixReadout = document.getElementById("hudFixReadout");
+      if (fixReadout) fixReadout.hidden = !activeFix;
+      updateFixNavigationReadouts(pos, gs);
+      
       const refA=document.getElementById("hudRefillArrow");
       const fullA=document.getElementById("hudFullArrow");
       const fireA=document.getElementById("hudFireArrow");
+      const fixA=document.getElementById("hudFixArrow");
       // Οι DCT γραμμές είναι σωστές. Το συγκεκριμένο CSS arrow δείχνει 180° αντίθετα
       // από την οπτική φορά του HSI, άρα εφαρμόζουμε +180° ΜΟΝΟ στην περιστροφή του γραφικού.
       const relRef=(brRef===null||hdg===null)?brRef:((brRef-hdg+360)%360);
       const relFull=(brFull===null||hdg===null)?brFull:((brFull-hdg+360)%360);
       const relFire=(brFire===null||hdg===null)?brFire:((brFire-hdg+360)%360);
+      const brFix = activeFixNav.bearing;
+      const relFix=(brFix===null||hdg===null)?brFix:((brFix-hdg+360)%360);
       const drawRef = relRef===null ? 0 : ((relRef + 180) % 360);
       const drawFull = relFull===null ? 0 : ((relFull + 180) % 360);
       const drawFire = relFire===null ? 0 : ((relFire + 180) % 360);
+      const drawFix = relFix===null ? 0 : ((relFix + 180) % 360);
       if(refA){ refA.style.transform = `rotate(${drawRef}deg)`; refA.style.opacity = (brRef===null ? ".25" : ".95"); }
       if(fullA){ fullA.style.transform = `rotate(${drawFull}deg)`; fullA.style.opacity = (brFull===null ? ".25" : ".95"); }
       if(fireA){ fireA.style.transform = `rotate(${drawFire}deg)`; fireA.style.opacity = (brFire===null ? ".18" : ".97"); }
+      if(fixA){ fixA.hidden=!activeFix; fixA.style.transform=`rotate(${drawFix}deg)`; fixA.style.opacity=(!activeFix||brFix===null?".20":".98"); }
       const baroBtn=document.getElementById("hudBaroAltBtn"), qnh=document.getElementById("hudQnhBox");
       updateGpsLiveUi();
       if(baroBtn){
@@ -5847,16 +5837,16 @@ const base = bases[selectedBaseName];
       updateFixClearButtonVisibility();
     }
     const fixBtn = document.getElementById("fixBtn");
-    if (fixBtn) {
-      fixBtn.addEventListener("click", saveCurrentFixPoint);
-    }
+    if (fixBtn) fixBtn.addEventListener("click", function(){pzlSetManualFixMode(false);saveCurrentFixPoint();});
+    const manualFixBtn = document.getElementById("manualFixBtn");
+    if (manualFixBtn) manualFixBtn.addEventListener("click", function(){if(manualFixPoints.length>=5&&!manualFixMode){alert("Έχεις ήδη 5 Manual FIX. Διέγραψε ένα για να προσθέσεις άλλο.");return}pzlSetManualFixMode(!manualFixMode);});
+    ["fireModeBtn","viaModeBtn","returnWpBtn","coordToggleBtn"].forEach(id=>{const btn=document.getElementById(id);if(btn)btn.addEventListener("click",function(){if(manualFixMode)pzlSetManualFixMode(false)},true)});
     const clearFixBtn = document.getElementById("clearFixBtn");
     if (clearFixBtn) {
       clearFixBtn.addEventListener("click", function(ev){
         if (ev) { ev.preventDefault(); ev.stopPropagation(); }
-        savedFixPoints = [];
-        saveSavedFixPoints();
-        renderSavedFixPoints();
+        savedFixPoints = []; manualFixPoints = []; activeHudFixId = null; pzlSetManualFixMode(false);
+        renderSavedFixPoints(); updateHsiHud();
       });
     }
 
@@ -9658,7 +9648,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_LEAFLET_ATTRIBUTION_NOT_CLICKABLE_20260701AI */
+/* PZL_MFIX_HUD_NAV_20260701AJ */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
