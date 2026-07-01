@@ -1,4 +1,4 @@
-const PZL_BUILD = 'PZL_TEST_MODE_COMMAND_TIME_LIMITS_20260701T';
+const PZL_BUILD = 'PZL_TEST_INTERMEDIATE_TAKEOFF_100_20260701X';
 self.addEventListener('install', event => { self.skipWaiting(); });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {

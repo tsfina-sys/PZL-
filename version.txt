@@ -1,15 +1,6 @@
-PZL_TEST_MODE_COMMAND_TIME_LIMITS_20260701T
+PZL_TEST_INTERMEDIATE_TAKEOFF_100_20260701X
 Built 2026-07-01
 
-- Added selectable command date and time in Test Mode.
-- “Νέα test αποστολή” starts from the selected command date/time.
-- Mission log records the selected command date/time.
-- The initial 15-minute readiness is calculated from the selected command time.
-- The 3-hour restriction is calculated from the simulated actual takeoff (GS >100).
-- TF, twilight and cutoff are requested for the selected test date.
-- The sunset API now receives the selected mission date.
-- Manual TF is also stored and calculated for the selected mission date.
-- Stored TF from a different date is not silently reused.
-- Test status displays the active 3-hour/TF restriction and cutoff.
-- IAS/wind-based GS and all previous Test Mode functions remain enabled.
-- Cache identifier updated.
+- Intermediate takeoff is recorded only when IAS rises above 100 km/h.
+- The 20-minute landing-to-final-landing logic remains unchanged.
+- All previous Test Mode features remain unchanged.
