@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_NAV_MODE_DOUBLE_PRESS_FIRE_LOCK_20260701AO">
+<meta name="pzl-build" content="PZL_NAV_ROUTE_STAYS_METAR_20260701AQ">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -8750,6 +8750,15 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
     return {raw,windDir:d,windSpeed:s,windGust:g,varFrom:p.varFrom,varTo:p.varTo,timeZ:time};
   }
   function names(){
+    try {
+      if (typeof window.pzlGetNavMetarNames === "function") {
+        const navNames = window.pzlGetNavMetarNames();
+        if (Array.isArray(navNames) && navNames.length) {
+          return Array.from(new Set(navNames.filter(Boolean)));
+        }
+      }
+    } catch(e) {}
+
     const s=(typeof selectedBaseName!="undefined"&&selectedBaseName)?selectedBaseName:null;
     let refill=null, full=null;
     try{ if(typeof selectedRefillBaseName!="undefined"&&selectedRefillBaseName) refill=selectedRefillBaseName; }catch(e){}
@@ -9775,7 +9784,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_NAV_MODE_DOUBLE_PRESS_FIRE_LOCK_20260701AO */
+/* PZL_NAV_ROUTE_STAYS_METAR_20260701AQ */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
@@ -10650,11 +10659,17 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
   let pzlNavModeActive = false;
   let pzlNavArmActive = false;
   let pzlNavArmTimer = null;
+  let pzlNavAirborneLatched = false;
   let pzlNavRoutePoints = [];
   let pzlNavPassedIndex = 0;
   let pzlNavPlanStartPoint = null;
   let pzlNavLastDrawKey = '';
   let pzlNavLastInfoKey = '';
+  let pzlNavCachedAlt = null;
+  let pzlNavAltCheckedAt = 0;
+  let pzlNavLastMetarKey = '';
+  let pzlNavLastMetarRefreshAt = 0;
+  const PZL_NAV_ALTR_REFRESH_MS = 5 * 60 * 1000;
   let pzlNavFullLine = null;
   let pzlNavRemainingLine = null;
   let pzlNavAltLine = null;
@@ -10666,6 +10681,12 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     if(!pt) return null;
     return {lat:Number(pt.lat), lon:Number(pt.lon)};
   }
+
+  function navOperational(){
+    return pzlNavModeActive ||
+      (Array.isArray(pzlNavRoutePoints) && pzlNavRoutePoints.length > 0);
+  }
+
   function navStartPos(){
     if (typeof currentGps !== 'undefined' && currentGps) return navSafePos(currentGps);
     const base = (typeof bases !== 'undefined' && bases && bases[selectedBaseName]) ? bases[selectedBaseName] : null;
@@ -10682,55 +10703,123 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     const b = bases[name];
     return b ? {lat:Number(b.lat), lon:Number(b.lon), name} : null;
   }
-  function navAlternatePoint(){
+  function navAlternatePoint(forceRefresh){
     if (typeof bases === 'undefined' || typeof airports === 'undefined') return null;
+
+    const now = Date.now();
+    if (!forceRefresh &&
+        pzlNavCachedAlt &&
+        now - pzlNavAltCheckedAt < PZL_NAV_ALTR_REFRESH_MS) {
+      return pzlNavCachedAlt;
+    }
+
     const pos = navStartPos();
-    if (!pos) return null;
+    if (!pos) return pzlNavCachedAlt;
+
     const speed = navSpeedKmh() || 180;
     const candidates = [];
     const seen = new Set();
+
     Object.keys(bases || {}).forEach(name => {
       const b = bases[name];
       if (!b) return;
+
       if (!seen.has(name)) {
         seen.add(name);
-        candidates.push({lat:Number(b.lat), lon:Number(b.lon), name, source:'base'});
+        candidates.push({
+          lat:Number(b.lat),
+          lon:Number(b.lon),
+          name,
+          source:'base'
+        });
       }
+
       const altName = b.alt || b.ref;
       const altPoint = airports[altName] || bases[altName];
+
       if (altName && altPoint && !seen.has(altName)) {
         seen.add(altName);
-        candidates.push({lat:Number(altPoint.lat), lon:Number(altPoint.lon), name:altName, source:'alt'});
+        candidates.push({
+          lat:Number(altPoint.lat),
+          lon:Number(altPoint.lon),
+          name:altName,
+          source:'alt'
+        });
       }
     });
+
     let best = null;
+
     candidates.forEach(c => {
       const d = navDistanceKm(pos, c);
       if (d === null || !isFinite(d)) return;
+
       const timeMin = (d / speed) * 60;
-      if (!best || timeMin < best.timeMin - 1e-9 || (Math.abs(timeMin - best.timeMin) < 1e-9 && d < best.distKm)) {
+
+      if (!best ||
+          timeMin < best.timeMin - 1e-9 ||
+          (Math.abs(timeMin - best.timeMin) < 1e-9 &&
+           d < best.distKm)) {
         best = {...c, distKm:d, timeMin};
       }
     });
+
+    pzlNavCachedAlt = best;
+    pzlNavAltCheckedAt = now;
     return best;
   }
   function navBearing(a,b){ return (a&&b&&typeof bearingDeg==='function') ? Number(bearingDeg(a,b)) : null; }
   function navDistanceKm(a,b){ return (a&&b&&typeof haversineKm==='function') ? Number(haversineKm(a,b)) : null; }
-  function navSpeedKmh(){
-    // Μέχρι να καταγραφεί πραγματική Α/Γ, όλες οι εκτιμήσεις NAV γίνονται με 180 km/h.
-    const hasTakenOff =
-      (typeof pzlAutoHasBeenAirborne !== 'undefined' && pzlAutoHasBeenAirborne === true) ||
-      (typeof autoActualTakeoffTime !== 'undefined' && !!autoActualTakeoffTime);
-    if (!hasTakenOff) return 180;
-
+  function navCurrentGsKmh(){
     let gs = null;
-    try{ gs = (typeof pzlCurrentGsKmh === 'function') ? pzlCurrentGsKmh() : null; }catch(e){}
-    if (gs !== null && isFinite(gs) && gs > 0) return Number(gs);
-    if (typeof currentGps !== 'undefined' && currentGps && currentGps.speedMps !== undefined && currentGps.speedMps !== null && !isNaN(currentGps.speedMps)) {
-      const kmh = Number(currentGps.speedMps) * 3.6;
-      if (kmh > 0) return kmh;
+    try {
+      gs = (typeof pzlCurrentGsKmh === 'function')
+        ? pzlCurrentGsKmh()
+        : null;
+    } catch(e) {}
+
+    if (gs !== null && isFinite(gs) && gs >= 0) {
+      return Number(gs);
     }
+
+    if (typeof currentGps !== 'undefined' &&
+        currentGps &&
+        currentGps.speedMps !== undefined &&
+        currentGps.speedMps !== null &&
+        !isNaN(currentGps.speedMps)) {
+      return Math.max(0, Number(currentGps.speedMps) * 3.6);
+    }
+
+    return null;
+  }
+
+  function navSpeedKmh(){
+    const gs = navCurrentGsKmh();
+
+    // Στο έδαφος και μέχρι GS > 100 θεωρούμε ταχύτητα 180 km/h.
+    if (!pzlNavAirborneLatched &&
+        gs !== null &&
+        isFinite(gs) &&
+        gs > 100) {
+      pzlNavAirborneLatched = true;
+    }
+
+    if (!pzlNavAirborneLatched) return 180;
+
+    // Μετά την πραγματική Α/Γ χρησιμοποιείται η πραγματική GS.
+    if (gs !== null && isFinite(gs) && gs > 0) {
+      return Number(gs);
+    }
+
     return 180;
+  }
+
+  function navSpeedSourceText(){
+    if (!pzlNavAirborneLatched) return "180 km/h (πριν Α/Γ)";
+    const gs = navCurrentGsKmh();
+    return gs !== null && isFinite(gs)
+      ? `πραγματική GS ${Math.round(gs)} km/h`
+      : "180 km/h fallback";
   }
   function navFmtBearing(v){ return (v===null || !isFinite(v)) ? '---' : String(Math.round((v+360)%360)).padStart(3,'0'); }
   function navFmtKm(km){ return (km===null || !isFinite(km)) ? '-' : km.toFixed(1); }
@@ -10855,7 +10944,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
   function navUpdateProgress(){
     const pos = navStartPos();
     const route = navRouteWithDestination();
-    if (!pzlNavModeActive || !pos || !route.length) return;
+    if (!navOperational() || !pos || !route.length) return;
     let changed = false;
     while (pzlNavPassedIndex < route.length - 1) {
       const target = route[pzlNavPassedIndex];
@@ -10892,7 +10981,8 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
       `Από παρούσα θέση: ${navFmtBearing(info.legs[0].brg)}° | ${navFmtKm(info.legs[0].distKm)} km (${navFmtNm(info.legs[0].distKm)} NM) | ${navFmtMinutes(info.legs[0].legMin)}\n` +
       `Συνολικά απομένοντα: ${navFmtKm(info.totalRemainingKm)} km | ${navFmtMinutes(info.totalRemainingMin)}\n` +
       `Συνολική προγραμματισμένη απόσταση μέσω σημείων: ${navFmtKm(info.totalPlannedKm)} km | ${navFmtMinutes(info.totalPlannedMin)}\n` +
-      `Ταχύτητα υπολογισμού: ${Math.round(info.speed)} km/h${((typeof pzlAutoHasBeenAirborne === 'undefined' || !pzlAutoHasBeenAirborne) && (typeof autoActualTakeoffTime === 'undefined' || !autoActualTakeoffTime)) ? ' (πριν την Α/Γ)' : ''} | XTK: ${info.xtkNm!==null && isFinite(info.xtkNm) ? info.xtkNm.toFixed(1)+' NM' : '-'}`;
+      `Ταχύτητα υπολογισμού: ${navSpeedSourceText()} | XTK: ${info.xtkNm!==null && isFinite(info.xtkNm) ? info.xtkNm.toFixed(1)+' NM' : '-'}\n` +
+      `METAR: Α/Γ ${selectedBaseName || '-'} | DEST ${info.dest.name || '-'} | ALTR ${info.alt ? info.alt.name : '-'}`;
     const rows = [];
     info.legs.forEach((leg, idx) => {
       const isCurrent = idx === 0;
@@ -10932,6 +11022,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     navEnsureMapPanes();
     const drawKey = JSON.stringify({
       active:pzlNavModeActive,
+      operational:navOperational(),
       route:pzlNavRoutePoints.map(p=>[Number(p.lat).toFixed(4), Number(p.lon).toFixed(4), p.name]),
       dest:navDestinationName(),
       passed:pzlNavPassedIndex,
@@ -10946,7 +11037,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     if (pzlNavAltMarker) { try{ map.removeLayer(pzlNavAltMarker); }catch(e){} pzlNavAltMarker=null; }
     pzlNavMarkers.forEach(m=>{ try{ map.removeLayer(m); }catch(e){} });
     pzlNavMarkers = [];
-    if (!pzlNavModeActive || !info || !info.dest) return;
+    if (!navOperational() || !info || !info.dest) return;
     const start = pzlNavPlanStartPoint || info.pos;
     const route = navRouteWithDestination();
     const allPoints = [];
@@ -10965,7 +11056,9 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
         fillColor: idx < pzlNavPassedIndex ? '#94a3b8' : '#f59e0b', fillOpacity:0.95
       }).addTo(map);
       marker.bindTooltip(pt.name, {permanent:true, direction:'top', offset:[0,-8], className:'tinyLabel'});
-      marker.on('click', ()=>navDeletePoint(pt.id));
+      marker.on('click', ()=>{
+        if (pzlNavModeActive) navDeletePoint(pt.id);
+      });
       pzlNavMarkers.push(marker);
     });
     pzlNavDestinationMarker = L.circleMarker([info.dest.lat, info.dest.lon], {pane:'pzlNavMarkerPane', radius:9, color:'#14532d', weight:2, fillColor:'#22c55e', fillOpacity:0.95}).addTo(map);
@@ -10981,8 +11074,9 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     const cdiNeedle = document.getElementById('hudNavCdiNeedle');
     const cdiText = document.getElementById('hudNavCdiText');
     const refillRole = document.getElementById('hudRefillRoleLabel');
-    if (refillRole) refillRole.textContent = pzlNavModeActive ? 'ALTR' : 'REFILL';
-    if (!pzlNavModeActive || !info || !info.pos || !info.dest) {
+    const navInUse = navOperational();
+    if (refillRole) refillRole.textContent = navInUse ? 'ALTR' : 'REFILL';
+    if (!navInUse || !info || !info.pos || !info.dest) {
       if (cdi) { cdi.hidden = true; cdi.style.display = 'none'; }
       return;
     }
@@ -11032,12 +11126,87 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
       if (cdiText) cdiText.textContent = `LEG ${navFmtBearing(info.courseToLeg)}° • XTK ${xtkNm.toFixed(1)}NM`;
     }
   }
+  function navMetarNames(info){
+    if (!navOperational()) return [];
+
+    const computed = info || navCompute();
+    const departure =
+      (typeof selectedBaseName !== 'undefined' && selectedBaseName)
+        ? selectedBaseName
+        : null;
+
+    const destination =
+      computed && computed.dest
+        ? computed.dest.name
+        : navDestinationName();
+
+    const alternate =
+      computed && computed.alt
+        ? computed.alt.name
+        : null;
+
+    return Array.from(
+      new Set([departure, destination, alternate].filter(Boolean))
+    );
+  }
+
+  window.pzlGetNavMetarNames = function(){
+    return navMetarNames(navCompute());
+  };
+
+  function navMaybeRefreshMetars(info, force){
+    const names = navMetarNames(info);
+    const now = Date.now();
+
+    if (!names.length) {
+      if (pzlNavLastMetarKey) {
+        pzlNavLastMetarKey = '';
+        pzlNavLastMetarRefreshAt = 0;
+        setTimeout(function(){
+          try {
+            if (typeof window.pzlRefreshCheckwxMetars === 'function') {
+              window.pzlRefreshCheckwxMetars();
+            }
+          } catch(e) {}
+        }, 50);
+      }
+      return;
+    }
+
+    const key = names.join('|');
+    const due =
+      !!force ||
+      key !== pzlNavLastMetarKey ||
+      now - pzlNavLastMetarRefreshAt >= PZL_NAV_ALTR_REFRESH_MS;
+
+    if (!due) return;
+
+    pzlNavLastMetarKey = key;
+    pzlNavLastMetarRefreshAt = now;
+
+    try {
+      window.pzlMetarVisible = true;
+      if (typeof window.pzlApplyMetarVisibility === 'function') {
+        window.pzlApplyMetarVisibility();
+      }
+    } catch(e) {}
+
+    setTimeout(function(){
+      try {
+        if (typeof window.pzlRefreshCheckwxMetars === 'function') {
+          window.pzlRefreshCheckwxMetars();
+        }
+      } catch(e) {}
+    }, 50);
+  }
+
   function navRenderAll(force){
     const info = navCompute();
     if (force) pzlNavLastDrawKey = '';
     navRenderPanel(info);
     navDrawMap(info);
     navUpdateHud(info);
+    navMaybeRefreshMetars(info, !!force);
   }
   function navDeletePoint(id){
     const idx = pzlNavRoutePoints.findIndex(p => p.id === id);
@@ -11063,6 +11232,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     return true;
   }
   window.pzlNavHandleMapTap = function(latlng){
+    // Γκρι NAV = πλήρες κλείδωμα εισαγωγής σημείων.
     if (!pzlNavModeActive || !latlng) return false;
     return navAddPoint(latlng.lat, latlng.lng) === true;
   };
@@ -11074,11 +11244,28 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
   function navRefreshButton(){
     const btn = document.getElementById('navModeBtn');
     if (!btn) return;
+
+    const hasRoute =
+      Array.isArray(pzlNavRoutePoints) &&
+      pzlNavRoutePoints.length > 0;
+
     btn.classList.toggle('active', pzlNavModeActive);
     btn.classList.toggle('armed', !pzlNavModeActive && pzlNavArmActive);
-    if (pzlNavModeActive) btn.textContent = '🧭 NAV ON';
-    else if (pzlNavArmActive) btn.textContent = '🧭 NAV ?';
-    else btn.textContent = '🧭 NAV';
+
+    if (pzlNavModeActive) {
+      btn.textContent = '🧭 NAV ON';
+      btn.title =
+        'NAV ενεργό: τα tap στον χάρτη προσθέτουν σημεία. ' +
+        'Πάτησέ το μία φορά όταν τελειώσεις για να γίνει γκρι και να κλειδώσει.';
+    } else if (pzlNavArmActive) {
+      btn.textContent = '🧭 NAV ?';
+      btn.title = 'Πάτησε δεύτερη φορά για ενεργοποίηση NAV.';
+    } else {
+      btn.textContent = '🧭 NAV';
+      btn.title = hasRoute
+        ? 'NAV γκρι/κλειδωμένο: η διαδρομή παραμένει, αλλά τα tap δεν προσθέτουν σημεία. Θέλει 2 πατήματα για επανενεργοποίηση.'
+        : 'Θέλει 2 πατήματα για ενεργοποίηση NAV.';
+    }
   }
   function navRequestEnable(){
     if (pzlNavModeActive) return navSetMode(false);
@@ -11106,6 +11293,8 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     navClearArm();
     navRefreshButton();
     if (pzlNavModeActive) {
+      pzlNavCachedAlt = null;
+      pzlNavAltCheckedAt = 0;
       if (!pzlNavPlanStartPoint) pzlNavPlanStartPoint = navStartPos();
       try { if (typeof mode !== 'undefined') mode = 'navroute'; } catch(e){}
       try { if (typeof fireSelectionArmed !== 'undefined') fireSelectionArmed = false; } catch(e){}
@@ -11119,6 +11308,9 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     pzlNavRoutePoints = [];
     pzlNavPassedIndex = 0;
     pzlNavPlanStartPoint = navStartPos();
+    pzlNavAirborneLatched = false;
+    pzlNavCachedAlt = null;
+    pzlNavAltCheckedAt = 0;
     navClearArm();
     pzlNavModeActive = false;
     try { if (typeof mode !== 'undefined' && mode === 'navroute') mode = 'none'; } catch(e){}
@@ -11153,7 +11345,11 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
   document.addEventListener('DOMContentLoaded', function(){
     navPopulateDestinations();
     const sel = document.getElementById('navDestSelect');
-    if (sel) sel.addEventListener('change', function(){ navRenderAll(true); });
+    if (sel) sel.addEventListener('change', function(){
+      pzlNavCachedAlt = null;
+      pzlNavAltCheckedAt = 0;
+      navRenderAll(true);
+    });
     const navBtn = document.getElementById('navModeBtn');
     if (navBtn) navBtn.addEventListener('click', function(ev){ ev.preventDefault(); navRequestEnable(); });
     const clrBtn = document.getElementById('clearNavBtn');
