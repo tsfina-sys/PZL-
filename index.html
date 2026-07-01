@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_MOBILE_RESIZABLE_MAP_PANEL_20260701AF">
+<meta name="pzl-build" content="PZL_MOBILE_HANDLE_FULL_DOWN_20260701AG">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1400,6 +1400,11 @@ body.pzl-screen-locked #lockMapBtn {
   #pzlSplitHandle .pzlSplitGrip{
     width:56px;
     height:4px;
+  }
+  /* Στο κινητό επιτρέπουμε το πάνελ να μικραίνει σχεδόν τελείως,
+     ώστε η λαβή να φτάνει πολύ χαμηλά. */
+  .bottom-sheet{
+    min-height:28px!important;
   }
 }
 
@@ -9634,7 +9639,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_MOBILE_RESIZABLE_MAP_PANEL_20260701AF */
+/* PZL_MOBILE_HANDLE_FULL_DOWN_20260701AG */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
@@ -10333,10 +10338,10 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
       const storeKey = isMobileStack() ? MOBILE_HEIGHT_KEY : HEIGHT_KEY;
       const stored = Number(localStorage.getItem(storeKey));
       const minMap = isMobileStack()
-        ? Math.max(170, appRect.height * 0.24)
+        ? Math.max(120, appRect.height * 0.18)
         : Math.max(250, appRect.height * 0.32);
       const maxMap = isMobileStack()
-        ? Math.max(minMap + 20, appRect.height - 170)
+        ? Math.max(minMap + 20, appRect.height - 44)
         : Math.max(minMap + 20, appRect.height - 190);
       const defaultHeight = isMobileStack()
         ? appRect.height * 0.50
@@ -10368,10 +10373,10 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
       if (save) localStorage.setItem(WIDTH_KEY, String(Math.round(width)));
     } else {
       const minMap = isMobileStack()
-        ? Math.max(170, rect.height * 0.24)
+        ? Math.max(120, rect.height * 0.18)
         : Math.max(250, rect.height * 0.32);
       const maxMap = isMobileStack()
-        ? Math.max(minMap + 20, rect.height - 170)
+        ? Math.max(minMap + 20, rect.height - 44)
         : Math.max(minMap + 20, rect.height - 190);
       const height = clamp(clientY - rect.top, minMap, maxMap);
       const storeKey = isMobileStack() ? MOBILE_HEIGHT_KEY : HEIGHT_KEY;

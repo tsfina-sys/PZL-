@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_MOBILE_RESIZABLE_MAP_PANEL_20260701AF";
+const PZL_BUILD = "PZL_MOBILE_HANDLE_FULL_DOWN_20260701AG";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";

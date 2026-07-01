@@ -1,9 +1,8 @@
-PZL_MOBILE_RESIZABLE_MAP_PANEL_20260701AF
+PZL_MOBILE_HANDLE_FULL_DOWN_20260701AG
 Built 2026-07-01
 
-- The draggable separator now also works on mobile phones.
-- On phones and portrait tablets, drag the separator up/down to change the map and panel space.
-- On wider screens, left/right resizing remains available.
-- Mobile and tablet heights are saved separately.
-- Double tap the separator to restore the default size.
-- Offline support and all previous mission features remain unchanged.
+- On mobile, the grey splitter handle can now go much lower.
+- The map can expand much more, leaving only a minimal lower panel area visible.
+- Mobile minimum map height was reduced and maximum map height was increased.
+- The lower panel can shrink almost completely on phones.
+- All previous offline, iPad and mission features remain unchanged.
