@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_NAV_MODE_LANDING_20260701AL">
+<meta name="pzl-build" content="PZL_NAV_MODE_ROUTE_VISIBLE_180_20260701AM">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -3612,6 +3612,10 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
           return;
         }
         saveManualFixPoint(e.latlng.lat, e.latlng.lng);
+        return;
+      }
+      if (typeof window.pzlNavHandleMapTap === "function" &&
+          window.pzlNavHandleMapTap(e.latlng)) {
         return;
       }
       if (typeof mapLocked !== "undefined" && mapLocked) { return; }
@@ -9720,7 +9724,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_NAV_MODE_LANDING_20260701AL */
+/* PZL_NAV_MODE_ROUTE_VISIBLE_180_20260701AM */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
@@ -10630,6 +10634,12 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
   function navBearing(a,b){ return (a&&b&&typeof bearingDeg==='function') ? Number(bearingDeg(a,b)) : null; }
   function navDistanceKm(a,b){ return (a&&b&&typeof haversineKm==='function') ? Number(haversineKm(a,b)) : null; }
   function navSpeedKmh(){
+    // Μέχρι να καταγραφεί πραγματική Α/Γ, όλες οι εκτιμήσεις NAV γίνονται με 180 km/h.
+    const hasTakenOff =
+      (typeof pzlAutoHasBeenAirborne !== 'undefined' && pzlAutoHasBeenAirborne === true) ||
+      (typeof autoActualTakeoffTime !== 'undefined' && !!autoActualTakeoffTime);
+    if (!hasTakenOff) return 180;
+
     let gs = null;
     try{ gs = (typeof pzlCurrentGsKmh === 'function') ? pzlCurrentGsKmh() : null; }catch(e){}
     if (gs !== null && isFinite(gs) && gs > 0) return Number(gs);
@@ -10799,7 +10809,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
       `Από παρούσα θέση: ${navFmtBearing(info.legs[0].brg)}° | ${navFmtKm(info.legs[0].distKm)} km (${navFmtNm(info.legs[0].distKm)} NM) | ${navFmtMinutes(info.legs[0].legMin)}\n` +
       `Συνολικά απομένοντα: ${navFmtKm(info.totalRemainingKm)} km | ${navFmtMinutes(info.totalRemainingMin)}\n` +
       `Συνολική προγραμματισμένη απόσταση μέσω σημείων: ${navFmtKm(info.totalPlannedKm)} km | ${navFmtMinutes(info.totalPlannedMin)}\n` +
-      `Ταχύτητα υπολογισμού: ${Math.round(info.speed)} km/h | XTK: ${info.xtkNm!==null && isFinite(info.xtkNm) ? info.xtkNm.toFixed(1)+' NM' : '-'}`;
+      `Ταχύτητα υπολογισμού: ${Math.round(info.speed)} km/h${((typeof pzlAutoHasBeenAirborne === 'undefined' || !pzlAutoHasBeenAirborne) && (typeof autoActualTakeoffTime === 'undefined' || !autoActualTakeoffTime)) ? ' (πριν την Α/Γ)' : ''} | XTK: ${info.xtkNm!==null && isFinite(info.xtkNm) ? info.xtkNm.toFixed(1)+' NM' : '-'}`;
     const rows = [];
     info.legs.forEach((leg, idx) => {
       const isCurrent = idx === 0;
@@ -10822,8 +10832,21 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
       navDeletePoint(this.getAttribute('data-nav-del'));
     }));
   }
+  function navEnsureMapPanes(){
+    if (typeof map === 'undefined' || !map || typeof map.createPane !== 'function') return;
+    if (!map.getPane('pzlNavRoutePane')) {
+      const pane = map.createPane('pzlNavRoutePane');
+      pane.style.zIndex = '610';
+      pane.style.pointerEvents = 'none';
+    }
+    if (!map.getPane('pzlNavMarkerPane')) {
+      const pane = map.createPane('pzlNavMarkerPane');
+      pane.style.zIndex = '625';
+    }
+  }
   function navDrawMap(info){
     if (typeof map === 'undefined' || !map) return;
+    navEnsureMapPanes();
     const drawKey = JSON.stringify({
       active:pzlNavModeActive,
       route:pzlNavRoutePoints.map(p=>[Number(p.lat).toFixed(4), Number(p.lon).toFixed(4), p.name]),
@@ -10847,27 +10870,27 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     if (start) allPoints.push([start.lat,start.lon]);
     route.forEach(pt => allPoints.push([pt.lat,pt.lon]));
     if (allPoints.length >= 2) {
-      pzlNavFullLine = L.polyline(allPoints, {color:'#0f172a', weight:4, opacity:0.18, dashArray:'6,8'}).addTo(map);
+      pzlNavFullLine = L.polyline(allPoints, {pane:'pzlNavRoutePane', color:'#0f172a', weight:4, opacity:0.24, dashArray:'6,8'}).addTo(map);
       const remPoints = [];
       if (info.pos) remPoints.push([info.pos.lat, info.pos.lon]);
       for (let i=info.activeIndex; i<route.length; i++) remPoints.push([route[i].lat, route[i].lon]);
-      if (remPoints.length >= 2) pzlNavRemainingLine = L.polyline(remPoints, {color:'#111827', weight:4, opacity:0.85}).addTo(map);
+      if (remPoints.length >= 2) pzlNavRemainingLine = L.polyline(remPoints, {pane:'pzlNavRoutePane', color:'#111827', weight:5, opacity:0.92}).addTo(map);
     }
     pzlNavRoutePoints.forEach((pt, idx) => {
       const marker = L.circleMarker([pt.lat,pt.lon], {
-        radius:7, color:'#111827', weight:2,
+        pane:'pzlNavMarkerPane', radius:7, color:'#111827', weight:2,
         fillColor: idx < pzlNavPassedIndex ? '#94a3b8' : '#f59e0b', fillOpacity:0.95
       }).addTo(map);
       marker.bindTooltip(pt.name, {permanent:true, direction:'top', offset:[0,-8], className:'tinyLabel'});
       marker.on('click', ()=>navDeletePoint(pt.id));
       pzlNavMarkers.push(marker);
     });
-    pzlNavDestinationMarker = L.circleMarker([info.dest.lat, info.dest.lon], {radius:9, color:'#14532d', weight:2, fillColor:'#22c55e', fillOpacity:0.95}).addTo(map);
+    pzlNavDestinationMarker = L.circleMarker([info.dest.lat, info.dest.lon], {pane:'pzlNavMarkerPane', radius:9, color:'#14532d', weight:2, fillColor:'#22c55e', fillOpacity:0.95}).addTo(map);
     pzlNavDestinationMarker.bindTooltip('LDG ' + info.dest.name, {permanent:true, direction:'top', offset:[0,-10], className:'tinyLabel'});
     if (info.alt) {
-      pzlNavAltMarker = L.circleMarker([info.alt.lat, info.alt.lon], {radius:8, color:'#1d4ed8', weight:2, fillColor:'#60a5fa', fillOpacity:0.9}).addTo(map);
+      pzlNavAltMarker = L.circleMarker([info.alt.lat, info.alt.lon], {pane:'pzlNavMarkerPane', radius:8, color:'#1d4ed8', weight:2, fillColor:'#60a5fa', fillOpacity:0.9}).addTo(map);
       pzlNavAltMarker.bindTooltip('ALT ' + info.alt.name, {permanent:false, direction:'top', offset:[0,-10], className:'tinyLabel'});
-      pzlNavAltLine = L.polyline([[info.dest.lat, info.dest.lon],[info.alt.lat, info.alt.lon]], {color:'#2563eb', weight:2, opacity:0.5, dashArray:'4,6'}).addTo(map);
+      pzlNavAltLine = L.polyline([[info.dest.lat, info.dest.lon],[info.alt.lat, info.alt.lon]], {pane:'pzlNavRoutePane', color:'#2563eb', weight:2, opacity:0.55, dashArray:'4,6'}).addTo(map);
     }
   }
   function navUpdateHud(info){
@@ -10940,15 +10963,24 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     navRenderAll(true);
   }
   function navAddPoint(lat, lon){
-    if (!pzlNavModeActive) return;
-    if (typeof manualFixMode !== 'undefined' && manualFixMode) return;
-    if (pzlNavRoutePoints.length >= MAX_NAV_POINTS) { alert(`Μέχρι ${MAX_NAV_POINTS} σημεία NAV.`); return; }
+    if (!pzlNavModeActive) return false;
+    if (typeof manualFixMode !== 'undefined' && manualFixMode) return false;
+    if (typeof mapLocked !== 'undefined' && mapLocked) {
+      alert('Ξεκλείδωσε πρώτα τον χάρτη για να προσθέσεις σημείο NAV.');
+      return true;
+    }
+    if (pzlNavRoutePoints.length >= MAX_NAV_POINTS) { alert(`Μέχρι ${MAX_NAV_POINTS} σημεία NAV.`); return true; }
     if (!pzlNavPlanStartPoint) pzlNavPlanStartPoint = navStartPos();
     pzlNavRoutePoints.push({id:'nav_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), lat:Number(lat), lon:Number(lon)});
     navRenumber();
     const panel = document.getElementById('navPanel'); if (panel) panel.open = true;
     navRenderAll(true);
+    return true;
   }
+  window.pzlNavHandleMapTap = function(latlng){
+    if (!pzlNavModeActive || !latlng) return false;
+    return navAddPoint(latlng.lat, latlng.lng) === true;
+  };
   function navPopulateDestinations(){
     const sel = document.getElementById('navDestSelect');
     if (!sel || typeof bases === 'undefined') return;
@@ -11013,9 +11045,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     if (navBtn) navBtn.addEventListener('click', function(ev){ ev.preventDefault(); navSetMode(!pzlNavModeActive); });
     const clrBtn = document.getElementById('clearNavBtn');
     if (clrBtn) clrBtn.addEventListener('click', function(ev){ ev.preventDefault(); navClearAll(); });
-    if (typeof map !== 'undefined' && map) {
-      map.on('click', function(e){ if (pzlNavModeActive) navAddPoint(e.latlng.lat, e.latlng.lon); });
-    }
+    if (typeof map !== 'undefined' && map) navEnsureMapPanes();
     navRenderAll(true);
     setInterval(function(){ try { navUpdateProgress(); navRenderAll(false); } catch(e){} }, 3000);
   });

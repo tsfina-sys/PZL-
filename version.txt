@@ -1,11 +1,9 @@
-PZL_NAV_MODE_LANDING_20260701AL
+PZL_NAV_MODE_ROUTE_VISIBLE_180_20260701AM
 Built 2026-07-01
 
-- Νέο mode ναυτιλίας / προσγείωσης (NAV).
-- Επιλογή κλιμακίου προορισμού και αυτόματου εναλλακτικού.
-- Επιλογή σημείων διαδρομής στον χάρτη με άγγιγμα.
-- Αναλυτικά στοιχεία επόμενου σημείου, σκελών, αθροιστικών χρόνων και συνολικής απόστασης.
-- Πέρασμα waypoint: εντός 0.5 NM ή όταν περάσει η νοητή κάθετη γραμμή.
-- Υπολογισμός επανεισόδου 45° στο νέο σκέλος για το ενεργό σκέλος.
-- HUD σε NAV mode: επόμενο σημείο (κόκκινη βελόνα), destination (πράσινη), alternate (μπλε), FIX/MFIX (μαύρη) και μπάρα CDI/XTK.
-- Διατηρούνται Fire mode, FIX/MFIX, Test Mode και offline υποστήριξη.
+- NAV map taps now use the primary map click handler, eliminating the duplicate-handler race.
+- NAV route and waypoint layers use dedicated high-z-index Leaflet panes and remain visible after each new point.
+- Before actual takeoff, NAV calculations always use 180 km/h.
+- After actual takeoff, current GS is used when available.
+- The NAV summary explicitly marks “180 km/h (πριν την Α/Γ)”.
+- All previous NAV, MFIX, HUD, offline and splitter features remain unchanged.
