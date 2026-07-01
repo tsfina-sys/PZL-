@@ -1,8 +1,9 @@
-PZL_FIRE_TOGGLE_BUTTON_20260701Y
+PZL_FIRE_TOGGLE_ROBUST_20260701Z
 Built 2026-07-01
 
-- Fire button now works as an on/off toggle.
-- First press: Fire becomes green and allows fire selection.
-- Second press: Fire becomes grey immediately, without selecting a fire.
-- The existing fire point remains unchanged when Fire is switched off.
-- All previous Test Mode and mission-log functions remain unchanged.
+- Reworked Fire as a robust true toggle.
+- First tap: green/on.
+- Second tap: grey/off without selecting a fire.
+- Uses capture-phase pointer handling so it works inside the draggable mobile panel.
+- A real drag of the panel does not toggle Fire.
+- Existing fire position remains unchanged when Fire is switched off.

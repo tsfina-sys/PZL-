@@ -1,4 +1,4 @@
-const PZL_BUILD = 'PZL_FIRE_TOGGLE_BUTTON_20260701Y';
+const PZL_BUILD = 'PZL_FIRE_TOGGLE_ROBUST_20260701Z';
 self.addEventListener('install', event => { self.skipWaiting(); });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {

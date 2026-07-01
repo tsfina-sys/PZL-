@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_FIRE_TOGGLE_BUTTON_20260701Y">
+<meta name="pzl-build" content="PZL_FIRE_TOGGLE_ROBUST_20260701Z">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -3998,23 +3998,8 @@ function setFireMarker() {
     }
     updateFireModeButtonState();
 
-    document.getElementById("fireModeBtn").addEventListener("click", () => {
-      // Toggle Fire:
-      // πράσινο → δεύτερο πάτημα γκρι, χωρίς να απαιτείται επιλογή νέας φωτιάς.
-      if (mode === "fire" && fireSelectionArmed === true) {
-        fireSelectionArmed = false;
-        mode = "none";
-        updateFireModeButtonState();
-        setViaWptArmed(false);
-        return;
-      }
-
-      exitReturnWpModeForNormalMode();
-      mode = "fire";
-      fireSelectionArmed = true;
-      updateFireModeButtonState();
-      setViaWptArmed(false);
-    });
+    // Το Fire toggle χειρίζεται από το robust capture handler στο τέλος του αρχείου,
+    // ώστε να λειτουργεί σωστά και στο κινητό μέσα στο draggable panel.
     document.getElementById("viaModeBtn").addEventListener("click", () => {
       exitReturnWpModeForNormalMode();
       mode="via";
@@ -9352,7 +9337,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_FIRE_TOGGLE_BUTTON_20260701Y */
+/* PZL_FIRE_TOGGLE_ROBUST_20260701Z */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
@@ -9885,6 +9870,100 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
       try { target.blur(); } catch(e) {}
     }, true);
   });
+})();
+</script>
+
+
+<script id="pzl-fire-toggle-robust">
+(function(){
+  let down = null;
+  let lastToggleAt = 0;
+
+  function getFireButton(target){
+    if (!target || !target.closest) return null;
+    return target.closest("#fireModeBtn");
+  }
+
+  function toggleFire(){
+    try {
+      const isActive =
+        typeof mode !== "undefined" &&
+        mode === "fire" &&
+        typeof fireSelectionArmed !== "undefined" &&
+        fireSelectionArmed === true;
+
+      if (isActive) {
+        fireSelectionArmed = false;
+        mode = "none";
+        try { setViaWptArmed(false); } catch(e) {}
+      } else {
+        try { exitReturnWpModeForNormalMode(); } catch(e) {}
+        mode = "fire";
+        fireSelectionArmed = true;
+        try { setViaWptArmed(false); } catch(e) {}
+        try {
+          returnWpMode = false;
+          setReturnWptArmed(false);
+        } catch(e) {}
+      }
+
+      try { updateFireModeButtonState(); } catch(e) {
+        const btn = document.getElementById("fireModeBtn");
+        if (btn) btn.className = isActive ? "secondary" : "active";
+      }
+
+      lastToggleAt = Date.now();
+    } catch(e) {
+      console.warn("Fire toggle", e);
+    }
+  }
+
+  // Capture phase runs before the draggable right-panel handlers.
+  document.addEventListener("pointerdown", function(event){
+    const btn = getFireButton(event.target);
+    if (!btn || btn.disabled) return;
+    down = {
+      pointerId:event.pointerId,
+      x:event.clientX,
+      y:event.clientY
+    };
+  }, true);
+
+  document.addEventListener("pointerup", function(event){
+    const btn = getFireButton(event.target);
+    if (!btn || btn.disabled || !down) return;
+    if (event.pointerId !== down.pointerId) return;
+
+    const moved = Math.hypot(
+      event.clientX - down.x,
+      event.clientY - down.y
+    );
+    down = null;
+
+    // A real drag of the whole panel must not toggle Fire.
+    if (moved > 12) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    toggleFire();
+  }, true);
+
+  document.addEventListener("pointercancel", function(){
+    down = null;
+  }, true);
+
+  // Keyboard/desktop fallback. The timestamp prevents the synthetic click
+  // after pointerup from toggling it a second time.
+  document.addEventListener("click", function(event){
+    const btn = getFireButton(event.target);
+    if (!btn || btn.disabled) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    if (Date.now() - lastToggleAt < 500) return;
+    toggleFire();
+  }, true);
 })();
 </script>
 
