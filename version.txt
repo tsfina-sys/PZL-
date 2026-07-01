@@ -1,6 +1,8 @@
-PZL_TEST_INTERMEDIATE_TAKEOFF_100_20260701X
+PZL_FIRE_TOGGLE_BUTTON_20260701Y
 Built 2026-07-01
 
-- Intermediate takeoff is recorded only when IAS rises above 100 km/h.
-- The 20-minute landing-to-final-landing logic remains unchanged.
-- All previous Test Mode features remain unchanged.
+- Fire button now works as an on/off toggle.
+- First press: Fire becomes green and allows fire selection.
+- Second press: Fire becomes grey immediately, without selecting a fire.
+- The existing fire point remains unchanged when Fire is switched off.
+- All previous Test Mode and mission-log functions remain unchanged.

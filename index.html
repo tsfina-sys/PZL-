@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_TEST_INTERMEDIATE_TAKEOFF_100_20260701X">
+<meta name="pzl-build" content="PZL_FIRE_TOGGLE_BUTTON_20260701Y">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -3999,8 +3999,18 @@ function setFireMarker() {
     updateFireModeButtonState();
 
     document.getElementById("fireModeBtn").addEventListener("click", () => {
+      // Toggle Fire:
+      // πράσινο → δεύτερο πάτημα γκρι, χωρίς να απαιτείται επιλογή νέας φωτιάς.
+      if (mode === "fire" && fireSelectionArmed === true) {
+        fireSelectionArmed = false;
+        mode = "none";
+        updateFireModeButtonState();
+        setViaWptArmed(false);
+        return;
+      }
+
       exitReturnWpModeForNormalMode();
-      mode="fire";
+      mode = "fire";
       fireSelectionArmed = true;
       updateFireModeButtonState();
       setViaWptArmed(false);
@@ -9342,7 +9352,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_TEST_INTERMEDIATE_TAKEOFF_100_20260701X */
+/* PZL_FIRE_TOGGLE_BUTTON_20260701Y */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
