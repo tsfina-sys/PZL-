@@ -1,7 +1,11 @@
-PZL_SPLITTER_UNDER_HUD_PANEL_20260701AK
+PZL_NAV_MODE_LANDING_20260701AL
 Built 2026-07-01
 
-- The draggable grey separator now passes underneath the HUD.
-- It also passes underneath the floating right-side controls panel.
-- The separator remains draggable in all uncovered parts.
-- MFIX, fourth HUD needle, offline support and all prior features remain unchanged.
+- Νέο mode ναυτιλίας / προσγείωσης (NAV).
+- Επιλογή κλιμακίου προορισμού και αυτόματου εναλλακτικού.
+- Επιλογή σημείων διαδρομής στον χάρτη με άγγιγμα.
+- Αναλυτικά στοιχεία επόμενου σημείου, σκελών, αθροιστικών χρόνων και συνολικής απόστασης.
+- Πέρασμα waypoint: εντός 0.5 NM ή όταν περάσει η νοητή κάθετη γραμμή.
+- Υπολογισμός επανεισόδου 45° στο νέο σκέλος για το ενεργό σκέλος.
+- HUD σε NAV mode: επόμενο σημείο (κόκκινη βελόνα), destination (πράσινη), alternate (μπλε), FIX/MFIX (μαύρη) και μπάρα CDI/XTK.
+- Διατηρούνται Fire mode, FIX/MFIX, Test Mode και offline υποστήριξη.

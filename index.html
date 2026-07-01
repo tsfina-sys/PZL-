@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_SPLITTER_UNDER_HUD_PANEL_20260701AK">
+<meta name="pzl-build" content="PZL_NAV_MODE_LANDING_20260701AL">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1512,6 +1512,39 @@ body.pzl-screen-locked #lockMapBtn {
 }
 </style>
 
+
+<style id="pzl-nav-mode-css">
+  .nav-panel .collapsible-body{padding-top:8px}
+  .nav-grid{display:grid;grid-template-columns:1fr;gap:8px}
+  .nav-grid label{display:block;font-size:12px;font-weight:800;color:#334155;margin-bottom:4px}
+  .nav-grid select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;font-size:16px;font-weight:800}
+  .nav-help{font-size:12px;line-height:1.35;color:#475569;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:8px 10px;margin:8px 0}
+  #navSummaryBox{white-space:pre-line}
+  #navRouteList{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  .nav-route-card{border:1px solid #cbd5e1;border-radius:12px;background:#fff;padding:8px 10px;box-shadow:0 1px 2px rgba(15,23,42,.06)}
+  .nav-route-card.current{border-color:#0ea5e9;background:#f0f9ff}
+  .nav-route-title{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:900;color:#0f172a;margin-bottom:4px}
+  .nav-route-sub{font-size:12px;color:#334155;line-height:1.35;white-space:pre-line}
+  .nav-del-btn{padding:2px 7px;border:none;border-radius:8px;background:#dc2626;color:#fff;font-size:11px;font-weight:900}
+  .nav-mode-live{display:inline-block;padding:2px 7px;border-radius:999px;background:#065f46;color:#fff;font-size:11px;font-weight:900}
+  .nav-empty{color:#64748b;font-size:12px;padding:8px 2px}
+  #navModeBtn.active{background:#065f46!important;color:#fff!important;box-shadow:0 0 0 2px rgba(6,95,70,.18) inset}
+  .navSplit button{font-size:15px!important}
+  #hudNavCdi{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);width:84px;height:26px;pointer-events:none;display:none;z-index:4}
+  #hudNavCdi .cdi-track{position:absolute;left:0;right:0;top:11px;border-top:1px dashed rgba(255,255,255,.55)}
+  #hudNavCdi .cdi-center{position:absolute;left:50%;top:6px;transform:translateX(-50%);width:2px;height:12px;background:rgba(255,255,255,.85);border-radius:2px}
+  #hudNavCdi .cdi-needle{position:absolute;top:3px;width:4px;height:18px;background:#f8fafc;border:1px solid rgba(15,23,42,.6);border-radius:3px;left:40px;box-shadow:0 0 4px rgba(0,0,0,.35)}
+  #hudNavCdi .cdi-text{position:absolute;left:50%;top:18px;transform:translateX(-50%);font-size:8px;font-weight:900;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8);white-space:nowrap}
+  .nav-dest-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .nav-mini-box{background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:9px 10px;font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center}
+  @media(max-width:700px){
+    .nav-dest-row{grid-template-columns:1fr}
+    .nav-route-title{font-size:12px}
+    .nav-route-sub{font-size:11px}
+    #hudNavCdi{top:58%;width:72px}
+  }
+</style>
+
 </head>
 
 <style id="fix37d46-metar-final-css">
@@ -1689,6 +1722,7 @@ body.pzl-screen-locked #lockMapBtn {
         <div id="hudFullArrow" class="hsiArrow hsiFull"></div>
         <div id="hudFireArrow" class="hsiArrow hsiFire"></div>
         <div id="hudFixArrow" class="hsiArrow hsiFix" hidden></div>
+        <div id="hudNavCdi" hidden><div class="cdi-track"></div><div class="cdi-center"></div><div id="hudNavCdiNeedle" class="cdi-needle"></div><div id="hudNavCdiText" class="cdi-text">LEG</div></div>
         <div class="hsiLabel refill">REFILL<span id="hudRefillName" class="hsiAirport">-</span><span id="hudRefillBrg">---</span>°<span class="hsiMetric">| <span id="hudRefillKm">-</span> km</span><span class="hsiMetric">| <span id="hudRefillEta">-</span></span></div>
         <div class="hsiLabel full">FULL STOP<span id="hudFullName" class="hsiAirport">-</span><span id="hudFullBrg">---</span>°<span class="hsiMetric">| <span id="hudFullKm">-</span> km</span><span class="hsiMetric">| <span id="hudFullEta">-</span></span></div>
         <div class="hsiLabel fire"><span id="hudFireBrg">---</span>°<br><span class="hsiMetric"><span id="hudFireKm">-</span> km / <span id="hudFireEta">-</span></span></div>
@@ -1701,7 +1735,7 @@ body.pzl-screen-locked #lockMapBtn {
 
     <div class="map-actions">
       <button id="lockMapBtn" class="secondary">🔓</button>
-      <div class="splitControl fireSplit"><button id="fireModeBtn" class="active">🔥 Fire</button><button id="toggleFireCirclesBtn" class="secondary" title="Εμφάνιση/απόκρυψη 3 κύκλων φωτιάς"><span class="fire-circles-icon" aria-hidden="true"><span class="ring-red"></span><span class="ring-black"></span><span class="flame">🔥</span></span></button></div><div class="searchStack"><div class="searchCombo searchNameRow"><input id="searchBox" disabled placeholder="Περιοχή" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" /><button id="searchBtn" type="button" disabled>SRCH</button></div><button id="coordToggleBtn" type="button" class="secondary" disabled aria-expanded="false">Coord</button><div id="coordEntryPanel" class="coordEntryPanel" hidden><div class="coordRawRow"><label class="coordInputLine" for="coordLatRaw"><span>LAT</span><input id="coordLatRaw" type="text" inputmode="numeric" maxlength="14" placeholder="390315" aria-label="Latitude χωρίς σύμβολα" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></label><label class="coordInputLine" for="coordLonRaw"><span>LON</span><input id="coordLonRaw" type="text" inputmode="numeric" maxlength="15" placeholder="0263626" aria-label="Longitude χωρίς σύμβολα" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></label><button id="coordSearchBtn" type="button" disabled>GO</button></div><input id="coordBox" type="hidden"><select id="searchInputMode" hidden aria-label="Επιλεγμένη μορφή συντεταγμένων"><option value="dd">DD</option><option value="ddm" selected>DDM</option><option value="dms">DMS</option></select><button type="button" class="coordFormatRow" data-format="dd"><span class="coordFormatName">DD</span><span id="coordDDValue" class="coordFormatValue">—</span></button><button type="button" class="coordFormatRow selected" data-format="ddm"><span class="coordFormatName">DDM</span><span id="coordDDMValue" class="coordFormatValue">—</span></button><button type="button" class="coordFormatRow" data-format="dms"><span class="coordFormatName">DMS</span><span id="coordDMSValue" class="coordFormatValue">—</span></button></div></div>
+      <div class="splitControl fireSplit"><button id="fireModeBtn" class="active">🔥 Fire</button><button id="toggleFireCirclesBtn" class="secondary" title="Εμφάνιση/απόκρυψη 3 κύκλων φωτιάς"><span class="fire-circles-icon" aria-hidden="true"><span class="ring-red"></span><span class="ring-black"></span><span class="flame">🔥</span></span></button></div><div class="splitControl navSplit"><button id="navModeBtn" class="secondary">🧭 NAV</button><button id="clearNavBtn" class="danger">CLR NAV <span class="x2-mark">x2</span></button></div><div class="searchStack"><div class="searchCombo searchNameRow"><input id="searchBox" disabled placeholder="Περιοχή" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" /><button id="searchBtn" type="button" disabled>SRCH</button></div><button id="coordToggleBtn" type="button" class="secondary" disabled aria-expanded="false">Coord</button><div id="coordEntryPanel" class="coordEntryPanel" hidden><div class="coordRawRow"><label class="coordInputLine" for="coordLatRaw"><span>LAT</span><input id="coordLatRaw" type="text" inputmode="numeric" maxlength="14" placeholder="390315" aria-label="Latitude χωρίς σύμβολα" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></label><label class="coordInputLine" for="coordLonRaw"><span>LON</span><input id="coordLonRaw" type="text" inputmode="numeric" maxlength="15" placeholder="0263626" aria-label="Longitude χωρίς σύμβολα" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></label><button id="coordSearchBtn" type="button" disabled>GO</button></div><input id="coordBox" type="hidden"><select id="searchInputMode" hidden aria-label="Επιλεγμένη μορφή συντεταγμένων"><option value="dd">DD</option><option value="ddm" selected>DDM</option><option value="dms">DMS</option></select><button type="button" class="coordFormatRow" data-format="dd"><span class="coordFormatName">DD</span><span id="coordDDValue" class="coordFormatValue">—</span></button><button type="button" class="coordFormatRow selected" data-format="ddm"><span class="coordFormatName">DDM</span><span id="coordDDMValue" class="coordFormatValue">—</span></button><button type="button" class="coordFormatRow" data-format="dms"><span class="coordFormatName">DMS</span><span id="coordDMSValue" class="coordFormatValue">—</span></button></div></div>
       <div class="splitControl wptSplit"><button id="viaModeBtn" class="secondary">🔥 WPT</button><button id="clearViaBtn" class="danger">🔥 CLR <span class="x2-mark">x2</span></button></div>
       <div class="splitControl rtbSplit"><button id="returnWpBtn" class="secondary">WPT RTB</button><button id="clearReturnWpBtn" class="danger">CLR RTB <span class="x2-mark">x2</span></button></div><div class="splitControl commandSplit"><button id="takeoffBtn">☎️ Εντολή <span class="x2-mark">x2</span></button><button class="secondary" id="setManualTimeBtn">Manual Practice <span class="x2-mark">x2</span></button></div><button id="newFireWithWaterBtn" class="secondary">Airborne Full Tank <span class="x2-mark">x2</span></button>
       <button id="dropNowBtn" class="drop-now-btn" type="button" disabled>💧 Ρίψη τώρα</button>
@@ -1776,6 +1810,29 @@ body.pzl-screen-locked #lockMapBtn {
 </div>
 <div id="returnWpStatus" class="small">Ενδιάμεσα επιστροφής: 0 σημεία</div>
 <div class="row" style="margin-top:6px"></div>
+      </div>
+    </details>
+
+
+
+    <details id="navPanel" class="collapsible-panel nav-panel">
+      <summary>🧭 Ναυτιλία / προσγείωση</summary>
+      <div class="collapsible-body">
+        <div class="nav-grid">
+          <div class="nav-dest-row">
+            <div>
+              <label for="navDestSelect">Κλιμάκιο προορισμού</label>
+              <select id="navDestSelect"></select>
+            </div>
+            <div>
+              <label>Εναλλακτικό</label>
+              <div id="navAltName" class="nav-mini-box">-</div>
+            </div>
+          </div>
+          <div class="nav-help">Πάτησε το <b>🧭 NAV</b> ώστε να γίνει πράσινο και μετά άγγιξε σημεία στον χάρτη για τη διαδρομή. Το επόμενο σημείο θεωρείται περασμένο είτε <b>εντός 0,5 NM</b>, είτε όταν περάσεις τη νοητή κάθετη γραμμή του. Αν περάσεις εκτός, ο υπολογισμός συνεχίζει με είσοδο <b>45°</b> στο νέο σκέλος.</div>
+          <div id="navSummaryBox" class="position-report">Δεν υπάρχει ακόμη ενεργή διαδρομή ναυτιλίας.</div>
+          <div id="navRouteList"></div>
+        </div>
       </div>
     </details>
 
@@ -9663,7 +9720,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_SPLITTER_UNDER_HUD_PANEL_20260701AK */
+/* PZL_NAV_MODE_LANDING_20260701AL */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
@@ -10522,6 +10579,446 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
   });
 
   applyStoredSize();
+})();
+</script>
+
+
+<script id="pzl-nav-mode-script">
+(function(){
+  const MAX_NAV_POINTS = 8;
+  let pzlNavModeActive = false;
+  let pzlNavRoutePoints = [];
+  let pzlNavPassedIndex = 0;
+  let pzlNavPlanStartPoint = null;
+  let pzlNavLastDrawKey = '';
+  let pzlNavLastInfoKey = '';
+  let pzlNavFullLine = null;
+  let pzlNavRemainingLine = null;
+  let pzlNavAltLine = null;
+  let pzlNavMarkers = [];
+  let pzlNavDestinationMarker = null;
+  let pzlNavAltMarker = null;
+
+  function navSafePos(pt){
+    if(!pt) return null;
+    return {lat:Number(pt.lat), lon:Number(pt.lon)};
+  }
+  function navStartPos(){
+    if (typeof currentGps !== 'undefined' && currentGps) return navSafePos(currentGps);
+    const base = (typeof bases !== 'undefined' && bases && bases[selectedBaseName]) ? bases[selectedBaseName] : null;
+    return base ? {lat:Number(base.lat), lon:Number(base.lon)} : null;
+  }
+  function navDestinationName(){
+    const sel = document.getElementById('navDestSelect');
+    if (sel && sel.value) return sel.value;
+    return (typeof selectedFullStopBaseName !== 'undefined' && selectedFullStopBaseName) ? selectedFullStopBaseName : selectedBaseName;
+  }
+  function navDestinationPoint(){
+    if (typeof bases === 'undefined') return null;
+    const name = navDestinationName();
+    const b = bases[name];
+    return b ? {lat:Number(b.lat), lon:Number(b.lon), name} : null;
+  }
+  function navAlternatePoint(){
+    if (typeof bases === 'undefined' || typeof airports === 'undefined') return null;
+    const destBase = bases[navDestinationName()];
+    if (!destBase) return null;
+    const altName = destBase.alt || destBase.ref;
+    const p = airports[altName] || bases[altName];
+    return p ? {lat:Number(p.lat), lon:Number(p.lon), name:altName} : null;
+  }
+  function navBearing(a,b){ return (a&&b&&typeof bearingDeg==='function') ? Number(bearingDeg(a,b)) : null; }
+  function navDistanceKm(a,b){ return (a&&b&&typeof haversineKm==='function') ? Number(haversineKm(a,b)) : null; }
+  function navSpeedKmh(){
+    let gs = null;
+    try{ gs = (typeof pzlCurrentGsKmh === 'function') ? pzlCurrentGsKmh() : null; }catch(e){}
+    if (gs !== null && isFinite(gs) && gs > 0) return Number(gs);
+    if (typeof currentGps !== 'undefined' && currentGps && currentGps.speedMps !== undefined && currentGps.speedMps !== null && !isNaN(currentGps.speedMps)) {
+      const kmh = Number(currentGps.speedMps) * 3.6;
+      if (kmh > 0) return kmh;
+    }
+    return 180;
+  }
+  function navFmtBearing(v){ return (v===null || !isFinite(v)) ? '---' : String(Math.round((v+360)%360)).padStart(3,'0'); }
+  function navFmtKm(km){ return (km===null || !isFinite(km)) ? '-' : km.toFixed(1); }
+  function navFmtNm(km){ return (km===null || !isFinite(km)) ? '-' : (km/1.852).toFixed(1); }
+  function navFmtMinutes(min){
+    if (min===null || !isFinite(min)) return '-';
+    const total = Math.max(0, Math.round(min));
+    const h = Math.floor(total / 60);
+    const m = total % 60;
+    return h > 0 ? `${h}ω ${String(m).padStart(2,'0')}'` : `${m}'`;
+  }
+  function navProjectXY(pt, refLat){
+    const latKm = 111.32;
+    const lonKm = 111.32 * Math.cos((refLat||pt.lat) * Math.PI/180);
+    return {x:Number(pt.lon) * lonKm, y:Number(pt.lat) * latKm};
+  }
+  function navLineMetrics(a,b,p){
+    if(!a || !b || !p) return {t:0, crossKm:0};
+    const refLat = (Number(a.lat)+Number(b.lat)+Number(p.lat))/3;
+    const A = navProjectXY(a, refLat), B = navProjectXY(b, refLat), P = navProjectXY(p, refLat);
+    const vx = B.x - A.x, vy = B.y - A.y;
+    const wx = P.x - A.x, wy = P.y - A.y;
+    const vv = vx*vx + vy*vy;
+    if (vv < 1e-9) return {t:0, crossKm:0};
+    const t = (wx*vx + wy*vy) / vv;
+    const projX = A.x + t*vx, projY = A.y + t*vy;
+    const crossKm = Math.hypot(P.x - projX, P.y - projY);
+    return {t, crossKm};
+  }
+  function navRemainingDistanceCurrentToTarget(current,start,target){
+    const direct = navDistanceKm(current, target);
+    if (!current || !start || !target || direct === null) return direct;
+    const metrics = navLineMetrics(start, target, current);
+    if (!isFinite(metrics.t) || metrics.t <= 1) return direct;
+    return navDistanceVia45(current, target, target);
+  }
+  function navDistanceVia45(current, legStart, legEnd){
+    if(!current || !legStart || !legEnd) return navDistanceKm(current, legEnd);
+    const refLat = (Number(current.lat)+Number(legStart.lat)+Number(legEnd.lat))/3;
+    const A = navProjectXY(legStart, refLat), B = navProjectXY(legEnd, refLat), P = navProjectXY(current, refLat);
+    const vx = B.x - A.x, vy = B.y - A.y;
+    const vv = vx*vx + vy*vy;
+    if (vv < 1e-9) return navDistanceKm(current, legEnd);
+    let t = ((P.x - A.x)*vx + (P.y - A.y)*vy) / vv;
+    t = Math.max(0, Math.min(1, t));
+    const footX = A.x + t*vx, footY = A.y + t*vy;
+    const crossKm = Math.hypot(P.x - footX, P.y - footY);
+    const remainingAlongKm = Math.hypot(B.x - footX, B.y - footY);
+    return crossKm * Math.SQRT2 + remainingAlongKm;
+  }
+  function navRenumber(){
+    pzlNavRoutePoints.forEach((p,i)=>{ p.name = 'NAV' + (i+1); });
+  }
+  function navRouteWithDestination(){
+    navRenumber();
+    const out = pzlNavRoutePoints.map(p => ({id:p.id, lat:Number(p.lat), lon:Number(p.lon), name:p.name}));
+    const dest = navDestinationPoint();
+    if (dest) out.push({id:'DEST', lat:dest.lat, lon:dest.lon, name:dest.name, isDest:true});
+    return out;
+  }
+  function navTotalPlannedKm(route, start){
+    if(!route || !route.length || !start) return 0;
+    let prev = start;
+    let total = 0;
+    route.forEach(pt => { const d = navDistanceKm(prev, pt); if (d) total += d; prev = pt; });
+    return total;
+  }
+  function navCompute(){
+    const pos = navStartPos();
+    const dest = navDestinationPoint();
+    const alt = navAlternatePoint();
+    const route = navRouteWithDestination();
+    const speed = navSpeedKmh();
+    const startAnchor = pzlNavPlanStartPoint || pos;
+    if (!dest || !pos) {
+      return {pos, dest, alt, route, speed, legs:[], next:null, totalRemainingKm:0, totalRemainingMin:0, totalPlannedKm:0, totalPlannedMin:0, activeIndex:0, activeLegStart:null, xtkNm:null, courseToLeg:null};
+    }
+    let activeIndex = Math.min(pzlNavPassedIndex, Math.max(0, route.length-1));
+    if (!route.length) {
+      const d = navDistanceKm(pos,dest) || 0;
+      return {
+        pos, dest, alt, route:[{id:'DEST',lat:dest.lat,lon:dest.lon,name:dest.name,isDest:true}], speed,
+        legs:[{kind:'current',fromName:'ΠΑΡΟΥΣΑ ΘΕΣΗ',toName:dest.name,brg:navBearing(pos,dest),distKm:d,legMin:d/speed*60,cumKm:d,cumMin:d/speed*60}],
+        next:dest,totalRemainingKm:d,totalRemainingMin:d/speed*60,totalPlannedKm:d,totalPlannedMin:d/speed*60,activeIndex:0,activeLegStart:startAnchor, xtkNm:0, courseToLeg:navBearing(pos,dest)
+      };
+    }
+    const next = route[activeIndex];
+    const activeLegStart = activeIndex === 0 ? (startAnchor || pos) : route[activeIndex - 1];
+    let firstDist = navDistanceKm(pos, next) || 0;
+    if (activeLegStart && next && activeIndex > 0) {
+      firstDist = navDistanceVia45(pos, activeLegStart, next);
+    }
+    let cumKm = firstDist;
+    let cumMin = firstDist / speed * 60;
+    const legs = [{
+      kind:'current',
+      fromName:'ΠΑΡΟΥΣΑ ΘΕΣΗ',
+      toName:next.name,
+      brg:navBearing(pos,next),
+      distKm:firstDist,
+      legMin:firstDist / speed * 60,
+      cumKm,
+      cumMin
+    }];
+    for (let i = activeIndex + 1; i < route.length; i++) {
+      const from = route[i-1];
+      const to = route[i];
+      const d = navDistanceKm(from,to) || 0;
+      const m = d / speed * 60;
+      cumKm += d;
+      cumMin += m;
+      legs.push({kind:'route',fromName:from.name,toName:to.name,brg:navBearing(from,to),distKm:d,legMin:m,cumKm,cumMin});
+    }
+    const metrics = (activeLegStart && next) ? navLineMetrics(activeLegStart, next, pos) : {crossKm:0};
+    return {
+      pos,dest,alt,route,speed,legs,next,totalRemainingKm:cumKm,totalRemainingMin:cumMin,
+      totalPlannedKm:navTotalPlannedKm(route, startAnchor || pos),
+      totalPlannedMin:navTotalPlannedKm(route, startAnchor || pos) / speed * 60,
+      activeIndex,activeLegStart, xtkNm:(metrics.crossKm || 0) / 1.852, courseToLeg:navBearing(activeLegStart || pos, next)
+    };
+  }
+  function navUpdateProgress(){
+    const pos = navStartPos();
+    const route = navRouteWithDestination();
+    if (!pzlNavModeActive || !pos || !route.length) return;
+    let changed = false;
+    while (pzlNavPassedIndex < route.length - 1) {
+      const target = route[pzlNavPassedIndex];
+      const start = pzlNavPassedIndex === 0 ? (pzlNavPlanStartPoint || pos) : route[pzlNavPassedIndex - 1];
+      const distNm = (navDistanceKm(pos, target) || 0) / 1.852;
+      let passed = distNm <= 0.5;
+      if (!passed && start) {
+        const metrics = navLineMetrics(start, target, pos);
+        if (metrics.t > 1) passed = true;
+      }
+      if (passed) { pzlNavPassedIndex += 1; changed = true; }
+      else break;
+    }
+    if (changed) navRenderAll(true);
+  }
+  function navRenderPanel(info){
+    const summary = document.getElementById('navSummaryBox');
+    const list = document.getElementById('navRouteList');
+    const altNameEl = document.getElementById('navAltName');
+    if (altNameEl) altNameEl.textContent = info && info.alt ? info.alt.name : '-';
+    if (!summary || !list) return;
+    if (!info || !info.pos || !info.dest) {
+      summary.textContent = 'Ενεργοποίησε GPS ή Test Mode και επίλεξε κλιμάκιο προορισμού.';
+      list.innerHTML = '<div class="nav-empty">Δεν υπάρχουν διαθέσιμα στοιχεία ναυτιλίας.</div>';
+      return;
+    }
+    if (!info.legs.length) {
+      summary.textContent = 'Δεν υπάρχουν σημεία διαδρομής. Το σύστημα δείχνει μόνο direct προς το κλιμάκιο προορισμού.';
+      list.innerHTML = '<div class="nav-empty">Πάτησε NAV και άγγιξε σημεία στον χάρτη για να τα προσθέσεις.</div>';
+      return;
+    }
+    summary.textContent =
+      `Επόμενο σημείο: ${info.next ? info.next.name : info.dest.name}\n` +
+      `Από παρούσα θέση: ${navFmtBearing(info.legs[0].brg)}° | ${navFmtKm(info.legs[0].distKm)} km (${navFmtNm(info.legs[0].distKm)} NM) | ${navFmtMinutes(info.legs[0].legMin)}\n` +
+      `Συνολικά απομένοντα: ${navFmtKm(info.totalRemainingKm)} km | ${navFmtMinutes(info.totalRemainingMin)}\n` +
+      `Συνολική προγραμματισμένη απόσταση μέσω σημείων: ${navFmtKm(info.totalPlannedKm)} km | ${navFmtMinutes(info.totalPlannedMin)}\n` +
+      `Ταχύτητα υπολογισμού: ${Math.round(info.speed)} km/h | XTK: ${info.xtkNm!==null && isFinite(info.xtkNm) ? info.xtkNm.toFixed(1)+' NM' : '-'}`;
+    const rows = [];
+    info.legs.forEach((leg, idx) => {
+      const isCurrent = idx === 0;
+      let del = '';
+      if (isCurrent && info.activeIndex < pzlNavRoutePoints.length) {
+        const targetPoint = pzlNavRoutePoints[info.activeIndex];
+        del = `<button class="nav-del-btn" data-nav-del="${targetPoint.id}">X</button>`;
+      } else if (!isCurrent) {
+        const routeIdx = info.activeIndex + idx;
+        if (routeIdx < pzlNavRoutePoints.length) {
+          del = `<button class="nav-del-btn" data-nav-del="${pzlNavRoutePoints[routeIdx].id}">X</button>`;
+        }
+      }
+      const titleRight = isCurrent ? '<span class="nav-mode-live">NOW</span>' : del;
+      rows.push(`<div class="nav-route-card ${isCurrent ? 'current' : ''}"><div class="nav-route-title"><span>${leg.fromName} → ${leg.toName}</span>${titleRight}</div><div class="nav-route-sub">BRG ${navFmtBearing(leg.brg)}°\nΣκέλος ${navFmtKm(leg.distKm)} km (${navFmtNm(leg.distKm)} NM) / ${navFmtMinutes(leg.legMin)}\nΣυνολικά μέχρι εδώ ${navFmtKm(leg.cumKm)} km / ${navFmtMinutes(leg.cumMin)}</div></div>`);
+    });
+    list.innerHTML = rows.join('');
+    list.querySelectorAll('[data-nav-del]').forEach(btn => btn.addEventListener('click', function(ev){
+      ev.preventDefault(); ev.stopPropagation();
+      navDeletePoint(this.getAttribute('data-nav-del'));
+    }));
+  }
+  function navDrawMap(info){
+    if (typeof map === 'undefined' || !map) return;
+    const drawKey = JSON.stringify({
+      active:pzlNavModeActive,
+      route:pzlNavRoutePoints.map(p=>[Number(p.lat).toFixed(4), Number(p.lon).toFixed(4), p.name]),
+      dest:navDestinationName(),
+      passed:pzlNavPassedIndex,
+      pos:info && info.pos ? [Number(info.pos.lat).toFixed(4), Number(info.pos.lon).toFixed(4)] : null
+    });
+    if (drawKey === pzlNavLastDrawKey) return;
+    pzlNavLastDrawKey = drawKey;
+    if (pzlNavFullLine) { try{ map.removeLayer(pzlNavFullLine); }catch(e){} pzlNavFullLine=null; }
+    if (pzlNavRemainingLine) { try{ map.removeLayer(pzlNavRemainingLine); }catch(e){} pzlNavRemainingLine=null; }
+    if (pzlNavAltLine) { try{ map.removeLayer(pzlNavAltLine); }catch(e){} pzlNavAltLine=null; }
+    if (pzlNavDestinationMarker) { try{ map.removeLayer(pzlNavDestinationMarker); }catch(e){} pzlNavDestinationMarker=null; }
+    if (pzlNavAltMarker) { try{ map.removeLayer(pzlNavAltMarker); }catch(e){} pzlNavAltMarker=null; }
+    pzlNavMarkers.forEach(m=>{ try{ map.removeLayer(m); }catch(e){} });
+    pzlNavMarkers = [];
+    if (!pzlNavModeActive || !info || !info.dest) return;
+    const start = pzlNavPlanStartPoint || info.pos;
+    const route = navRouteWithDestination();
+    const allPoints = [];
+    if (start) allPoints.push([start.lat,start.lon]);
+    route.forEach(pt => allPoints.push([pt.lat,pt.lon]));
+    if (allPoints.length >= 2) {
+      pzlNavFullLine = L.polyline(allPoints, {color:'#0f172a', weight:4, opacity:0.18, dashArray:'6,8'}).addTo(map);
+      const remPoints = [];
+      if (info.pos) remPoints.push([info.pos.lat, info.pos.lon]);
+      for (let i=info.activeIndex; i<route.length; i++) remPoints.push([route[i].lat, route[i].lon]);
+      if (remPoints.length >= 2) pzlNavRemainingLine = L.polyline(remPoints, {color:'#111827', weight:4, opacity:0.85}).addTo(map);
+    }
+    pzlNavRoutePoints.forEach((pt, idx) => {
+      const marker = L.circleMarker([pt.lat,pt.lon], {
+        radius:7, color:'#111827', weight:2,
+        fillColor: idx < pzlNavPassedIndex ? '#94a3b8' : '#f59e0b', fillOpacity:0.95
+      }).addTo(map);
+      marker.bindTooltip(pt.name, {permanent:true, direction:'top', offset:[0,-8], className:'tinyLabel'});
+      marker.on('click', ()=>navDeletePoint(pt.id));
+      pzlNavMarkers.push(marker);
+    });
+    pzlNavDestinationMarker = L.circleMarker([info.dest.lat, info.dest.lon], {radius:9, color:'#14532d', weight:2, fillColor:'#22c55e', fillOpacity:0.95}).addTo(map);
+    pzlNavDestinationMarker.bindTooltip('LDG ' + info.dest.name, {permanent:true, direction:'top', offset:[0,-10], className:'tinyLabel'});
+    if (info.alt) {
+      pzlNavAltMarker = L.circleMarker([info.alt.lat, info.alt.lon], {radius:8, color:'#1d4ed8', weight:2, fillColor:'#60a5fa', fillOpacity:0.9}).addTo(map);
+      pzlNavAltMarker.bindTooltip('ALT ' + info.alt.name, {permanent:false, direction:'top', offset:[0,-10], className:'tinyLabel'});
+      pzlNavAltLine = L.polyline([[info.dest.lat, info.dest.lon],[info.alt.lat, info.alt.lon]], {color:'#2563eb', weight:2, opacity:0.5, dashArray:'4,6'}).addTo(map);
+    }
+  }
+  function navUpdateHud(info){
+    const cdi = document.getElementById('hudNavCdi');
+    const cdiNeedle = document.getElementById('hudNavCdiNeedle');
+    const cdiText = document.getElementById('hudNavCdiText');
+    if (!pzlNavModeActive || !info || !info.pos || !info.dest) {
+      if (cdi) { cdi.hidden = true; cdi.style.display = 'none'; }
+      return;
+    }
+    const gps = (typeof currentGps !== 'undefined' && currentGps) ? currentGps : null;
+    const hdg = gps && gps.heading !== null && gps.heading !== undefined && !isNaN(gps.heading) ? Number(gps.heading) : null;
+    const gs = navSpeedKmh();
+    const next = info.next || info.dest;
+    const alt = info.alt;
+    const brDest = navBearing(info.pos, info.dest);
+    const brAlt = alt ? navBearing(info.pos, alt) : null;
+    const brNext = next ? navBearing(info.pos, next) : null;
+    const distDest = navDistanceKm(info.pos, info.dest);
+    const distAlt = alt ? navDistanceKm(info.pos, alt) : null;
+    const distNext = next ? info.legs[0].distKm : null;
+    const rel = function(brg){ return (brg===null || hdg===null) ? brg : ((brg-hdg+360)%360); };
+    const draw = function(relB){ return relB===null ? 0 : ((relB+180)%360); };
+    const refA=document.getElementById('hudRefillArrow');
+    const fullA=document.getElementById('hudFullArrow');
+    const fireA=document.getElementById('hudFireArrow');
+    if (document.getElementById('hudRefillName')) document.getElementById('hudRefillName').textContent = alt ? alt.name : '-';
+    if (document.getElementById('hudFullName')) document.getElementById('hudFullName').textContent = info.dest.name || '-';
+    if (document.getElementById('hudRefillBrg')) document.getElementById('hudRefillBrg').textContent = navFmtBearing(brAlt);
+    if (document.getElementById('hudFullBrg')) document.getElementById('hudFullBrg').textContent = navFmtBearing(brDest);
+    if (document.getElementById('hudFireBrg')) document.getElementById('hudFireBrg').textContent = navFmtBearing(brNext);
+    if (document.getElementById('hudRefillKm')) document.getElementById('hudRefillKm').textContent = navFmtKm(distAlt);
+    if (document.getElementById('hudFullKm')) document.getElementById('hudFullKm').textContent = navFmtKm(distDest);
+    if (document.getElementById('hudFireKm')) document.getElementById('hudFireKm').textContent = navFmtKm(distNext);
+    if (document.getElementById('hudRefillEta')) document.getElementById('hudRefillEta').textContent = navFmtMinutes((distAlt||0)/gs*60);
+    if (document.getElementById('hudFullEta')) document.getElementById('hudFullEta').textContent = navFmtMinutes((distDest||0)/gs*60);
+    if (document.getElementById('hudFireEta')) document.getElementById('hudFireEta').textContent = navFmtMinutes((distNext||0)/gs*60);
+    if (refA){ refA.style.transform = `rotate(${draw(rel(brAlt))}deg)`; refA.style.opacity = brAlt===null ? '.22' : '.95'; }
+    if (fullA){ fullA.style.transform = `rotate(${draw(rel(brDest))}deg)`; fullA.style.opacity = brDest===null ? '.22' : '.95'; }
+    if (fireA){ fireA.style.transform = `rotate(${draw(rel(brNext))}deg)`; fireA.style.opacity = brNext===null ? '.22' : '.97'; }
+    if (cdi) {
+      cdi.hidden = false; cdi.style.display = 'block';
+      const xtkNm = info.xtkNm!==null && isFinite(info.xtkNm) ? info.xtkNm : 0;
+      const signed = (()=>{
+        if (!info.activeLegStart || !next) return 0;
+        const refLat = (info.activeLegStart.lat + next.lat + info.pos.lat) / 3;
+        const A = navProjectXY(info.activeLegStart, refLat), B = navProjectXY(next, refLat), P = navProjectXY(info.pos, refLat);
+        const vx = B.x - A.x, vy = B.y - A.y;
+        const wx = P.x - A.x, wy = P.y - A.y;
+        return Math.sign(vx*wy - vy*wx) || 1;
+      })();
+      const offsetPx = Math.max(-28, Math.min(28, signed * xtkNm * 12));
+      if (cdiNeedle) cdiNeedle.style.left = `${40 + offsetPx}px`;
+      if (cdiText) cdiText.textContent = `LEG ${navFmtBearing(info.courseToLeg)}° • XTK ${xtkNm.toFixed(1)}NM`;
+    }
+  }
+  function navRenderAll(force){
+    const info = navCompute();
+    if (force) pzlNavLastDrawKey = '';
+    navRenderPanel(info);
+    navDrawMap(info);
+    navUpdateHud(info);
+  }
+  function navDeletePoint(id){
+    const idx = pzlNavRoutePoints.findIndex(p => p.id === id);
+    if (idx < 0) return;
+    pzlNavRoutePoints.splice(idx,1);
+    if (pzlNavPassedIndex > idx) pzlNavPassedIndex = Math.max(0, pzlNavPassedIndex - 1);
+    navRenumber();
+    navRenderAll(true);
+  }
+  function navAddPoint(lat, lon){
+    if (!pzlNavModeActive) return;
+    if (typeof manualFixMode !== 'undefined' && manualFixMode) return;
+    if (pzlNavRoutePoints.length >= MAX_NAV_POINTS) { alert(`Μέχρι ${MAX_NAV_POINTS} σημεία NAV.`); return; }
+    if (!pzlNavPlanStartPoint) pzlNavPlanStartPoint = navStartPos();
+    pzlNavRoutePoints.push({id:'nav_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), lat:Number(lat), lon:Number(lon)});
+    navRenumber();
+    const panel = document.getElementById('navPanel'); if (panel) panel.open = true;
+    navRenderAll(true);
+  }
+  function navPopulateDestinations(){
+    const sel = document.getElementById('navDestSelect');
+    if (!sel || typeof bases === 'undefined') return;
+    const current = sel.value || ((typeof selectedFullStopBaseName !== 'undefined' && selectedFullStopBaseName) ? selectedFullStopBaseName : selectedBaseName);
+    const opts = Object.keys(bases).map(name => `<option value="${name}">${name}</option>`).join('');
+    sel.innerHTML = opts;
+    if (bases[current]) sel.value = current;
+    else if (selectedBaseName && bases[selectedBaseName]) sel.value = selectedBaseName;
+  }
+  function navSetMode(flag){
+    pzlNavModeActive = !!flag;
+    const btn = document.getElementById('navModeBtn');
+    if (btn) {
+      btn.classList.toggle('active', pzlNavModeActive);
+      btn.textContent = pzlNavModeActive ? '🧭 NAV ON' : '🧭 NAV';
+    }
+    if (pzlNavModeActive) {
+      if (!pzlNavPlanStartPoint) pzlNavPlanStartPoint = navStartPos();
+      try { if (typeof mode !== 'undefined') mode = 'navroute'; } catch(e){}
+      try { if (typeof fireSelectionArmed !== 'undefined') fireSelectionArmed = false; } catch(e){}
+    } else {
+      try { if (typeof mode !== 'undefined' && mode === 'navroute') mode = 'none'; } catch(e){}
+    }
+    navRenderAll(true);
+  }
+  function navClearAll(){
+    pzlNavRoutePoints = [];
+    pzlNavPassedIndex = 0;
+    pzlNavPlanStartPoint = navStartPos();
+    navRenderAll(true);
+  }
+
+  const oldUpdateHsiHud = typeof updateHsiHud === 'function' ? updateHsiHud : null;
+  if (oldUpdateHsiHud) {
+    window.updateHsiHud = function(){
+      const r = oldUpdateHsiHud.apply(this, arguments);
+      try { navUpdateProgress(); navRenderAll(false); } catch(e){}
+      return r;
+    };
+  }
+  const oldDrawAll = typeof drawAll === 'function' ? drawAll : null;
+  if (oldDrawAll) {
+    window.drawAll = function(){
+      const r = oldDrawAll.apply(this, arguments);
+      try { navRenderAll(false); } catch(e){}
+      return r;
+    };
+  }
+  const oldCalculate = typeof calculate === 'function' ? calculate : null;
+  if (oldCalculate) {
+    window.calculate = async function(){
+      const r = await oldCalculate.apply(this, arguments);
+      try { navUpdateProgress(); navRenderAll(false); } catch(e){}
+      return r;
+    };
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    navPopulateDestinations();
+    const sel = document.getElementById('navDestSelect');
+    if (sel) sel.addEventListener('change', function(){ navRenderAll(true); });
+    const navBtn = document.getElementById('navModeBtn');
+    if (navBtn) navBtn.addEventListener('click', function(ev){ ev.preventDefault(); navSetMode(!pzlNavModeActive); });
+    const clrBtn = document.getElementById('clearNavBtn');
+    if (clrBtn) clrBtn.addEventListener('click', function(ev){ ev.preventDefault(); navClearAll(); });
+    if (typeof map !== 'undefined' && map) {
+      map.on('click', function(e){ if (pzlNavModeActive) navAddPoint(e.latlng.lat, e.latlng.lon); });
+    }
+    navRenderAll(true);
+    setInterval(function(){ try { navUpdateProgress(); navRenderAll(false); } catch(e){} }, 3000);
+  });
 })();
 </script>
 
