@@ -846,85 +846,6 @@ body.pzl-screen-locked #lockMapBtn {
   background:#6b7280; color:#fff; border:0; font-weight:800;
 }
 
-
-/* Orbital lower-panel browser */
-.orb-panel-shell{margin:0 0 12px;border:1px solid #d7dee8;border-radius:16px;background:linear-gradient(180deg,#f8fbff 0%,#eef4ff 100%);padding:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 3px 10px rgba(15,23,42,.06)}
-.orb-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;font-weight:900;color:#1e3a8a}
-.orb-panel-head .orb-tag{font-size:12px;font-weight:800;color:#0f172a;background:#ffffff;border:1px solid #cbd5e1;border-radius:999px;padding:4px 8px}
-.orb-panel-help{margin-top:8px;color:#475569;font-size:12px;line-height:1.35}
-.orb-panel-viewport{position:relative;height:240px;border-radius:14px;overflow:hidden;touch-action:none;background:radial-gradient(circle at 50% 50%, rgba(59,130,246,.22) 0%, rgba(59,130,246,.12) 22%, rgba(255,255,255,.9) 23%, rgba(226,232,240,.8) 53%, rgba(241,245,249,.65) 70%, rgba(248,250,252,.95) 100%)}
-.orb-panel-viewport::before,.orb-panel-viewport::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border:1px dashed rgba(59,130,246,.18);border-radius:50%;pointer-events:none}
-.orb-panel-viewport::before{width:74%;height:62%}
-.orb-panel-viewport::after{width:56%;height:48%}
-.orb-panel-scene{position:absolute;inset:0;transform-origin:50% 50%}
-.orb-core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:118px;height:118px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;background:radial-gradient(circle at 30% 30%, #bfdbfe 0%, #60a5fa 20%, #1d4ed8 55%, #0f172a 100%);color:#fff;box-shadow:0 14px 30px rgba(37,99,235,.30), inset 0 2px 10px rgba(255,255,255,.35);font-weight:900;letter-spacing:.2px;line-height:1.15;pointer-events:none}
-.orb-core .orb-core-small{display:block;font-size:11px;opacity:.9;font-weight:700;margin-top:4px}
-.orb-node{position:absolute;left:50%;top:50%;width:148px;min-height:58px;transform:translate(-50%,-50%);border:1px solid rgba(148,163,184,.45);border-radius:16px;background:rgba(255,255,255,.96);box-shadow:0 8px 18px rgba(15,23,42,.12);padding:10px 12px;text-align:left;color:#0f172a;cursor:pointer;transition:box-shadow .18s ease,border-color .18s ease,background .18s ease}
-.orb-node-title{display:block;font-size:14px;font-weight:900;line-height:1.15}
-.orb-node-sub{display:block;font-size:11px;color:#475569;margin-top:2px}
-.orb-node.active{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.20), 0 10px 22px rgba(37,99,235,.14);background:#ffffff}
-.orb-node:focus-visible{outline:3px solid rgba(37,99,235,.28);outline-offset:2px}
-@media (max-width:480px){
-  .orb-panel-viewport{height:224px}
-  .orb-core{width:102px;height:102px;font-size:13px}
-  .orb-node{width:124px;min-height:54px;padding:8px 10px;border-radius:14px}
-  .orb-node-title{font-size:13px}
-  .orb-node-sub{font-size:10px}
-}
-
-
-/* 3D sphere panel */
-.orb3d-shell{margin:0 0 10px;border:1px solid #d7e0ef;border-radius:20px;background:linear-gradient(180deg,#f8fbff 0%,#edf4ff 100%);padding:10px;box-shadow:0 6px 18px rgba(15,23,42,.08), inset 0 1px 0 rgba(255,255,255,.85)}
-.orb3d-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-.orb3d-title{font-weight:900;color:#0f172a;font-size:18px}
-.orb3d-tag{font-size:12px;font-weight:900;color:#1e3a8a;background:#fff;border:1px solid #cbd5e1;border-radius:999px;padding:4px 8px;white-space:nowrap}
-.orb3d-help{margin-top:8px;color:#475569;font-size:12px;line-height:1.35}
-.orb3d-viewport{position:relative;height:980px;border-radius:18px;overflow:hidden;touch-action:none;perspective:1400px;background:radial-gradient(circle at 50% 50%, rgba(148,163,184,.06) 0%, rgba(191,219,254,.18) 24%, rgba(226,232,240,.45) 48%, rgba(248,250,252,.98) 100%)}
-.orb3d-viewport::before,.orb3d-viewport::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none}
-.orb3d-viewport::before{width:340px;height:340px;border:1px dashed rgba(59,130,246,.18);box-shadow:0 0 0 26px rgba(255,255,255,.22),0 0 0 56px rgba(59,130,246,.06)}
-.orb3d-viewport::after{width:520px;height:520px;border:1px dashed rgba(30,64,175,.12)}
-.orb3d-scene{position:absolute;inset:0;transform-style:preserve-3d;transform-origin:50% 50%}
-.orb3d-core{position:absolute;left:50%;top:50%;width:168px;height:168px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;transform:translate(-50%,-50%);background:radial-gradient(circle at 35% 35%, #dbeafe 0%, #60a5fa 18%, #2563eb 45%, #1e3a8a 72%, #0f172a 100%);color:#fff;box-shadow:0 22px 45px rgba(37,99,235,.28), inset 0 3px 14px rgba(255,255,255,.35);font-weight:900;letter-spacing:.3px;pointer-events:none;z-index:50}
-.orb3d-core span{font-size:18px;line-height:1.05}
-.orb3d-core small{display:block;margin-top:8px;font-size:11px;font-weight:700;line-height:1.2;opacity:.92}
-.orb3d-card{position:absolute;left:50%;top:50%;width:min(86vw,320px);max-height:290px;overflow:auto;transform-style:preserve-3d;border-radius:18px;background:rgba(255,255,255,.95);border:1px solid rgba(148,163,184,.48);box-shadow:0 16px 35px rgba(15,23,42,.12);backdrop-filter:blur(4px);padding:8px 9px 10px;color:#0f172a}
-.orb3d-card::-webkit-scrollbar{width:6px;height:6px}.orb3d-card::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}
-.orb3d-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 2px 8px;margin-bottom:2px;border-bottom:1px solid #e5e7eb}
-.orb3d-card-title{font-size:16px;font-weight:900;color:#1e3a8a;line-height:1.15}
-.orb3d-card-sub{font-size:10px;font-weight:900;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:999px;padding:3px 6px;white-space:nowrap}
-.orb3d-card .collapsible-panel,.orb3d-card #fixPanel,.orb3d-card .mission-log-panel,.orb3d-card .nav-panel,.orb3d-card .pzl-test-panel{margin:0!important;border:0!important;box-shadow:none!important;background:transparent!important;padding:0!important}
-.orb3d-card details{display:block!important}
-.orb3d-card details>summary,.orb3d-card #fixPanel>summary{display:none!important}
-.orb3d-card .collapsible-body{padding-top:4px!important}
-.orb3d-card .dashboard{gap:6px!important}
-.orb3d-card .dash-card{min-height:auto!important;padding:8px!important}
-.orb3d-card .dash-card .value{font-size:18px!important}
-.orb3d-card .row{margin:6px 0!important}
-.orb3d-card .section-title{margin:8px 0 6px!important}
-.orb3d-card .result,.orb3d-card .small{font-size:12px!important}
-.orb3d-card .nav-leg{margin:8px 0 0!important}
-.orb3d-card .test-row,.orb3d-card .test-row-2col{gap:6px!important}
-.orb3d-card .test-quick-row,.orb3d-card .test-action-row{display:flex;flex-wrap:wrap;gap:6px!important}
-.orb3d-card .test-btn,.orb3d-card .btn,.orb3d-card button{min-height:38px}
-.orb3d-card .mission-log-actions{display:flex;flex-wrap:wrap;gap:8px}
-.orb3d-card .mission-log-actions button{flex:1 1 140px}
-.orb3d-card .fix-row{grid-template-columns:52px minmax(0,1fr) 42px 32px!important}
-.orb3d-card .fix-title{margin-bottom:6px!important}
-.orb3d-card table{font-size:13px!important}
-.orb3d-card.active{box-shadow:0 0 0 3px rgba(37,99,235,.18), 0 18px 42px rgba(15,23,42,.18);border-color:#2563eb}
-.orb3d-source-hidden{display:none!important}
-@media (max-width:700px){
-  .orb3d-viewport{height:940px}
-  .orb3d-core{width:132px;height:132px}
-  .orb3d-core span{font-size:15px}
-  .orb3d-card{width:min(82vw,280px);max-height:250px;padding:7px 8px 9px}
-  .orb3d-card-title{font-size:15px}
-}
-@media (min-width:900px){
-  .orb3d-viewport{height:1100px}
-  .orb3d-card{width:320px;max-height:300px}
-}
-
 </style>
 
 <style id="fix37d9-panel-visible">
@@ -1399,6 +1320,100 @@ body.pzl-screen-locked #lockMapBtn {
 </style>
 
 
+<style id="pzl-card-carousel-style">
+.bottom-sheet.card-carousel-sheet{
+  position:relative;
+}
+.bottom-sheet.card-carousel-sheet .panel-carousel-hint{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:2px 4px 8px;
+  color:#667085;
+  font-size:12px;
+  font-weight:700;
+}
+.bottom-sheet.card-carousel-sheet .panel-carousel-hint b{
+  color:#0f3d5e;
+}
+.bottom-sheet.card-carousel-sheet .panel-carousel{
+  display:flex;
+  gap:12px;
+  overflow-x:auto;
+  overflow-y:visible;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  padding:2px 2px 14px;
+}
+.bottom-sheet.card-carousel-sheet .panel-carousel::-webkit-scrollbar{
+  height:8px;
+}
+.bottom-sheet.card-carousel-sheet .panel-carousel::-webkit-scrollbar-thumb{
+  background:#cbd5e1;
+  border-radius:99px;
+}
+.bottom-sheet.card-carousel-sheet .panel-card,
+.bottom-sheet.card-carousel-sheet .panel-carousel > details{
+  flex:0 0 min(92vw, 430px);
+  width:min(92vw, 430px);
+  scroll-snap-align:start;
+  margin-top:0 !important;
+  border-radius:18px !important;
+  overflow:hidden;
+  box-shadow:0 8px 24px rgba(15,61,94,.08);
+}
+.bottom-sheet.card-carousel-sheet .panel-card > summary,
+.bottom-sheet.card-carousel-sheet .panel-carousel > details > summary{
+  padding:13px 14px !important;
+  background:linear-gradient(180deg,#ffffff 0%,#f7fafc 100%);
+  border-bottom:1px solid #e5edf5;
+  font-size:17px;
+}
+.bottom-sheet.card-carousel-sheet .panel-card[open] > summary,
+.bottom-sheet.card-carousel-sheet .panel-carousel > details[open] > summary{
+  border-bottom:1px solid #d9e6f2;
+}
+.bottom-sheet.card-carousel-sheet #fixPanel{
+  background:#fffaf3 !important;
+}
+.bottom-sheet.card-carousel-sheet .panel-card .collapsible-body{
+  padding:10px 12px 14px 12px;
+}
+.bottom-sheet.card-carousel-sheet .panel-card .dashboard{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+.bottom-sheet.card-carousel-sheet .panel-card .grid2{
+  grid-template-columns:1fr;
+}
+.bottom-sheet.card-carousel-sheet .panel-card .pzl-test-grid,
+.bottom-sheet.card-carousel-sheet .panel-card .mission-log-actions,
+.bottom-sheet.card-carousel-sheet .panel-card .pzl-test-actions{
+  display:grid;
+  grid-template-columns:1fr;
+}
+.bottom-sheet.card-carousel-sheet .panel-card .row{
+  flex-direction:column;
+  align-items:stretch;
+}
+.bottom-sheet.card-carousel-sheet .panel-card input,
+.bottom-sheet.card-carousel-sheet .panel-card select,
+.bottom-sheet.card-carousel-sheet .panel-card button,
+.bottom-sheet.card-carousel-sheet .panel-card textarea{
+  width:100%;
+}
+.bottom-sheet.card-carousel-sheet .panel-card .drop-table{
+  font-size:13px;
+}
+@media (min-width:900px){
+  .bottom-sheet.card-carousel-sheet .panel-carousel > details,
+  .bottom-sheet.card-carousel-sheet .panel-card{
+    flex-basis:min(390px, calc(100% - 20px));
+    width:min(390px, calc(100% - 20px));
+  }
+}
+</style>
+
 <style id="pzl-ipad-resizable-panel-css">
 #pzlSplitHandle{
   display:none;
@@ -1830,19 +1845,7 @@ body.pzl-screen-locked #lockMapBtn {
     <span class="pzlSplitGrip" aria-hidden="true"></span>
   </div>
   <div class="bottom-sheet">
-  <div id="orb3dShell" class="orb3d-shell">
-    <div class="orb3d-head">
-      <div class="orb3d-title">🔵 3D σφαίρα panel</div>
-      <div id="orb3dScaleTag" class="orb3d-tag">Zoom x1.00</div>
-    </div>
-    <div id="orb3dViewport" class="orb3d-viewport" aria-label="3D σφαίρα panel">
-      <div id="orb3dScene" class="orb3d-scene">
-        <div class="orb3d-core">PZL<br><span>3D PANEL</span><small>σύρε για περιστροφή<br>pinch για zoom</small></div>
-      </div>
-    </div>
-    <div class="orb3d-help">Περιστρέφεις τη σφαίρα με το δάκτυλο. Κάθε κάρτα είναι ανοιχτό πεδίο του panel. Δεν εμφανίζονται ξανά πιο κάτω.</div>
-  </div>
-    <details id="summaryPanel" class="collapsible-panel">
+    <details class="collapsible-panel">
       <summary>Σύνοψη / χρόνοι</summary>
       <div class="collapsible-body">
     <div class="dashboard">
@@ -1871,7 +1874,7 @@ body.pzl-screen-locked #lockMapBtn {
       <summary class="fix-title"><span>FIX σημεία</span><button id="clearFixBtn" type="button">CLR FIX</button></summary>
       <div id="fixPanelList">FIX 1 -<br>FIX 2 -<br>FIX 3 -<br>FIX 4 -<br>FIX 5 -</div>
     </details>
-    <details id="reportsPanel" class="collapsible-panel">
+    <details class="collapsible-panel">
       <summary>Αναφορές / ενδιάμεσα</summary>
       <div class="collapsible-body">
     <div class="row"></div>
@@ -2048,7 +2051,7 @@ body.pzl-screen-locked #lockMapBtn {
       </div>
     </details>
 
-<details id="dropsPanel" class="collapsible-panel"><summary>Αποστολή / Ρίψεις</summary>
+<details><summary>Αποστολή / Ρίψεις</summary>
 <div class="timing-fields">
   <b>Χρόνοι απογείωσης</b>
   <div class="grid2">
@@ -2085,7 +2088,7 @@ body.pzl-screen-locked #lockMapBtn {
       <div class="small">+14 L μη ενδεικνυόμενα. Συνολικό πλήρες καύσιμο: 726 L.</div>
     </details>
 
-    <details id="windPanel" class="collapsible-panel"><summary>Άνεμος / Διάδρομος</summary>
+    <details><summary>Άνεμος / Διάδρομος</summary>
       <div class="grid2">
         <div><label>Διάδρομος heading °</label><input id="runwayHeading" type="number" value="010" min="0" max="360" /></div>
         <div><label>Άνεμος από °</label><input id="windDir" type="number" value="000" min="0" max="360" /></div>
@@ -2105,6 +2108,35 @@ body.pzl-screen-locked #lockMapBtn {
   </div>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function(){
+  function initPanelCarousel(){
+    const sheet = document.querySelector('.bottom-sheet');
+    if (!sheet || sheet.dataset.carouselInit === '1') return;
+    const detailPanels = Array.from(sheet.children).filter(el => el.tagName === 'DETAILS');
+    if (!detailPanels.length) return;
+    const hint = document.createElement('div');
+    hint.className = 'panel-carousel-hint';
+    hint.innerHTML = '<span><b>Νέα όψη panel</b> · σύρε αριστερά/δεξιά για τα πεδία</span><span>⟷</span>';
+    const track = document.createElement('div');
+    track.className = 'panel-carousel';
+    detailPanels.forEach((panel, idx) => {
+      panel.classList.add('panel-card');
+      if (!panel.hasAttribute('open')) panel.open = true;
+      track.appendChild(panel);
+    });
+    sheet.appendChild(hint);
+    sheet.appendChild(track);
+    sheet.classList.add('card-carousel-sheet');
+    sheet.dataset.carouselInit = '1';
+    if (typeof placeAirportBarForViewport === 'function') {
+      try { placeAirportBarForViewport(); } catch(e) {}
+    }
+  }
+  window.addEventListener('load', function(){ setTimeout(initPanelCarousel, 50); });
+})();
+
+</script>
 
 <div id="bottom-climakia-bar" style="position:absolute;bottom:0px;left:25%;
 transform:translateX(-50%);z-index:9999;display:flex;gap:12px;align-items:flex-end;">
@@ -2130,12 +2162,14 @@ transform:translateX(-50%);z-index:9999;display:flex;gap:12px;align-items:flex-e
   function placeAirportBarForViewport(){
     const bar = document.getElementById('bottom-climakia-bar');
     const sheet = document.querySelector('.bottom-sheet');
-    const details = document.querySelector('.bottom-sheet details');
     if (!bar || !sheet) return;
+    const firstPanelHost = Array.from(sheet.children).find(el => el.matches && (el.matches('.panel-carousel') || el.matches('details')));
     const isMobile = window.matchMedia('(max-width: 900px)').matches;
     if (isMobile) {
       bar.classList.add('mobile-in-panel');
-      if (details && bar.parentElement !== sheet) sheet.insertBefore(bar, details);
+      if (bar.parentElement !== sheet) {
+        sheet.insertBefore(bar, firstPanelHost || sheet.firstChild);
+      }
     } else {
       bar.classList.remove('mobile-in-panel');
       if (bar.parentElement !== document.body) document.body.appendChild(bar);
@@ -8148,229 +8182,6 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
       setHudVisible(hud.classList.contains('hud-hidden'));
     });
   });
-
-  // Orbital browser for bottom panel sections
-  function initOrbPanel(){
-    const viewport = document.getElementById('orbPanelViewport');
-    const scene = document.getElementById('orbPanelScene');
-    const tag = document.getElementById('orbScaleTag');
-    if (!viewport || !scene || scene.dataset.bound === '1') return;
-    scene.dataset.bound = '1';
-    const nodes = Array.from(scene.querySelectorAll('.orb-node'));
-    if (!nodes.length) return;
-    let angle = -90;
-    let zoom = 1;
-    let dragActive = false;
-    let lastX = 0;
-    let dragMoved = false;
-    let pinchStartDist = null;
-    let pinchStartZoom = 1;
-
-    function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
-    function touchDistance(t1, t2){
-      const dx = t2.clientX - t1.clientX;
-      const dy = t2.clientY - t1.clientY;
-      return Math.hypot(dx, dy);
-    }
-    function syncActive(sel){
-      nodes.forEach(function(btn){ btn.classList.toggle('active', btn.getAttribute('data-target') === sel); });
-    }
-    function render(){
-      const rect = viewport.getBoundingClientRect();
-      const cx = rect.width / 2;
-      const cy = rect.height / 2;
-      const baseRx = Math.max(86, Math.min(145, rect.width * 0.33));
-      const baseRy = Math.max(60, Math.min(102, rect.height * 0.26));
-      nodes.forEach(function(node, idx){
-        const deg = angle + idx * (360 / nodes.length);
-        const rad = deg * Math.PI / 180;
-        const depth = (Math.sin(rad - Math.PI/2) + 1) / 2;
-        const scale = 0.72 + depth * 0.42;
-        const x = Math.cos(rad) * baseRx;
-        const y = Math.sin(rad) * baseRy;
-        node.style.left = cx + 'px';
-        node.style.top = cy + 'px';
-        node.style.transform = 'translate(-50%, -50%) translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) scale(' + scale.toFixed(3) + ')';
-        node.style.opacity = (0.48 + depth * 0.52).toFixed(2);
-        node.style.zIndex = String(10 + Math.round(depth * 100));
-      });
-      scene.style.transform = 'scale(' + zoom.toFixed(3) + ')';
-      if (tag) tag.textContent = 'Zoom x' + zoom.toFixed(2);
-    }
-    function openTarget(sel){
-      const target = document.querySelector(sel);
-      if (!target) return;
-      try { target.open = true; } catch(e){}
-      syncActive(sel);
-      setTimeout(function(){
-        try { target.scrollIntoView({behavior:'smooth', block:'start'}); } catch(e){}
-      }, 20);
-    }
-    nodes.forEach(function(btn){
-      btn.addEventListener('click', function(ev){
-        if (dragMoved) { ev.preventDefault(); return; }
-        openTarget(btn.getAttribute('data-target'));
-      });
-    });
-    viewport.addEventListener('pointerdown', function(ev){
-      dragActive = true;
-      dragMoved = false;
-      lastX = ev.clientX;
-      try { viewport.setPointerCapture(ev.pointerId); } catch(e){}
-    });
-    viewport.addEventListener('pointermove', function(ev){
-      if (!dragActive) return;
-      const dx = ev.clientX - lastX;
-      if (Math.abs(dx) > 1) dragMoved = true;
-      angle += dx * 0.42;
-      lastX = ev.clientX;
-      render();
-    });
-    function endPointer(ev){
-      dragActive = false;
-      setTimeout(function(){ dragMoved = false; }, 40);
-      try { viewport.releasePointerCapture(ev.pointerId); } catch(e){}
-    }
-    viewport.addEventListener('pointerup', endPointer);
-    viewport.addEventListener('pointercancel', endPointer);
-    viewport.addEventListener('wheel', function(ev){
-      ev.preventDefault();
-      zoom = clamp(zoom + (ev.deltaY < 0 ? 0.06 : -0.06), 0.80, 1.45);
-      render();
-    }, {passive:false});
-    viewport.addEventListener('touchstart', function(ev){
-      if (ev.touches.length === 2){
-        pinchStartDist = touchDistance(ev.touches[0], ev.touches[1]);
-        pinchStartZoom = zoom;
-      }
-    }, {passive:false});
-    viewport.addEventListener('touchmove', function(ev){
-      if (ev.touches.length === 2 && pinchStartDist){
-        ev.preventDefault();
-        const dist = touchDistance(ev.touches[0], ev.touches[1]);
-        zoom = clamp(pinchStartZoom * (dist / pinchStartDist), 0.80, 1.45);
-        render();
-      }
-    }, {passive:false});
-    viewport.addEventListener('touchend', function(ev){
-      if (!ev.touches || ev.touches.length < 2) pinchStartDist = null;
-    });
-
-    ['#summaryPanel','#fixPanel','#reportsPanel','#navPanel','#pzlTestModePanel','#missionLogPanel','#dropsPanel','#windPanel'].forEach(function(sel){
-      const el = document.querySelector(sel);
-      if (el) el.addEventListener('toggle', function(){ if (el.open) syncActive(sel); });
-    });
-    render();
-    syncActive('#summaryPanel');
-  }
-
-
-  function initOrb3DPanel(){
-    const shell = document.getElementById('orb3dShell');
-    const viewport = document.getElementById('orb3dViewport');
-    const scene = document.getElementById('orb3dScene');
-    const tag = document.getElementById('orb3dScaleTag');
-    if (!shell || !viewport || !scene || scene.dataset.bound === '1') return;
-    scene.dataset.bound = '1';
-
-    const defs = [
-      { id:'summaryPanel', title:'Σύνοψη / χρόνοι', short:'χρόνοι • GPS' },
-      { id:'fixPanel', title:'FIX σημεία', short:'GPS & Manual FIX' },
-      { id:'reportsPanel', title:'Αναφορές / ενδιάμεσα', short:'θέση • ενδιάμεσα' },
-      { id:'navPanel', title:'Ναυτιλία / προσγείωση', short:'NAV • legs • ALTR' },
-      { id:'pzlTestModePanel', title:'Test Mode', short:'IAS • άνεμος • ρυθμός' },
-      { id:'missionLogPanel', title:'Ημερολόγιο αποστολής', short:'καταγραφές' },
-      { id:'dropsPanel', title:'Αποστολή / Ρίψεις', short:'ρίψεις • DCT' },
-      { id:'windPanel', title:'Άνεμος / Διάδρομος', short:'άνεμος • όρια' }
-    ];
-
-    const cards = [];
-    defs.forEach(function(def, idx){
-      const panel = document.getElementById(def.id);
-      if (!panel) return;
-      panel.open = true;
-      panel.classList.add('orb-embedded-panel');
-      const card = document.createElement('div');
-      card.className = 'orb3d-card';
-      card.dataset.index = String(idx);
-      card.innerHTML = '<div class="orb3d-card-head"><div class="orb3d-card-title">'+def.title+'</div><div class="orb3d-card-sub">'+def.short+'</div></div>';
-      card.appendChild(panel);
-      scene.appendChild(card);
-      cards.push(card);
-      card.addEventListener('click', function(ev){
-        const interactive = ev.target.closest('input,button,select,textarea,label,summary,a');
-        if (!interactive) { angle = -idx * step; render(); }
-      });
-    });
-
-    // hide any now-empty direct children after the shell
-    Array.from(shell.parentElement.children).forEach(function(el){
-      if (el !== shell && !scene.contains(el) && (el.matches?.('details') || (el.nodeType===1 && !el.textContent.trim()))) {
-        el.classList.add('orb3d-source-hidden');
-      }
-    });
-
-    let angle = -90;
-    let zoom = 1;
-    let pointerDown = false;
-    let lastX = 0;
-    let moved = false;
-    let pinchDist = null;
-    let pinchZoom = 1;
-    const step = 360 / Math.max(cards.length,1);
-    function clamp(v,min,max){ return Math.max(min, Math.min(max,v)); }
-    function dist(t1,t2){ const dx=t2.clientX-t1.clientX, dy=t2.clientY-t1.clientY; return Math.hypot(dx,dy); }
-    function render(){
-      const rect = viewport.getBoundingClientRect();
-      const cx = rect.width/2;
-      const cy = rect.height/2;
-      const radius = Math.max(135, Math.min(220, rect.width * 0.48));
-      const lift = Math.max(110, Math.min(175, rect.height * 0.16));
-      cards.forEach(function(card, idx){
-        const deg = angle + idx * step;
-        const rad = deg * Math.PI / 180;
-        const x = Math.cos(rad) * radius;
-        const z = Math.sin(rad) * radius;
-        const y = Math.sin(rad * 2) * lift;
-        const depth = (z + radius) / (2 * radius);
-        const scale = 0.72 + depth * 0.34;
-        card.style.left = cx + 'px';
-        card.style.top = cy + 'px';
-        card.style.transform = 'translate(-50%, -50%) translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,' + z.toFixed(1) + 'px) scale(' + scale.toFixed(3) + ')';
-        card.style.opacity = (0.42 + depth * 0.58).toFixed(2);
-        card.style.zIndex = String(10 + Math.round(depth * 100));
-        card.classList.toggle('active', depth > 0.86);
-      });
-      scene.style.transform = 'scale(' + zoom.toFixed(3) + ')';
-      if (tag) tag.textContent = 'Zoom x' + zoom.toFixed(2);
-    }
-
-    viewport.addEventListener('pointerdown', function(ev){
-      pointerDown = true; moved = false; lastX = ev.clientX;
-      try { viewport.setPointerCapture(ev.pointerId); } catch(e){}
-    });
-    viewport.addEventListener('pointermove', function(ev){
-      if (!pointerDown) return;
-      if (ev.target.closest('.orb3d-card input,.orb3d-card textarea,.orb3d-card select')) return;
-      const dx = ev.clientX - lastX;
-      if (Math.abs(dx) > 1) moved = true;
-      lastX = ev.clientX;
-      angle += dx * 0.45;
-      render();
-    });
-    function endPtr(ev){ pointerDown = false; setTimeout(function(){ moved=false; }, 20); try { viewport.releasePointerCapture(ev.pointerId); } catch(e){} }
-    viewport.addEventListener('pointerup', endPtr);
-    viewport.addEventListener('pointercancel', endPtr);
-    viewport.addEventListener('wheel', function(ev){ ev.preventDefault(); zoom = clamp(zoom + (ev.deltaY < 0 ? 0.06 : -0.06), 0.82, 1.36); render(); }, {passive:false});
-    viewport.addEventListener('touchstart', function(ev){ if (ev.touches.length === 2){ pinchDist = dist(ev.touches[0], ev.touches[1]); pinchZoom = zoom; } }, {passive:false});
-    viewport.addEventListener('touchmove', function(ev){ if (ev.touches.length === 2 && pinchDist){ ev.preventDefault(); zoom = clamp(pinchZoom * (dist(ev.touches[0], ev.touches[1]) / pinchDist), 0.82, 1.36); render(); } }, {passive:false});
-    viewport.addEventListener('touchend', function(ev){ if (!ev.touches || ev.touches.length < 2) pinchDist = null; });
-
-    render();
-    const frontCard = cards[0]; if (frontCard) frontCard.classList.add('active');
-  }
-
-document.addEventListener('DOMContentLoaded', function(){ try { initOrb3DPanel(); } catch(e){}; /* old orb disabled */ });
 })();
 </script>
 
