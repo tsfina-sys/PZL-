@@ -846,6 +846,32 @@ body.pzl-screen-locked #lockMapBtn {
   background:#6b7280; color:#fff; border:0; font-weight:800;
 }
 
+
+/* Orbital lower-panel browser */
+.orb-panel-shell{margin:0 0 12px;border:1px solid #d7dee8;border-radius:16px;background:linear-gradient(180deg,#f8fbff 0%,#eef4ff 100%);padding:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 3px 10px rgba(15,23,42,.06)}
+.orb-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;font-weight:900;color:#1e3a8a}
+.orb-panel-head .orb-tag{font-size:12px;font-weight:800;color:#0f172a;background:#ffffff;border:1px solid #cbd5e1;border-radius:999px;padding:4px 8px}
+.orb-panel-help{margin-top:8px;color:#475569;font-size:12px;line-height:1.35}
+.orb-panel-viewport{position:relative;height:240px;border-radius:14px;overflow:hidden;touch-action:none;background:radial-gradient(circle at 50% 50%, rgba(59,130,246,.22) 0%, rgba(59,130,246,.12) 22%, rgba(255,255,255,.9) 23%, rgba(226,232,240,.8) 53%, rgba(241,245,249,.65) 70%, rgba(248,250,252,.95) 100%)}
+.orb-panel-viewport::before,.orb-panel-viewport::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border:1px dashed rgba(59,130,246,.18);border-radius:50%;pointer-events:none}
+.orb-panel-viewport::before{width:74%;height:62%}
+.orb-panel-viewport::after{width:56%;height:48%}
+.orb-panel-scene{position:absolute;inset:0;transform-origin:50% 50%}
+.orb-core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:118px;height:118px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;background:radial-gradient(circle at 30% 30%, #bfdbfe 0%, #60a5fa 20%, #1d4ed8 55%, #0f172a 100%);color:#fff;box-shadow:0 14px 30px rgba(37,99,235,.30), inset 0 2px 10px rgba(255,255,255,.35);font-weight:900;letter-spacing:.2px;line-height:1.15;pointer-events:none}
+.orb-core .orb-core-small{display:block;font-size:11px;opacity:.9;font-weight:700;margin-top:4px}
+.orb-node{position:absolute;left:50%;top:50%;width:148px;min-height:58px;transform:translate(-50%,-50%);border:1px solid rgba(148,163,184,.45);border-radius:16px;background:rgba(255,255,255,.96);box-shadow:0 8px 18px rgba(15,23,42,.12);padding:10px 12px;text-align:left;color:#0f172a;cursor:pointer;transition:box-shadow .18s ease,border-color .18s ease,background .18s ease}
+.orb-node-title{display:block;font-size:14px;font-weight:900;line-height:1.15}
+.orb-node-sub{display:block;font-size:11px;color:#475569;margin-top:2px}
+.orb-node.active{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.20), 0 10px 22px rgba(37,99,235,.14);background:#ffffff}
+.orb-node:focus-visible{outline:3px solid rgba(37,99,235,.28);outline-offset:2px}
+@media (max-width:480px){
+  .orb-panel-viewport{height:224px}
+  .orb-core{width:102px;height:102px;font-size:13px}
+  .orb-node{width:124px;min-height:54px;padding:8px 10px;border-radius:14px}
+  .orb-node-title{font-size:13px}
+  .orb-node-sub{font-size:10px}
+}
+
 </style>
 
 <style id="fix37d9-panel-visible">
@@ -1751,7 +1777,24 @@ body.pzl-screen-locked #lockMapBtn {
     <span class="pzlSplitGrip" aria-hidden="true"></span>
   </div>
   <div class="bottom-sheet">
-    <details class="collapsible-panel">
+  <div id="orbPanelShell" class="orb-panel-shell">
+    <div class="orb-panel-head"><span>🪐 Orbital panel</span><span id="orbScaleTag" class="orb-tag">Zoom x1.00</span></div>
+    <div id="orbPanelViewport" class="orb-panel-viewport" aria-label="Σφαιρικός πλοηγός πεδίων panel">
+      <div id="orbPanelScene" class="orb-panel-scene">
+        <div class="orb-core">PZL<br>Panel<span class="orb-core-small">σύρε • περιστροφή<br>pinch • zoom</span></div>
+        <button type="button" class="orb-node" data-target="#summaryPanel"><span class="orb-node-title">Σύνοψη</span><span class="orb-node-sub">χρόνοι • GPS</span></button>
+        <button type="button" class="orb-node" data-target="#fixPanel"><span class="orb-node-title">FIX</span><span class="orb-node-sub">GPS & Manual FIX</span></button>
+        <button type="button" class="orb-node" data-target="#reportsPanel"><span class="orb-node-title">Αναφορές</span><span class="orb-node-sub">θέση • ενδιάμεσα</span></button>
+        <button type="button" class="orb-node" data-target="#navPanel"><span class="orb-node-title">NAV</span><span class="orb-node-sub">ναυτιλία • προσγείωση</span></button>
+        <button type="button" class="orb-node" data-target="#pzlTestModePanel"><span class="orb-node-title">Test Mode</span><span class="orb-node-sub">IAS • άνεμος • ρυθμός</span></button>
+        <button type="button" class="orb-node" data-target="#missionLogPanel"><span class="orb-node-title">Ημερολόγιο</span><span class="orb-node-sub">καταγραφές αποστολής</span></button>
+        <button type="button" class="orb-node" data-target="#dropsPanel"><span class="orb-node-title">Ρίψεις</span><span class="orb-node-sub">εκτιμήσεις • DCT</span></button>
+        <button type="button" class="orb-node" data-target="#windPanel"><span class="orb-node-title">Άνεμος</span><span class="orb-node-sub">διάδρομος • όρια</span></button>
+      </div>
+    </div>
+    <div class="orb-panel-help">Σύρε μέσα στο πλαίσιο για να περιστρέψεις τη «σφαίρα». Κάνε pinch ή wheel για zoom. Άγγιξε ένα πεδίο για να ανοίξει το αντίστοιχο section πιο κάτω.</div>
+  </div>
+    <details id="summaryPanel" class="collapsible-panel">
       <summary>Σύνοψη / χρόνοι</summary>
       <div class="collapsible-body">
     <div class="dashboard">
@@ -1780,7 +1823,7 @@ body.pzl-screen-locked #lockMapBtn {
       <summary class="fix-title"><span>FIX σημεία</span><button id="clearFixBtn" type="button">CLR FIX</button></summary>
       <div id="fixPanelList">FIX 1 -<br>FIX 2 -<br>FIX 3 -<br>FIX 4 -<br>FIX 5 -</div>
     </details>
-    <details class="collapsible-panel">
+    <details id="reportsPanel" class="collapsible-panel">
       <summary>Αναφορές / ενδιάμεσα</summary>
       <div class="collapsible-body">
     <div class="row"></div>
@@ -1957,7 +2000,7 @@ body.pzl-screen-locked #lockMapBtn {
       </div>
     </details>
 
-<details><summary>Αποστολή / Ρίψεις</summary>
+<details id="dropsPanel" class="collapsible-panel"><summary>Αποστολή / Ρίψεις</summary>
 <div class="timing-fields">
   <b>Χρόνοι απογείωσης</b>
   <div class="grid2">
@@ -1994,7 +2037,7 @@ body.pzl-screen-locked #lockMapBtn {
       <div class="small">+14 L μη ενδεικνυόμενα. Συνολικό πλήρες καύσιμο: 726 L.</div>
     </details>
 
-    <details><summary>Άνεμος / Διάδρομος</summary>
+    <details id="windPanel" class="collapsible-panel"><summary>Άνεμος / Διάδρομος</summary>
       <div class="grid2">
         <div><label>Διάδρομος heading °</label><input id="runwayHeading" type="number" value="010" min="0" max="360" /></div>
         <div><label>Άνεμος από °</label><input id="windDir" type="number" value="000" min="0" max="360" /></div>
@@ -8057,6 +8100,123 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
       setHudVisible(hud.classList.contains('hud-hidden'));
     });
   });
+
+  // Orbital browser for bottom panel sections
+  function initOrbPanel(){
+    const viewport = document.getElementById('orbPanelViewport');
+    const scene = document.getElementById('orbPanelScene');
+    const tag = document.getElementById('orbScaleTag');
+    if (!viewport || !scene || scene.dataset.bound === '1') return;
+    scene.dataset.bound = '1';
+    const nodes = Array.from(scene.querySelectorAll('.orb-node'));
+    if (!nodes.length) return;
+    let angle = -90;
+    let zoom = 1;
+    let dragActive = false;
+    let lastX = 0;
+    let dragMoved = false;
+    let pinchStartDist = null;
+    let pinchStartZoom = 1;
+
+    function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+    function touchDistance(t1, t2){
+      const dx = t2.clientX - t1.clientX;
+      const dy = t2.clientY - t1.clientY;
+      return Math.hypot(dx, dy);
+    }
+    function syncActive(sel){
+      nodes.forEach(function(btn){ btn.classList.toggle('active', btn.getAttribute('data-target') === sel); });
+    }
+    function render(){
+      const rect = viewport.getBoundingClientRect();
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const baseRx = Math.max(86, Math.min(145, rect.width * 0.33));
+      const baseRy = Math.max(60, Math.min(102, rect.height * 0.26));
+      nodes.forEach(function(node, idx){
+        const deg = angle + idx * (360 / nodes.length);
+        const rad = deg * Math.PI / 180;
+        const depth = (Math.sin(rad - Math.PI/2) + 1) / 2;
+        const scale = 0.72 + depth * 0.42;
+        const x = Math.cos(rad) * baseRx;
+        const y = Math.sin(rad) * baseRy;
+        node.style.left = cx + 'px';
+        node.style.top = cy + 'px';
+        node.style.transform = 'translate(-50%, -50%) translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) scale(' + scale.toFixed(3) + ')';
+        node.style.opacity = (0.48 + depth * 0.52).toFixed(2);
+        node.style.zIndex = String(10 + Math.round(depth * 100));
+      });
+      scene.style.transform = 'scale(' + zoom.toFixed(3) + ')';
+      if (tag) tag.textContent = 'Zoom x' + zoom.toFixed(2);
+    }
+    function openTarget(sel){
+      const target = document.querySelector(sel);
+      if (!target) return;
+      try { target.open = true; } catch(e){}
+      syncActive(sel);
+      setTimeout(function(){
+        try { target.scrollIntoView({behavior:'smooth', block:'start'}); } catch(e){}
+      }, 20);
+    }
+    nodes.forEach(function(btn){
+      btn.addEventListener('click', function(ev){
+        if (dragMoved) { ev.preventDefault(); return; }
+        openTarget(btn.getAttribute('data-target'));
+      });
+    });
+    viewport.addEventListener('pointerdown', function(ev){
+      dragActive = true;
+      dragMoved = false;
+      lastX = ev.clientX;
+      try { viewport.setPointerCapture(ev.pointerId); } catch(e){}
+    });
+    viewport.addEventListener('pointermove', function(ev){
+      if (!dragActive) return;
+      const dx = ev.clientX - lastX;
+      if (Math.abs(dx) > 1) dragMoved = true;
+      angle += dx * 0.42;
+      lastX = ev.clientX;
+      render();
+    });
+    function endPointer(ev){
+      dragActive = false;
+      setTimeout(function(){ dragMoved = false; }, 40);
+      try { viewport.releasePointerCapture(ev.pointerId); } catch(e){}
+    }
+    viewport.addEventListener('pointerup', endPointer);
+    viewport.addEventListener('pointercancel', endPointer);
+    viewport.addEventListener('wheel', function(ev){
+      ev.preventDefault();
+      zoom = clamp(zoom + (ev.deltaY < 0 ? 0.06 : -0.06), 0.80, 1.45);
+      render();
+    }, {passive:false});
+    viewport.addEventListener('touchstart', function(ev){
+      if (ev.touches.length === 2){
+        pinchStartDist = touchDistance(ev.touches[0], ev.touches[1]);
+        pinchStartZoom = zoom;
+      }
+    }, {passive:false});
+    viewport.addEventListener('touchmove', function(ev){
+      if (ev.touches.length === 2 && pinchStartDist){
+        ev.preventDefault();
+        const dist = touchDistance(ev.touches[0], ev.touches[1]);
+        zoom = clamp(pinchStartZoom * (dist / pinchStartDist), 0.80, 1.45);
+        render();
+      }
+    }, {passive:false});
+    viewport.addEventListener('touchend', function(ev){
+      if (!ev.touches || ev.touches.length < 2) pinchStartDist = null;
+    });
+
+    ['#summaryPanel','#fixPanel','#reportsPanel','#navPanel','#pzlTestModePanel','#missionLogPanel','#dropsPanel','#windPanel'].forEach(function(sel){
+      const el = document.querySelector(sel);
+      if (el) el.addEventListener('toggle', function(){ if (el.open) syncActive(sel); });
+    });
+    render();
+    syncActive('#summaryPanel');
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){ try { initOrbPanel(); } catch(e){} });
 })();
 </script>
 
