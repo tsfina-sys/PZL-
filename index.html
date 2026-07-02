@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_EMPTY_BASE_SELECTS_FIXED_20260701AS">
+<meta name="pzl-build" content="PZL_NAV_DEST_ALL_AIRPORTS_20260702AU">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1822,7 +1822,7 @@ body.pzl-screen-locked #lockMapBtn {
         <div class="nav-grid">
           <div class="nav-dest-row">
             <div>
-              <label for="navDestSelect">Κλιμάκιο προορισμού</label>
+              <label for="navDestSelect">Α/Δ προορισμού (κλιμάκιο ή εναλλακτικό)</label>
               <select id="navDestSelect"></select>
             </div>
             <div>
@@ -9914,7 +9914,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_EMPTY_BASE_SELECTS_FIXED_20260701AS */
+/* PZL_NAV_DEST_ALL_AIRPORTS_20260702AU */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
@@ -10827,11 +10827,20 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     if (sel && sel.value) return sel.value;
     return (typeof selectedFullStopBaseName !== 'undefined' && selectedFullStopBaseName) ? selectedFullStopBaseName : selectedBaseName;
   }
+  function navAirportPointByName(name){
+    if (!name) return null;
+    const source =
+      (typeof bases !== 'undefined' && bases && bases[name])
+        ? bases[name]
+        : ((typeof airports !== 'undefined' && airports && airports[name])
+            ? airports[name]
+            : null);
+    return source
+      ? {lat:Number(source.lat), lon:Number(source.lon), name}
+      : null;
+  }
   function navDestinationPoint(){
-    if (typeof bases === 'undefined') return null;
-    const name = navDestinationName();
-    const b = bases[name];
-    return b ? {lat:Number(b.lat), lon:Number(b.lon), name} : null;
+    return navAirportPointByName(navDestinationName());
   }
   function navAlternatePoint(forceRefresh){
     if (typeof bases === 'undefined' || typeof airports === 'undefined') return null;
@@ -11412,11 +11421,57 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
   function navPopulateDestinations(){
     const sel = document.getElementById('navDestSelect');
     if (!sel || typeof bases === 'undefined') return;
-    const current = sel.value || ((typeof selectedFullStopBaseName !== 'undefined' && selectedFullStopBaseName) ? selectedFullStopBaseName : selectedBaseName);
-    const opts = Object.keys(bases).map(name => `<option value="${name}">${name}</option>`).join('');
-    sel.innerHTML = opts;
-    if (bases[current]) sel.value = current;
-    else if (selectedBaseName && bases[selectedBaseName]) sel.value = selectedBaseName;
+
+    const current =
+      sel.value ||
+      ((typeof selectedFullStopBaseName !== 'undefined' && selectedFullStopBaseName)
+        ? selectedFullStopBaseName
+        : selectedBaseName);
+
+    const baseNames = Object.keys(bases || {});
+    const baseSet = new Set(baseNames);
+    const alternateNames = Array.from(
+      new Set(
+        baseNames
+          .map(name => {
+            const b = bases[name];
+            return b ? (b.alt || b.ref) : null;
+          })
+          .filter(Boolean)
+      )
+    ).filter(name => !baseSet.has(name) && navAirportPointByName(name));
+
+    sel.innerHTML = '';
+
+    const baseGroup = document.createElement('optgroup');
+    baseGroup.label = 'ΚΛΙΜΑΚΙΑ';
+    baseNames.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      baseGroup.appendChild(opt);
+    });
+    sel.appendChild(baseGroup);
+
+    if (alternateNames.length) {
+      const altGroup = document.createElement('optgroup');
+      altGroup.label = 'ΕΝΑΛΛΑΚΤΙΚΑ ΚΛΙΜΑΚΙΩΝ';
+      alternateNames.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        altGroup.appendChild(opt);
+      });
+      sel.appendChild(altGroup);
+    }
+
+    if (navAirportPointByName(current)) {
+      sel.value = current;
+    } else if (selectedBaseName && navAirportPointByName(selectedBaseName)) {
+      sel.value = selectedBaseName;
+    } else if (baseNames.length) {
+      sel.value = baseNames[0];
+    }
   }
   function navSetMode(flag){
     pzlNavModeActive = !!flag;

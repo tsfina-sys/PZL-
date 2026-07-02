@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_EMPTY_BASE_SELECTS_FIXED_20260701AS";
+const PZL_BUILD = "PZL_NAV_DEST_ALL_AIRPORTS_20260702AU";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";
