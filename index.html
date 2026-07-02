@@ -12927,5 +12927,273 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 
 <!-- PZL_CHECK_DISTANCE_LIBRARY_ROUTES_END -->
 
+
+
+<!-- PZL_TOPO_OBSTACLES_D420_BEGIN -->
+<style id="pzl-d420-topo-obstacles-css">
+#pzlMapModeBtn{
+  position:absolute;z-index:1002;top:96px;left:6px;
+  min-width:96px;padding:8px 9px;border-radius:10px;
+  background:#157347;color:#fff;border:0;font-weight:900;
+  box-shadow:0 2px 8px rgba(0,0,0,.35);
+}
+#pzlMapModeBtn.standard{background:#6b7280!important;}
+#pzlMapModeBtn.loading{background:#0f6ab4!important;}
+#pzlTerrainPanel{
+  position:fixed;inset:0;z-index:12050;background:rgba(15,23,42,.58);
+  display:flex;align-items:center;justify-content:center;padding:14px;
+}
+#pzlTerrainPanel[hidden]{display:none!important;}
+#pzlTerrainCard{
+  width:min(94vw,460px);max-height:86vh;overflow:auto;
+  background:#fff;color:#172033;border-radius:16px;padding:14px;
+  box-shadow:0 16px 45px rgba(0,0,0,.46);
+}
+.pzl-map-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
+.pzl-map-title b{font-size:20px;}
+.pzl-map-title button{padding:6px 10px;background:#6b7280;}
+.pzl-map-mode-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.pzl-map-mode-row button{padding:11px 7px;}
+.pzl-map-mode-row button.active{background:#157347!important;}
+.pzl-map-layer-list{border:1px solid #d0d5dd;border-radius:12px;padding:8px;margin-bottom:10px;}
+.pzl-map-layer-item{display:flex!important;align-items:center;justify-content:space-between;gap:10px;padding:8px 4px;border-bottom:1px solid #e5e7eb;font-size:14px!important;color:#172033!important;margin:0!important;}
+.pzl-map-layer-item:last-child{border-bottom:0;}
+.pzl-map-layer-item input{flex:0 0 auto!important;min-width:22px!important;width:22px!important;height:22px!important;margin:0!important;}
+.pzl-map-status{font-size:12px;line-height:1.3;background:#eef2f6;border-radius:9px;padding:8px;white-space:pre-line;}
+.pzl-map-warning{font-size:11px;color:#7c2d12;background:#fff7ed;border:1px solid #fdba74;border-radius:9px;padding:8px;margin-top:8px;line-height:1.25;}
+.pzl-peak-icon,.pzl-wind-icon,.pzl-antenna-icon,.pzl-pylon-icon{background:transparent!important;border:0!important;}
+.pzl-peak-symbol{color:#5b2c06;font-size:18px;font-weight:1000;text-shadow:0 1px 2px #fff,0 0 4px #fff;}
+.pzl-wind-symbol{color:#7c3aed;font-size:21px;font-weight:1000;text-shadow:0 1px 2px #fff,0 0 4px #fff;}
+.pzl-antenna-symbol{font-size:20px;filter:drop-shadow(0 1px 2px #fff);}
+.pzl-pylon-symbol{color:#ef4444;font-size:12px;font-weight:1000;text-shadow:0 0 3px #fff;}
+.pzl-peak-label{
+  background:rgba(255,255,255,.88)!important;color:#3f2208!important;
+  border:1px solid rgba(91,44,6,.65)!important;border-radius:5px!important;
+  box-shadow:0 1px 4px rgba(0,0,0,.25)!important;
+  font-size:9.5px!important;font-weight:900!important;padding:2px 4px!important;
+  white-space:nowrap!important;
+}
+.pzl-obstacle-tooltip{
+  background:rgba(10,20,30,.88)!important;color:#fff!important;
+  border:1px solid rgba(255,255,255,.55)!important;border-radius:6px!important;
+  box-shadow:0 2px 6px rgba(0,0,0,.35)!important;
+  font-size:9px!important;font-weight:900!important;padding:2px 4px!important;
+}
+#pzlTopoStatusBadge{
+  position:absolute;z-index:899;left:7px;top:139px;max-width:180px;
+  background:rgba(10,20,30,.82);color:#fff;border:1px solid rgba(255,255,255,.5);
+  border-radius:8px;padding:4px 6px;font-size:9px;font-weight:800;line-height:1.15;
+  pointer-events:none;display:none;
+}
+@media(max-width:700px){
+  #pzlMapModeBtn{top:94px;left:6px;min-width:86px;height:32px;padding:5px 6px;font-size:10px;}
+  #pzlTopoStatusBadge{top:130px;max-width:145px;font-size:8px;}
+  #pzlTerrainCard{padding:11px;}
+  .pzl-map-title b{font-size:18px;}
+}
+</style>
+<script id="pzl-d420-topo-obstacles-js">
+(function(){
+  'use strict';
+  const BUILD='PZL_TOPO_OBSTACLES_D420';
+  const MODE_KEY='pzlD420MapMode';
+  const OPT_KEY='pzlD420MapOptions';
+  const API_LIST=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+  const defaults={peaks:true,power:true,wind:true,antennas:true,telecom:true};
+  let options={...defaults};
+  try{options={...defaults,...JSON.parse(localStorage.getItem(OPT_KEY)||'{}')};}catch(e){}
+  let mode=localStorage.getItem(MODE_KEY)||'topo';
+  let standardLayer=null,topoLayer=null;
+  let peakLayer=null,powerLayer=null,windLayer=null,antennaLayer=null,telecomLayer=null,pylonLayer=null;
+  let refreshTimer=null,requestSeq=0,lastKey='',lastPayload=null,lastPayloadAt=0;
+  let btn,panel,statusBox,badge;
+
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function save(){localStorage.setItem(MODE_KEY,mode);localStorage.setItem(OPT_KEY,JSON.stringify(options));}
+  function mapReady(){return typeof map!=='undefined'&&window.L&&map&&typeof map.getBounds==='function';}
+  function firstTileLayer(){let found=null;map.eachLayer(l=>{if(!found&&l instanceof L.TileLayer)found=l;});return found;}
+  function setStatus(msg,loading){
+    if(statusBox)statusBox.textContent=msg||'';
+    if(badge){badge.textContent=msg||'';badge.style.display=(mode==='topo'&&msg)?'block':'none';}
+    if(btn){btn.classList.toggle('loading',!!loading);btn.textContent=loading?'PZL MAP…':'PZL MAP';}
+  }
+  function buildLayers(){
+    if(peakLayer)return;
+    peakLayer=L.layerGroup().addTo(map);powerLayer=L.layerGroup().addTo(map);windLayer=L.layerGroup().addTo(map);
+    antennaLayer=L.layerGroup().addTo(map);telecomLayer=L.layerGroup().addTo(map);pylonLayer=L.layerGroup().addTo(map);
+  }
+  function clearData(){[peakLayer,powerLayer,windLayer,antennaLayer,telecomLayer,pylonLayer].forEach(l=>{try{l&&l.clearLayers();}catch(e){}});}
+  function applyMode(){
+    if(!mapReady())return;
+    if(!standardLayer)standardLayer=firstTileLayer();
+    if(!topoLayer)topoLayer=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{
+      maxZoom:17,subdomains:'abc',crossOrigin:true,
+      attribution:'Map: © OpenStreetMap contributors, SRTM | Style: © OpenTopoMap (CC-BY-SA)'
+    });
+    if(mode==='topo'){
+      if(standardLayer&&map.hasLayer(standardLayer))map.removeLayer(standardLayer);
+      if(!map.hasLayer(topoLayer))topoLayer.addTo(map);
+      try{topoLayer.bringToBack();}catch(e){}
+      if(btn)btn.classList.remove('standard');
+      scheduleRefresh(true);
+    }else{
+      if(topoLayer&&map.hasLayer(topoLayer))map.removeLayer(topoLayer);
+      if(standardLayer&&!map.hasLayer(standardLayer))standardLayer.addTo(map);
+      try{standardLayer&&standardLayer.bringToBack();}catch(e){}
+      if(btn)btn.classList.add('standard');
+      clearData();setStatus('',false);
+    }
+    updatePanel();save();
+  }
+  function updatePanel(){
+    const s=document.getElementById('pzlModeStandard'),t=document.getElementById('pzlModeTopo');
+    if(s)s.classList.toggle('active',mode==='standard');if(t)t.classList.toggle('active',mode==='topo');
+    Object.keys(defaults).forEach(k=>{const e=document.getElementById('pzlOpt_'+k);if(e)e.checked=!!options[k];});
+  }
+  function openPanel(){if(panel){panel.hidden=false;updatePanel();}}
+  function closePanel(){if(panel)panel.hidden=true;}
+  function voltageValue(tags){
+    const raw=String(tags&&tags.voltage||'');
+    const nums=raw.split(/[;,/]/).map(x=>Number(String(x).replace(/[^0-9.]/g,''))).filter(Number.isFinite);
+    return nums.length?Math.max(...nums):null;
+  }
+  function powerClass(tags){
+    const v=voltageValue(tags);
+    if(v!=null){if(v>=100000)return{key:'high',label:'Υψηλή τάση',color:'#ff2222',weight:4};if(v>=1000)return{key:'medium',label:'Μέση τάση',color:'#ff8c00',weight:3};return{key:'low',label:'Χαμηλή τάση',color:'#ffd000',weight:2};}
+    if(tags.power==='line')return{key:'high',label:'Γραμμή ισχύος (τάση άγνωστη)',color:'#ff3b30',weight:3.5};
+    return{key:'medium',label:'Μικρή γραμμή ισχύος (τάση άγνωστη)',color:'#ffb000',weight:2.5};
+  }
+  function nameOf(tags,fallback){return tags['name:el']||tags.name||tags['name:en']||fallback;}
+  function coordsOf(el){
+    if(Number.isFinite(el.lat)&&Number.isFinite(el.lon))return[el.lat,el.lon];
+    if(el.center&&Number.isFinite(el.center.lat)&&Number.isFinite(el.center.lon))return[el.center.lat,el.center.lon];
+    if(Array.isArray(el.geometry)&&el.geometry.length){const pts=el.geometry.filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lon));if(pts.length){const a=pts.reduce((s,p)=>[s[0]+p.lat,s[1]+p.lon],[0,0]);return[a[0]/pts.length,a[1]/pts.length];}}
+    return null;
+  }
+  function parseEleMeters(raw){
+    if(raw==null)return null;const s=String(raw).trim().replace(',','.');const m=s.match(/-?\d+(?:\.\d+)?/);if(!m)return null;let v=Number(m[0]);if(!Number.isFinite(v))return null;if(/ft|feet/i.test(s))v/=3.28084;return v;
+  }
+  function feet(m){return Math.round(m*3.28084);}
+  function popupHtml(title,rows){return `<b>${esc(title)}</b><br>${rows.filter(Boolean).map(esc).join('<br>')}`;}
+  function renderPeak(el,z){
+    const t=el.tags||{},m=parseEleMeters(t.ele);if(m==null)return;
+    const min=z<=8?1500:z===9?1000:z===10?500:0;if(m<min)return;
+    const ll=coordsOf(el);if(!ll)return;const n=nameOf(t,'Κορυφή'),ft=feet(m);
+    const icon=L.divIcon({className:'pzl-peak-icon',html:'<div class="pzl-peak-symbol">▲</div>',iconSize:[20,20],iconAnchor:[10,12]});
+    const marker=L.marker(ll,{icon,interactive:true}).addTo(peakLayer);
+    marker.bindTooltip(`${esc(n)} ${ft} ft MSL`,{permanent:true,direction:'right',offset:[8,-2],className:'pzl-peak-label'});
+    marker.bindPopup(popupHtml(n,[`${ft} ft MSL`,`${Math.round(m)} m MSL`,'Πηγή: OpenStreetMap']));
+  }
+  function renderPower(el){
+    const t=el.tags||{},geom=Array.isArray(el.geometry)?el.geometry.filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lon)).map(p=>[p.lat,p.lon]):[];if(geom.length<2)return;
+    const c=powerClass(t),v=voltageValue(t),operator=t.operator||t.owner||'';
+    const line=L.polyline(geom,{color:c.color,weight:c.weight,opacity:.93,dashArray:t.power==='minor_line'?'7 4':null,interactive:true}).addTo(powerLayer);
+    const volts=v!=null?(v>=1000?`${(v/1000).toFixed(v%1000?1:0)} kV`:`${v} V`):'Τάση μη δηλωμένη';
+    line.bindPopup(popupHtml(c.label,[volts,operator?`Φορέας: ${operator}`:'','Μόνο όπου έχει χαρτογραφηθεί στο OSM']));
+  }
+  function renderTelecom(el){
+    const t=el.tags||{},geom=Array.isArray(el.geometry)?el.geometry.filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lon)).map(p=>[p.lat,p.lon]):[];if(geom.length<2)return;
+    const operator=t.operator||t.owner||'';
+    const line=L.polyline(geom,{color:'#a855f7',weight:2,opacity:.9,dashArray:'4 5',interactive:true}).addTo(telecomLayer);
+    line.bindPopup(popupHtml('Γραμμή τηλεπικοινωνιών',[operator?`Φορέας: ${operator}`:'','Εμφανίζεται μόνο όπου υπάρχει σχετική καταχώριση OSM']));
+  }
+  function renderWind(el){
+    const t=el.tags||{},ll=coordsOf(el);if(!ll)return;const n=nameOf(t,'Ανεμογεννήτρια');
+    const icon=L.divIcon({className:'pzl-wind-icon',html:'<div class="pzl-wind-symbol">✣</div>',iconSize:[24,24],iconAnchor:[12,12]});
+    const m=L.marker(ll,{icon,interactive:true}).addTo(windLayer);const h=parseEleMeters(t.height);
+    m.bindTooltip('Α/Γ',{direction:'top',className:'pzl-obstacle-tooltip',offset:[0,-8]});
+    m.bindPopup(popupHtml(n,[h!=null?`Ύψος κατασκευής: ${feet(h)} ft`:'',t.operator?`Φορέας: ${t.operator}`:'','Θέση από OpenStreetMap']));
+  }
+  function renderAntenna(el){
+    const t=el.tags||{},ll=coordsOf(el);if(!ll)return;const n=nameOf(t,'Κεραία / ιστός');
+    const icon=L.divIcon({className:'pzl-antenna-icon',html:'<div class="pzl-antenna-symbol">📡</div>',iconSize:[24,24],iconAnchor:[12,14]});
+    const m=L.marker(ll,{icon,interactive:true}).addTo(antennaLayer);const h=parseEleMeters(t.height);
+    m.bindTooltip(h!=null?`${feet(h)} ft AGL`:'ΚΕΡΑΙΑ',{direction:'top',className:'pzl-obstacle-tooltip',offset:[0,-9]});
+    m.bindPopup(popupHtml(n,[h!=null?`Ύψος: ${feet(h)} ft AGL (${Math.round(h)} m)`:'Ύψος μη δηλωμένο',t.operator?`Φορέας: ${t.operator}`:'','Δεν αποτελεί επίσημη βάση εμποδίων']));
+  }
+  function renderPylon(el){
+    const t=el.tags||{},ll=coordsOf(el);if(!ll)return;
+    const icon=L.divIcon({className:'pzl-pylon-icon',html:'<div class="pzl-pylon-symbol">◆</div>',iconSize:[12,12],iconAnchor:[6,6]});
+    const m=L.marker(ll,{icon,interactive:true}).addTo(pylonLayer);const h=parseEleMeters(t.height);
+    m.bindPopup(popupHtml(t.power==='tower'?'Πυλώνας':'Στύλος',[h!=null?`Ύψος: ${feet(h)} ft AGL`:'',t.operator?`Φορέας: ${t.operator}`:'']));
+  }
+  function category(el){
+    const t=el.tags||{};
+    if(t.natural==='peak')return'peak';
+    if((t.power==='generator'&&t['generator:source']==='wind')||t['generator:method']==='wind_turbine'||t.man_made==='wind_turbine')return'wind';
+    if(t.power==='line'||t.power==='minor_line')return'power';
+    if(t.power==='tower'||t.power==='pole')return'pylon';
+    if(t.telecom||t.communication)return'telecom';
+    if(['mast','communications_tower','antenna'].includes(t.man_made)||(t.man_made==='tower'&&t['tower:type']==='communication'))return'antenna';
+    return'';
+  }
+  function render(payload,z){
+    clearData();const seen=new Set(),counts={peak:0,power:0,wind:0,antenna:0,telecom:0,pylon:0};
+    (payload.elements||[]).forEach(el=>{const id=`${el.type}/${el.id}`,cat=category(el);if(!cat||seen.has(id))return;seen.add(id);counts[cat]++;
+      try{if(cat==='peak')renderPeak(el,z);else if(cat==='power')renderPower(el);else if(cat==='wind')renderWind(el);else if(cat==='antenna')renderAntenna(el);else if(cat==='telecom')renderTelecom(el);else if(cat==='pylon')renderPylon(el);}catch(e){console.warn('PZL layer item',e);}
+    });
+    return counts;
+  }
+  function buildQuery(z,bbox){
+    const q=[];
+    if(options.peaks&&z>=8)q.push(`node["natural"="peak"]["ele"](${bbox});`);
+    if(options.wind&&z>=9){q.push(`nwr["power"="generator"]["generator:source"="wind"](${bbox});`);q.push(`nwr["generator:method"="wind_turbine"](${bbox});`);q.push(`nwr["man_made"="wind_turbine"](${bbox});`);}
+    if(options.antennas&&z>=9){q.push(`nwr["man_made"~"^(mast|communications_tower|antenna)$"](${bbox});`);q.push(`nwr["man_made"="tower"]["tower:type"="communication"](${bbox});`);}
+    if(options.power&&z>=10){q.push(`way["power"~"^(line|minor_line)$"](${bbox});`);if(z>=12)q.push(`node["power"="tower"](${bbox});`);if(z>=14)q.push(`node["power"="pole"](${bbox});`);}
+    if(options.telecom&&z>=12){q.push(`way["telecom"](${bbox});`);q.push(`way["communication"](${bbox});`);}
+    return q.length?`[out:json][timeout:24];(${q.join('')});out body center geom;`:'';
+  }
+  async function fetchOverpass(query,seq){
+    let lastErr=null;
+    for(const endpoint of API_LIST){
+      const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),28000);
+      try{
+        const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(query),signal:ctrl.signal});
+        if(!r.ok)throw new Error(`HTTP ${r.status}`);const j=await r.json();if(seq!==requestSeq)return null;return j;
+      }catch(e){lastErr=e;}finally{clearTimeout(timer);}
+    }
+    throw lastErr||new Error('Overpass unavailable');
+  }
+  async function refresh(force){
+    if(!mapReady()||mode!=='topo')return;
+    buildLayers();const z=Math.round(map.getZoom()),b=map.getBounds();
+    if(z<8){clearData();setStatus('Zoom ≥ 8 για κορυφές · ≥ 9 για εμπόδια · ≥ 10 για γραμμές',false);return;}
+    const bbox=[b.getSouth(),b.getWest(),b.getNorth(),b.getEast()].map(v=>v.toFixed(5)).join(',');
+    const query=buildQuery(z,bbox);if(!query){clearData();setStatus('Ενεργοποίησε ένα layer ή αύξησε το zoom.',false);return;}
+    const key=`${z}|${bbox}|${JSON.stringify(options)}`;
+    if(!force&&key===lastKey&&lastPayload&&Date.now()-lastPayloadAt<180000){const c=render(lastPayload,z);setStatus(`Κορυφές ${c.peak} · γραμμές ${c.power} · Α/Γ ${c.wind} · κεραίες ${c.antenna}`,false);return;}
+    const seq=++requestSeq;setStatus('Φόρτωση τοπογραφικών / εμποδίων…',true);
+    try{
+      const data=await fetchOverpass(query,seq);if(!data||seq!==requestSeq)return;lastKey=key;lastPayload=data;lastPayloadAt=Date.now();const c=render(data,z);
+      setStatus(`Κορυφές ${c.peak} · γραμμές ${c.power} · Α/Γ ${c.wind} · κεραίες ${c.antenna}${c.telecom?` · telecom ${c.telecom}`:''}`,false);
+    }catch(e){if(seq!==requestSeq)return;clearData();setStatus(`Δεν φορτώθηκαν εμπόδια (${e.message||e}). Ο TOPO χάρτης παραμένει ενεργός.`,false);}
+  }
+  function scheduleRefresh(force){clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>refresh(!!force),force?120:700);}
+  function install(){
+    if(!mapReady()){setTimeout(install,400);return;}
+    if(document.getElementById('pzlMapModeBtn'))return;
+    standardLayer=firstTileLayer();buildLayers();
+    btn=document.createElement('button');btn.id='pzlMapModeBtn';btn.type='button';btn.textContent='PZL MAP';btn.title='Τοπογραφικός χάρτης και βοηθητικά εμπόδια';
+    document.getElementById('mapWrap').appendChild(btn);btn.onclick=openPanel;
+    badge=document.createElement('div');badge.id='pzlTopoStatusBadge';document.getElementById('mapWrap').appendChild(badge);
+    panel=document.createElement('div');panel.id='pzlTerrainPanel';panel.hidden=true;
+    panel.innerHTML=`<div id="pzlTerrainCard"><div class="pzl-map-title"><b>PZL TOPO / OBSTACLES</b><button id="pzlTerrainClose" type="button">✕</button></div><div class="pzl-map-mode-row"><button id="pzlModeStandard" type="button" class="secondary">STANDARD</button><button id="pzlModeTopo" type="button">PZL TOPO</button></div><div class="pzl-map-layer-list"><label class="pzl-map-layer-item"><span>▲ Κορυφές + ύψος ft MSL</span><input id="pzlOpt_peaks" type="checkbox"></label><label class="pzl-map-layer-item"><span>⚡ Γραμμές ΧΤ / ΜΤ / ΥΤ</span><input id="pzlOpt_power" type="checkbox"></label><label class="pzl-map-layer-item"><span>✣ Ανεμογεννήτριες</span><input id="pzlOpt_wind" type="checkbox"></label><label class="pzl-map-layer-item"><span>📡 Κεραίες / ιστοί</span><input id="pzlOpt_antennas" type="checkbox"></label><label class="pzl-map-layer-item"><span>〰 Telecom γραμμές όπου υπάρχουν</span><input id="pzlOpt_telecom" type="checkbox"></label></div><button id="pzlMapReload" type="button" style="width:100%;margin-bottom:8px">ΑΝΑΝΕΩΣΗ ΠΕΡΙΟΧΗΣ</button><div id="pzlMapStatus" class="pzl-map-status"></div><div class="pzl-map-warning">Βοηθητικό situational-awareness layer. Τα στοιχεία OSM/Overpass μπορεί να είναι ελλιπή ή παλαιά και δεν αντικαθιστούν επίσημο αεροναυτικό χάρτη ή πιστοποιημένη βάση εμποδίων.</div></div>`;
+    document.body.appendChild(panel);statusBox=document.getElementById('pzlMapStatus');
+    document.getElementById('pzlTerrainClose').onclick=closePanel;panel.onclick=e=>{if(e.target===panel)closePanel();};
+    document.getElementById('pzlModeStandard').onclick=()=>{mode='standard';applyMode();};
+    document.getElementById('pzlModeTopo').onclick=()=>{mode='topo';applyMode();};
+    document.getElementById('pzlMapReload').onclick=()=>scheduleRefresh(true);
+    Object.keys(defaults).forEach(k=>{const e=document.getElementById('pzlOpt_'+k);e.onchange=()=>{options[k]=e.checked;save();scheduleRefresh(true);};});
+    map.on('moveend zoomend',()=>scheduleRefresh(false));
+    window.addEventListener('online',()=>scheduleRefresh(true));
+    applyMode();updatePanel();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
+  setTimeout(install,900);
+  window.PZL_TOPO_OBSTACLES={get mode(){return mode;},refresh:()=>scheduleRefresh(true),setMode(v){mode=v==='standard'?'standard':'topo';applyMode();},build:BUILD};
+})();
+</script>
+<!-- PZL_TOPO_OBSTACLES_D420_END -->
+
 </body>
 </html>

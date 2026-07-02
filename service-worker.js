@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_DDM_POINT_EDIT_20260702D419";
+const PZL_BUILD = "PZL_TOPO_OBSTACLES_20260702D420";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";
@@ -266,7 +266,10 @@ function isOnlineOnlyApi(url) {
   return (
     url.hostname === "nominatim.openstreetmap.org" ||
     url.hostname === "api.sunrise-sunset.org" ||
-    url.hostname === "api.checkwx.com"
+    url.hostname === "api.checkwx.com" ||
+    url.hostname === "overpass-api.de" ||
+    url.hostname === "overpass.kumi.systems" ||
+    url.hostname.endsWith("tile.opentopomap.org")
   );
 }
 
