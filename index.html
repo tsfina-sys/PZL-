@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool D430 OLD VFR STYLE + ROUTES HEIGHTS</title>
+  <title>PZL Mission Tool D431 OLD VFR STYLE + AIP CHART LAYER</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_VFR_OLD_STYLE_ROUTES_HEIGHTS_20260702D430">
+<meta name="pzl-build" content="PZL_VFR_OLD_STYLE_AIP_CHART_LAYER_20260702D431">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -13441,167 +13441,60 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 
 
 
-<!-- PZL_VFR_OLD_STYLE_ROUTES_HEIGHTS_D430_BEGIN -->
-<script id="pzl-d430-old-style-routes-js">
+
+<!-- PZL_VFR_OLD_STYLE_AIP_CHART_LAYER_D431_BEGIN -->
+<style id="pzl-d431-chart-style">
+#pzlD430RouteStatus{display:none!important;}
+#pzlD431ChartTools{margin:9px 0;padding:8px;border:1px solid #93c5fd;border-radius:10px;background:#eff6ff;}
+#pzlD431ChartTools .title{font-weight:1000;color:#1e3a8a;font-size:12px;margin-bottom:6px;}
+#pzlD431ChartButtons{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;}
+#pzlD431ChartButtons button{flex:0 0 auto;padding:7px 9px!important;font-size:10px!important;background:#2563eb!important;border-radius:8px!important;}
+#pzlD431ChartButtons button.auto{background:#0f766e!important;}
+#pzlD431ChartEmpty{font-size:10px;color:#475569;font-weight:800;line-height:1.25;}
+#pzlD431ChartViewer{position:fixed;inset:0;z-index:2147483000;background:#111827;display:flex;flex-direction:column;}
+#pzlD431ChartViewer[hidden]{display:none!important;}
+#pzlD431ChartHead{display:flex;align-items:center;gap:7px;padding:7px 8px;background:#0f3d5e;color:#fff;min-height:48px;box-shadow:0 2px 8px #0008;}
+#pzlD431ChartTitle{font-size:13px;font-weight:1000;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#pzlD431ChartClose,#pzlD431ChartPrev,#pzlD431ChartNext,#pzlD431ChartMap{border:0;border-radius:8px;background:#6b7280;color:#fff;padding:8px 10px;font-size:13px;font-weight:1000;}
+#pzlD431ChartPrev,#pzlD431ChartNext{background:#2563eb;}
+#pzlD431ChartTabs{display:flex;gap:5px;overflow-x:auto;padding:6px;background:#e5e7eb;}
+#pzlD431ChartTabs button{flex:0 0 auto;border:0;border-radius:7px;padding:6px 9px;background:#64748b;color:#fff;font-weight:900;font-size:10px;}
+#pzlD431ChartTabs button.active{background:#15803d;}
+#pzlD431ChartFrameWrap{position:relative;flex:1;min-height:0;background:#dbeafe;}
+#pzlD431ChartFrame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff;}
+#pzlD431ChartLoading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;background:#111827dd;color:#fff;border-radius:10px;padding:10px 14px;font-weight:900;font-size:12px;pointer-events:none;}
+#pzlD431ChartFoot{padding:5px 8px;background:#fff7ed;color:#7c2d12;font-size:9px;font-weight:800;line-height:1.2;}
+@media(max-width:700px){#pzlD431ChartHead{padding:5px 6px;gap:4px;}#pzlD431ChartTitle{font-size:11px;}#pzlD431ChartClose,#pzlD431ChartPrev,#pzlD431ChartNext,#pzlD431ChartMap{padding:7px 8px;font-size:11px;}#pzlD431ChartTabs{padding:4px;}#pzlD431ChartTabs button{font-size:9px;padding:5px 7px;}}
+</style>
+<script id="pzl-d431-chart-js">
 (function(){
   'use strict';
-  const BUILD='PZL_VFR_OLD_STYLE_ROUTES_HEIGHTS_D430';
-  const RADIUS_KM=65;
-  const PALETTE=['#7c3aed','#d97706','#0f766e','#dc2626'];
-  let xmlDoc=null, xmlPromise=null, xmlAirac='';
-  let routeLayer=null, seq=0, lastKey='', statusEl=null;
-
-  function mapReady(){return typeof map!=='undefined'&&window.L&&map&&typeof map.createPane==='function'}
-  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-  function selectedCenters(){try{return window.PZL_VFR_ROUTES&&typeof window.PZL_VFR_ROUTES.selected==='function'?window.PZL_VFR_ROUTES.selected()||[]:[]}catch(e){return[]}}
-  function isActive(){return document.body.classList.contains('pzl-vfr-active')}
-  function centersKey(cs){return cs.map(c=>(c.icao||'')+'|'+c.name+'|'+Number(c.lat).toFixed(4)+'|'+Number(c.lon).toFixed(4)).sort().join('::')}
-  function setStatus(msg,warn){
-    ensureUi();
-    if(!statusEl)return;
-    statusEl.textContent=msg||'';
-    statusEl.classList.toggle('warn',!!warn);
+  const BUILD='PZL_VFR_OLD_STYLE_AIP_CHART_LAYER_D431';
+  const OFFICIAL=new Set(['LGAD','LGAV','LGKL','LGKO','LGKP','LGKR','LGMK','LGMT','LGPA','LGSA','LGSK','LGSM','LGSR','LGSY','LGTS','LGLR','LGTG']);
+  let viewer=null,frame=null,tabs=null,title=null,loading=null,items=[],idx=0,lastKey='';
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function selected(){try{return window.PZL_VFR_ROUTES&&typeof window.PZL_VFR_ROUTES.selected==='function'?(window.PZL_VFR_ROUTES.selected()||[]):[]}catch(e){return[]}}
+  function releasePath(){
+    const d=new Date(),t=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+    const r=[[Date.UTC(2026,7,6),'aipgr_incl_amdt_0726_wef_06aug2026'],[Date.UTC(2026,6,9),'aipgr_incl_amdt_0626_wef_09jul2026'],[Date.UTC(2026,5,11),'aipgr_incl_amdt_0526_wef_11jun2026'],[Date.UTC(2026,4,14),'aipgr_incl_amdt_0426_wef_14may2026'],[Date.UTC(2026,3,16),'aipgr_incl_amdt_0326_wef_16apr2026'],[Date.UTC(2026,2,19),'aipgr_incl_amdt_0226_wef_19mar2026'],[Date.UTC(2026,0,22),'aipgr_incl_amdt_0126_wef_22jan2026']];
+    for(const x of r)if(t>=x[0])return x[1];return r[r.length-1][1];
   }
-  function ensureUi(){
-    const panel=document.querySelector('#pzlVfrRoutesPanel .pzl-map-menu-card');
-    if(panel&&!document.getElementById('pzlD430RouteStatus')){
-      const host=document.createElement('div');host.id='pzlD430RouteStatus';
-      const base=document.getElementById('pzlVfrStatus');
-      if(base&&base.parentNode)base.parentNode.insertBefore(host,base.nextSibling);else panel.appendChild(host);
-      statusEl=host;
-    } else statusEl=document.getElementById('pzlD430RouteStatus');
-    const note=document.querySelector('#pzlVfrRoutesPanel .pzl-vfr-note');
-    if(note&&!note.dataset.d430){
-      note.dataset.d430='1';
-      note.textContent='Κρατά το παλιό αεροναυτικό σχέδιο του D428. Πάνω του προστίθενται οι διαθέσιμες πραγματικές VFR procedure γραμμές και τα ύψη τους. Χωρίς PDF.';
-    }
-    document.querySelectorAll('.pzl-vfr-aip-btn,.pzl-vfr-airport-aip').forEach(b=>b.remove());
-  }
-  function airacCode(offset){
-    const DAY=86400000,CYCLE=28*DAY,base=Date.UTC(2026,0,22);
-    let idx=Math.floor((Date.now()-base)/CYCLE)+(offset||0),year=2026,cycle=idx+1;
-    while(cycle>13){cycle-=13;year++}while(cycle<1){cycle+=13;year--}
-    return String(year).slice(-2)+String(cycle).padStart(2,'0');
-  }
-  function urls(){
-    const codes=[airacCode(0),airacCode(-1),airacCode(-2)];
-    const out=[];
-    codes.filter((v,i,a)=>a.indexOf(v)===i).forEach(code=>{
-      const path=`live/${code}/ofmx/lggg/latest/embedded/ofmx_lg.xml`;
-      out.push({code,url:`https://storage.googleapis.com/snapshots.openflightmaps.org/${path}`});
-      out.push({code,url:`https://snapshots.openflightmaps.org/${path}`});
-    });
-    return out;
-  }
-  async function loadXml(){
-    if(xmlDoc)return xmlDoc;if(xmlPromise)return xmlPromise;
-    xmlPromise=(async()=>{
-      let last='';
-      for(const x of urls()){
-        try{
-          const r=await fetch(x.url,{cache:'force-cache',mode:'cors'});
-          if(!r.ok)throw new Error('HTTP '+r.status);
-          const t=await r.text();
-          if(!t.includes('<OFMX-Snapshot'))throw new Error('Μη έγκυρο OFMX');
-          const d=new DOMParser().parseFromString(t,'application/xml');
-          if(d.querySelector('parsererror'))throw new Error('XML parser error');
-          xmlDoc=d;xmlAirac=x.code;return d;
-        }catch(e){last=String(e&&e.message||e)}
-      }
-      throw new Error(last||'Δεν φορτώθηκαν OFMX δεδομένα');
-    })();
-    try{return await xmlPromise}finally{if(!xmlDoc)xmlPromise=null}
-  }
-  function direct(node,tag){if(!node)return null;for(const c of Array.from(node.children||[]))if(c.tagName===tag)return c;return null}
-  function dtext(node,tag){const e=direct(node,tag);return e&&e.textContent?e.textContent.trim():''}
-  function firstDesc(node,tag){const a=node&&node.getElementsByTagName?node.getElementsByTagName(tag):[];return a&&a.length?a[0]:null}
-  function associatedIcaos(node){
-    const s=new Set();
-    ['AhpUid','AhpUidAssoc'].forEach(tag=>Array.from(node.getElementsByTagName(tag)||[]).forEach(a=>{
-      const c=firstDesc(a,'codeId');if(c&&c.textContent)s.add(c.textContent.trim().toUpperCase());
-    }));
-    return s;
-  }
-  function readHeight(node,end){
-    if(!node)return'';
-    const code=dtext(node,'codeDistVer'+end),u=dtext(node,'uomDistVer'+end),v=dtext(node,'valDistVer'+end);
-    if(!v||!['STD','HEI','ALT'].includes(code)||!['FL','FT','M'].includes(u))return'';
-    if(u==='FL')return'FL '+v;
-    if(code==='HEI')return v==='0'?'GND':`${v} ${u.toLowerCase()} AGL`;
-    if(code==='ALT')return`${v} ${u.toLowerCase()} MSL`;
-    return'';
-  }
-  function readBand(n){const lo=readHeight(n,'Lower'),hi=readHeight(n,'Upper');if(lo&&hi&&lo===hi)return lo;if(lo&&hi)return`MIN ${lo} · MAX ${hi}`;return lo?`MIN ${lo}`:(hi?`MAX ${hi}`:'')}
-  function procedureAltitude(p){
-    const type=dtext(p,'codeType');
-    if(type==='TRAFFIC_CIRCUIT')return readHeight(p,'Tfc');
-    const set=new Set();
-    Array.from(p.getElementsByTagName('Leg')||[]).forEach(l=>{
-      const a=readBand(direct(l,'entry')),b=readBand(direct(l,'exit'));if(a)set.add(a);if(b)set.add(b);
-    });
-    const a=Array.from(set);return a.length<=3?a.join(' / '):a.slice(0,3).join(' / ')+'…';
-  }
-  function routeCoords(p){
-    const tr=direct(p,'_beztrajectory')||firstDesc(p,'_beztrajectory'),pos=tr&&firstDesc(tr,'gmlPosList');
-    if(!pos||!pos.textContent)return[];const out=[];
-    pos.textContent.trim().split(/\s+/).forEach(t=>{const q=t.split(',').map(Number);if(q.length>=2&&Number.isFinite(q[0])&&Number.isFinite(q[1]))out.push([q[1],q[0]])});
-    return out;
-  }
-  function hav(a,b){const R=6371,r=Math.PI/180,d1=(b[0]-a[0])*r,d2=(b[1]-a[1])*r,x=Math.sin(d1/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(d2/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
-  function nearCenter(coords,c){const p=[Number(c.lat),Number(c.lon)];return coords.some(x=>hav(p,x)<=RADIUS_KM)}
-  function ensurePane(){let p=map.getPane('pzlD430RoutesPane');if(!p)p=map.createPane('pzlD430RoutesPane');p.style.zIndex='525';p.style.pointerEvents='none'}
-  function clearRoutes(){if(routeLayer){try{map.removeLayer(routeLayer)}catch(e){}routeLayer=null}}
-  function midpoint(coords){return coords[Math.floor((coords.length-1)/2)]||coords[0]}
-  function routeIcon(name,alt){return L.divIcon({className:'',html:`<div class="pzl-d430-route-label">${esc(name||'VFR ROUTE')}${alt?`<span class="alt">${esc(alt)}</span>`:''}</div>`,iconSize:null,iconAnchor:[50,13]})}
-  function parseRoutes(doc,centers){
-    const groups=centers.map((c,i)=>({center:c,color:PALETTE[i%PALETTE.length],routes:[]}));
-    Array.from(doc.getElementsByTagName('Prc')||[]).forEach(p=>{
-      const type=dtext(p,'codeType');if(type!=='TRAFFIC_CIRCUIT'&&!type.includes('VFR'))return;
-      const usage=dtext(p,'usageType');if(usage&&usage!=='FIXED_WING')return;
-      const coords=routeCoords(p);if(coords.length<2)return;
-      const assoc=associatedIcaos(p);
-      groups.forEach(g=>{
-        const icao=String(g.center.icao||'').toUpperCase();
-        const match=(assoc.size&&icao)?assoc.has(icao):nearCenter(coords,g.center);
-        if(match)g.routes.push({coords,name:dtext(p,'txtName')||type.replace(/_/g,' '),alt:procedureAltitude(p),type});
-      });
-    });
-    return groups;
-  }
-  function render(groups){
-    clearRoutes();ensurePane();routeLayer=L.layerGroup();let count=0;const seen=new Set();
-    groups.forEach(g=>g.routes.forEach(r=>{
-      const k=r.coords.map(x=>x.map(v=>v.toFixed(4)).join(',')).join('|');if(seen.has(k))return;seen.add(k);
-      L.polyline(r.coords,{pane:'pzlD430RoutesPane',color:g.color,weight:4,opacity:.95,dashArray:r.type==='VFR_HOLD'?'8 6':null}).addTo(routeLayer);
-      const m=midpoint(r.coords);if(m)L.marker(m,{pane:'pzlD430RoutesPane',icon:routeIcon(r.name,r.alt),interactive:false}).addTo(routeLayer);
-      count++;
-    }));
-    routeLayer.addTo(map);return count;
-  }
-  async function updateRoutes(){
-    const cs=selectedCenters(),my=++seq;
-    if(!isActive()||!cs.length){clearRoutes();setStatus('Παλιό VFR σχέδιο ενεργό. Επίλεξε α/δ για τις διαθέσιμες γραμμές/ύψη.',false);return}
-    setStatus('Φόρτωση διαθέσιμων VFR procedure γραμμών και υψών…',false);
-    try{
-      const doc=await loadXml();if(my!==seq||!isActive())return;
-      const groups=parseRoutes(doc,cs),n=render(groups);
-      const empty=groups.filter(g=>!g.routes.length).map(g=>(g.center.icao?g.center.icao+' ':'')+g.center.name);
-      let msg=`Παλιό VFR σχέδιο D428 + ${n} διαθέσιμες procedure γραμμές/ύψη · AIRAC ${xmlAirac}.`;
-      if(empty.length)msg+=`\nΧωρίς vector procedure δεδομένα: ${empty.join(' · ')}.`;
-      setStatus(msg,!!empty.length&&n===0);
-    }catch(e){if(my!==seq)return;clearRoutes();setStatus('Το παλιό VFR σχέδιο παραμένει ενεργό. Δεν φορτώθηκαν οι πρόσθετες γραμμές/ύψη: '+String(e&&e.message||e),true)}
-  }
-  function tick(){
-    ensureUi();
-    if(!mapReady())return;
-    const cs=selectedCenters(),key=(isActive()?'1':'0')+'|'+centersKey(cs);
-    if(key!==lastKey){lastKey=key;if(isActive())updateRoutes();else{++seq;clearRoutes();setStatus('VFR OFF — standard χάρτης.',false)}}
-  }
-  function install(){ensureUi();tick();setInterval(tick,900);const mo=new MutationObserver(ensureUi);mo.observe(document.body,{childList:true,subtree:true});window.PZL_D430={build:BUILD,reload:updateRoutes}}
+  function pdfUrl(icao){icao=String(icao||'').toUpperCase();return `https://aisgr.hasp.gov.gr/${releasePath()}/cd/ais/eaip/pdf/AD%202/AD2-${icao}/LG_AD_2_${icao}_VFR_en.pdf`;}
+  function viewerUrl(url){return 'https://docs.google.com/gview?embedded=1&url='+encodeURIComponent(url);}
+  function available(){const seen=new Set(),out=[];selected().forEach(c=>{const icao=String(c.icao||'').toUpperCase();if(!icao||!OFFICIAL.has(icao)||seen.has(icao))return;seen.add(icao);out.push({...c,icao,pdf:pdfUrl(icao)});});return out;}
+  function buildViewer(){if(viewer)return;viewer=document.createElement('div');viewer.id='pzlD431ChartViewer';viewer.hidden=true;viewer.innerHTML=`<div id="pzlD431ChartHead"><button id="pzlD431ChartPrev" type="button">◀</button><div id="pzlD431ChartTitle">VFR CHART</div><button id="pzlD431ChartNext" type="button">▶</button><button id="pzlD431ChartMap" type="button">MAP</button><button id="pzlD431ChartClose" type="button">✕</button></div><div id="pzlD431ChartTabs"></div><div id="pzlD431ChartFrameWrap"><div id="pzlD431ChartLoading">Φόρτωση επίσημου VFR chart…</div><iframe id="pzlD431ChartFrame" title="Official VFR chart"></iframe></div><div id="pzlD431ChartFoot">Επίσημο AIP chart μέσα στην εφαρμογή. Περιλαμβάνει τις δημοσιευμένες VFR διαδρομές και τα ύψη. Επιβεβαίωση με το ισχύον AIP πριν από επιχειρησιακή χρήση.</div>`;document.body.appendChild(viewer);frame=document.getElementById('pzlD431ChartFrame');tabs=document.getElementById('pzlD431ChartTabs');title=document.getElementById('pzlD431ChartTitle');loading=document.getElementById('pzlD431ChartLoading');document.getElementById('pzlD431ChartClose').onclick=close;document.getElementById('pzlD431ChartMap').onclick=close;document.getElementById('pzlD431ChartPrev').onclick=()=>show((idx-1+items.length)%items.length);document.getElementById('pzlD431ChartNext').onclick=()=>show((idx+1)%items.length);frame.addEventListener('load',()=>{loading.style.display='none';});}
+  function renderTabs(){tabs.innerHTML='';items.forEach((c,i)=>{const b=document.createElement('button');b.type='button';b.className=i===idx?'active':'';b.textContent=(c.auto?'ALT ':'')+c.icao;b.onclick=()=>show(i);tabs.appendChild(b);});}
+  function show(i){if(!items.length)return;idx=Math.max(0,Math.min(items.length-1,i||0));const c=items[idx];title.textContent=`${c.icao} · ${c.name||''} · VFR ROUTES / ΥΨΗ`;loading.style.display='block';frame.src='about:blank';setTimeout(()=>{frame.src=viewerUrl(c.pdf);},30);renderTabs();}
+  function open(icao){buildViewer();items=available();if(!items.length){alert('Δεν βρέθηκε επίσημο VFR chart για τα επιλεγμένα αεροδρόμια.');return;}let i=0;if(icao){const q=String(icao).toUpperCase(),n=items.findIndex(x=>x.icao===q);if(n>=0)i=n;}viewer.hidden=false;document.documentElement.style.overflow='hidden';show(i);}
+  function close(){if(!viewer)return;viewer.hidden=true;document.documentElement.style.overflow='';try{frame.src='about:blank';}catch(e){}}
+  function tools(){const card=document.querySelector('#pzlVfrRoutesPanel .pzl-map-menu-card');if(!card)return;let box=document.getElementById('pzlD431ChartTools');if(!box){box=document.createElement('div');box.id='pzlD431ChartTools';const status=document.getElementById('pzlVfrStatus');if(status&&status.parentNode)status.parentNode.insertBefore(box,status);else card.appendChild(box);}const cs=available();box.innerHTML=`<div class="title">ΕΠΙΣΗΜΕΣ VFR ΔΙΑΔΡΟΜΕΣ + ΥΨΗ</div><div id="pzlD431ChartButtons"></div><div id="pzlD431ChartEmpty"></div>`;const host=box.querySelector('#pzlD431ChartButtons'),empty=box.querySelector('#pzlD431ChartEmpty');if(!cs.length){empty.textContent='Πρασίνισε α/δ που διαθέτει επίσημο VFR chart.';return;}empty.textContent='Πάτησε α/δ για να εμφανιστεί το επίσημο chart μέσα στην εφαρμογή.';cs.forEach(c=>{const b=document.createElement('button');b.type='button';b.className=c.auto?'auto':'';b.textContent=(c.auto?'ALT ':'')+c.icao;b.onclick=()=>open(c.icao);host.appendChild(b);});}
+  function bindButtons(){document.querySelectorAll('.pzl-vfr-focus-btn,.pzl-vfr-airport-zoom').forEach(b=>{if(b.dataset.d431)return;b.dataset.d431='1';b.title='Επίσημο VFR chart με διαδρομές και ύψη';b.addEventListener('click',e=>{const row=b.closest('.pzl-vfr-fire-row,.pzl-vfr-airport-row');if(!row)return;const txt=row.textContent||'',m=txt.match(/\bLG[A-Z0-9]{2}\b/);if(m){e.preventDefault();e.stopImmediatePropagation();open(m[0]);}},true);});const all=document.getElementById('pzlVfrShowAll');if(all&&!all.dataset.d431){all.dataset.d431='1';all.addEventListener('click',()=>setTimeout(()=>open(),900));}}
+  function tick(){buildViewer();tools();bindButtons();const k=available().map(x=>x.icao).join('|');if(k!==lastKey)lastKey=k;}
+  function install(){tick();setInterval(tick,1000);new MutationObserver(()=>{tools();bindButtons();}).observe(document.body,{childList:true,subtree:true});window.PZL_D431={build:BUILD,open,close,selectedCharts:available};}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
 </script>
-<!-- PZL_VFR_OLD_STYLE_ROUTES_HEIGHTS_D430_END -->
+<!-- PZL_VFR_OLD_STYLE_AIP_CHART_LAYER_D431_END -->
 
 </body>
 </html>
