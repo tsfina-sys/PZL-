@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool D424 MAP + VFR ROUTES</title>
+  <title>PZL Mission Tool D426 NAV VFR AIRPORT SELECTOR</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_NAV_DEST_GREECE_BALKANS_20260702AV">
+<meta name="pzl-build" content="PZL_NAV_VFR_AIRPORT_SELECTOR_ALTITUDES_20260702D426">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -13256,15 +13256,15 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 
 
 
-<!-- PZL_MAP_MENU_VFR_ROUTES_D424_BEGIN -->
-<style id="pzl-d424-map-menu-vfr-css">
+<!-- PZL_NAV_VFR_AIRPORT_SELECTOR_ALTITUDES_D426_BEGIN -->
+<style id="pzl-d426-map-menu-vfr-css">
 #pzlMapChooserPanel,#pzlVfrRoutesPanel{
   position:fixed;inset:0;z-index:12120;background:rgba(15,23,42,.62);
   display:flex;align-items:center;justify-content:center;padding:14px;
 }
 #pzlMapChooserPanel[hidden],#pzlVfrRoutesPanel[hidden]{display:none!important;}
 .pzl-map-menu-card{
-  width:min(94vw,430px);max-height:88vh;overflow:auto;background:#fff;color:#172033;
+  width:min(95vw,460px);max-height:90vh;overflow:auto;background:#fff;color:#172033;
   border-radius:16px;padding:14px;box-shadow:0 16px 45px rgba(0,0,0,.48);
 }
 .pzl-map-menu-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:11px;}
@@ -13281,9 +13281,27 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 #pzlChooseVfrRoutes{background:#7c3aed!important;}
 #pzlChooseVfrRoutes.vfr-on{background:#157347!important;}
 .pzl-vfr-note{font-size:12px;line-height:1.35;background:#ede9fe;border:1px solid #c4b5fd;border-radius:9px;padding:8px;margin-bottom:9px;font-weight:800;}
+#pzlVfrContextBadge{font-size:12px;font-weight:1000;border-radius:8px;padding:7px 8px;margin-bottom:8px;background:#e2e8f0;color:#0f172a;}
+#pzlVfrContextBadge.nav-context{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7;}
+#pzlVfrContextBadge.fire-context{background:#ffedd5;color:#9a3412;border:1px solid #fdba74;}
 #pzlVfrAirportButtons{display:grid;grid-template-columns:1fr;gap:7px;margin:9px 0;}
 #pzlVfrAirportButtons button{padding:9px 8px;font-size:12px;text-align:left;}
 #pzlVfrAirportButtons button span{display:block;font-size:10px;opacity:.88;margin-top:2px;}
+#pzlVfrNavTools{margin:8px 0;padding:8px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;}
+#pzlVfrNavTools[hidden]{display:none!important;}
+.pzl-vfr-nav-title{font-size:12px;font-weight:1000;color:#065f46;margin-bottom:6px;}
+#pzlVfrAirportSearch{width:100%;min-width:0!important;padding:8px!important;font-size:13px!important;margin-bottom:6px;}
+.pzl-vfr-nav-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:7px;}
+.pzl-vfr-nav-actions button{padding:7px 3px!important;font-size:10px!important;}
+#pzlVfrGreekAirportList{max-height:43vh;overflow:auto;border:1px solid #cbd5e1;border-radius:8px;background:#fff;padding:3px;}
+.pzl-vfr-airport-row{display:grid;grid-template-columns:25px minmax(0,1fr) 38px;gap:4px;align-items:center;padding:5px 4px;border-bottom:1px solid #e5e7eb;}
+.pzl-vfr-airport-row:last-child{border-bottom:0;}
+.pzl-vfr-airport-row input{width:18px;height:18px;min-width:18px;margin:0;}
+.pzl-vfr-airport-label{min-width:0;cursor:pointer;line-height:1.08;}
+.pzl-vfr-airport-label b{font-size:12px;display:block;color:#172033;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pzl-vfr-airport-label small{font-size:9.5px;color:#475569;font-weight:800;}
+.pzl-vfr-airport-zoom{padding:5px 2px!important;font-size:14px!important;min-width:0!important;background:#64748b!important;}
+#pzlVfrNavSelected{font-size:10px;line-height:1.25;margin-top:6px;padding:6px;border-radius:7px;background:#dcfce7;color:#14532d;font-weight:900;white-space:pre-line;}
 .pzl-vfr-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;}
 .pzl-vfr-actions button{padding:9px 6px;font-size:12px;}
 #pzlVfrToggle.vfr-on{background:#157347!important;}
@@ -13291,39 +13309,63 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 #pzlVfrStatus{font-size:12px;line-height:1.3;background:#eef2f6;border-radius:9px;padding:8px;white-space:pre-line;min-height:42px;}
 .pzl-vfr-warning{font-size:11px;color:#7c2d12;background:#fff7ed;border:1px solid #fdba74;border-radius:9px;padding:8px;margin-top:8px;line-height:1.25;}
 #pzlVfrBadge{
-  position:absolute;z-index:899;left:7px;top:173px;max-width:215px;
+  position:absolute;z-index:899;left:7px;top:173px;max-width:225px;
   background:rgba(76,29,149,.88);color:#fff;border:1px solid rgba(255,255,255,.55);
   border-radius:8px;padding:4px 6px;font-size:9px;font-weight:900;line-height:1.2;
   pointer-events:none;display:none;white-space:pre-line;
 }
 @media(max-width:700px){
-  .pzl-map-menu-card{padding:11px;}
+  .pzl-map-menu-card{padding:10px;}
   .pzl-map-menu-head b{font-size:17px;}
-  #pzlVfrBadge{top:165px;max-width:165px;font-size:8px;}
+  #pzlVfrBadge{top:165px;max-width:175px;font-size:8px;}
+  #pzlVfrGreekAirportList{max-height:40vh;}
+  .pzl-vfr-nav-actions button{font-size:9px!important;}
 }
 </style>
-<script id="pzl-d424-map-menu-vfr-js">
+<script id="pzl-d426-map-menu-vfr-js">
 (function(){
   'use strict';
-  const BUILD='PZL_MAP_MENU_VFR_ROUTES_D424';
-  const VFR_KEY='pzlD424VfrRoutesOn';
+  const BUILD='PZL_NAV_VFR_AIRPORT_SELECTOR_ALTITUDES_D426';
+  const VFR_KEY='pzlD426VfrRoutesOn';
+  const NAV_SELECTION_KEY='pzlD426NavVfrAirportSelection';
   const TILE_ROOT='https://nwy-tiles-api.prod.newaydata.com/tiles/{z}/{x}/{y}.png?path=';
+  const VFR_RADIUS_KM=55;
+  const VFR_MIN_ZOOM=9;
   let masterBtn=null,chooser=null,vfrPanel=null,vfrStatus=null,vfrBadge=null,vfrToggle=null,airportButtons=null;
+  let navTools=null,navList=null,navSearch=null,navSelectedBox=null,contextBadge=null;
   let vfrLayer=null,vfrActive=false,vfrSeq=0,vfrCycle='';
+  let navSelectedNames=new Set(),lastContext='',lastCentersKey='';
 
   function mapReady(){return typeof map!=='undefined'&&window.L&&map&&typeof map.createPane==='function';}
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function setHidden(el,hidden){if(el)el.hidden=!!hidden;}
+  function navContext(){
+    const navBtn=document.getElementById('navModeBtn');
+    const fireBtn=document.getElementById('fireModeBtn');
+    const active=!!(navBtn&&navBtn.classList.contains('active'));
+    let hasRoute=false;try{hasRoute=typeof window.pzlNavHasRoute==='function'&&window.pzlNavHasRoute();}catch(e){}
+    const fireActive=!!(fireBtn&&fireBtn.classList.contains('active'));
+    return active||(!fireActive&&hasRoute);
+  }
+  function contextName(){return navContext()?'NAV':'FIRE';}
   function syncMaster(){
     if(!masterBtn)return;
     masterBtn.textContent='MAP';
     masterBtn.classList.toggle('active',vfrActive||masterBtn.classList.contains('loading')||document.querySelector('#pzlTerrainPanel input:checked'));
-    if(vfrToggle){vfrToggle.classList.toggle('vfr-on',vfrActive);vfrToggle.classList.toggle('vfr-off',!vfrActive);vfrToggle.textContent=vfrActive?'VFR ROUTES: ON':'VFR ROUTES: OFF';}
+    if(vfrToggle){
+      vfrToggle.classList.toggle('vfr-on',vfrActive);vfrToggle.classList.toggle('vfr-off',!vfrActive);
+      vfrToggle.textContent=vfrActive?'VFR ROUTES + ΥΨΗ: ON':'VFR ROUTES + ΥΨΗ: OFF';
+    }
     const choice=document.getElementById('pzlChooseVfrRoutes');if(choice)choice.classList.toggle('vfr-on',vfrActive);
   }
   function setStatus(msg,hold){
     if(vfrStatus)vfrStatus.textContent=msg||'';
     if(vfrBadge){vfrBadge.textContent=msg||'';vfrBadge.style.display=msg?'block':'none';clearTimeout(vfrBadge._hide);if(msg&&!hold)vfrBadge._hide=setTimeout(()=>vfrBadge.style.display='none',6500);}
+  }
+  function icaoForName(name,data){
+    let code='';
+    try{code=(data&&data.icao)||((window.PZL_ICAO&&window.PZL_ICAO[name])||'');}catch(e){}
+    return String(code||'').toUpperCase();
   }
   function sourceForAirport(name){
     if(!name)return null;let a=null;
@@ -13332,9 +13374,9 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
         ((typeof airports!=='undefined'&&airports&&airports[name])?airports[name]:
         ((typeof navExtraAirports!=='undefined'&&navExtraAirports&&navExtraAirports[name])?navExtraAirports[name]:null));
     }catch(e){}
-    if(!a)return null;const lat=Number(a.lat),lon=Number(a.lon);return Number.isFinite(lat)&&Number.isFinite(lon)?{name,lat,lon}:null;
+    if(!a)return null;const lat=Number(a.lat),lon=Number(a.lon);return Number.isFinite(lat)&&Number.isFinite(lon)?{name,lat,lon,icao:icaoForName(name,a)}:null;
   }
-  function selectedAirports(){
+  function fireSelectedAirports(){
     const out=[],seen=new Set();
     function value(kind,id){
       let v='';try{
@@ -13352,6 +13394,51 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     ].forEach(x=>{const p=sourceForAirport(x.name);if(!p)return;const k=p.lat.toFixed(5)+','+p.lon.toFixed(5);if(seen.has(k))return;seen.add(k);out.push({...p,role:x.role});});
     return out;
   }
+  function allGreekAirports(){
+    const byName=new Map();
+    function add(name,data,forceGreek){
+      if(!name||!data)return;const lat=Number(data.lat),lon=Number(data.lon);if(!Number.isFinite(lat)||!Number.isFinite(lon))return;
+      const icao=icaoForName(name,data);
+      if(!forceGreek&&!(icao&&icao.startsWith('LG')))return;
+      const old=byName.get(name);const item={name,lat,lon,icao};
+      if(!old||(!old.icao&&item.icao))byName.set(name,item);
+    }
+    try{Object.entries(bases||{}).forEach(([n,d])=>add(n,d,true));}catch(e){}
+    try{Object.entries(airports||{}).forEach(([n,d])=>add(n,d,true));}catch(e){}
+    try{Object.entries(navExtraAirports||{}).forEach(([n,d])=>add(n,d,false));}catch(e){}
+    return Array.from(byName.values()).sort((a,b)=>((a.icao||'ZZZZ')+' '+a.name).localeCompare((b.icao||'ZZZZ')+' '+b.name,'el'));
+  }
+  function loadNavSelection(){
+    try{const raw=localStorage.getItem(NAV_SELECTION_KEY);if(raw===null)return null;const arr=JSON.parse(raw);return Array.isArray(arr)?arr.filter(x=>typeof x==='string'):[];}catch(e){return null;}
+  }
+  function saveNavSelection(){try{localStorage.setItem(NAV_SELECTION_KEY,JSON.stringify(Array.from(navSelectedNames)));}catch(e){}}
+  function navAutoNames(){
+    let names=[];try{if(typeof window.pzlGetNavMetarNames==='function')names=window.pzlGetNavMetarNames()||[];}catch(e){}
+    if(!names.length){
+      const dep=(document.getElementById('baseSelect')||{}).value||'';
+      const dest=(document.getElementById('navDestSelect')||{}).value||'';
+      names=[dep,dest];
+    }
+    return Array.from(new Set(names.filter(n=>sourceForAirport(n))));
+  }
+  function seedNavSelectionIfNeeded(){
+    const loaded=loadNavSelection();
+    if(loaded===null){navSelectedNames=new Set(navAutoNames());saveNavSelection();}
+    else navSelectedNames=new Set(loaded.filter(n=>sourceForAirport(n)));
+  }
+  function navSelectedAirports(){
+    const out=[];navSelectedNames.forEach(name=>{const p=sourceForAirport(name);if(p)out.push({...p,role:'NAV'});});
+    return out;
+  }
+  function activeCenters(){return navContext()?navSelectedAirports():fireSelectedAirports();}
+  function centersKey(){return contextName()+'|'+activeCenters().map(c=>c.name+':'+c.lat.toFixed(4)+','+c.lon.toFixed(4)).sort().join('|');}
+  function localBoundsFor(c){
+    const dLat=VFR_RADIUS_KM/111.32;
+    const cos=Math.max(.2,Math.cos(c.lat*Math.PI/180));
+    const dLon=VFR_RADIUS_KM/(111.32*cos);
+    return L.latLngBounds([c.lat-dLat,c.lon-dLon],[c.lat+dLat,c.lon+dLon]);
+  }
+  function selectedLocalBounds(centers){return centers.map(localBoundsFor);}
   function airacCode(offset){
     const DAY=86400000,CYCLE=28*DAY,base=Date.UTC(2026,0,22);
     let idx=Math.floor((Date.now()-base)/CYCLE)+(offset||0),year=2026,cycle=idx+1;
@@ -13365,72 +13452,138 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     p.style.zIndex='360';p.style.pointerEvents='none';p.style.opacity='1';
   }
   function removeLayer(){if(vfrLayer){try{map.removeLayer(vfrLayer);}catch(e){}vfrLayer=null;}}
+  function makeLocalTileLayer(url,localBounds){
+    const LocalVfrLayer=L.TileLayer.extend({
+      initialize:function(u,opts){this._pzlLocalBounds=(opts.localBounds||[]).slice();const clean=Object.assign({},opts);delete clean.localBounds;L.TileLayer.prototype.initialize.call(this,u,clean);},
+      _isValidTile:function(coords){
+        if(!L.TileLayer.prototype._isValidTile.call(this,coords))return false;
+        if(!this._pzlLocalBounds||!this._pzlLocalBounds.length)return false;
+        const tileBounds=this._tileCoordsToBounds(coords);
+        return this._pzlLocalBounds.some(b=>b.intersects(tileBounds));
+      }
+    });
+    return new LocalVfrLayer(url,{pane:'pzlVfrRoutesPane',localBounds,minZoom:VFR_MIN_ZOOM,maxZoom:14,maxNativeZoom:13,opacity:.96,updateWhenIdle:true,keepBuffer:0,noWrap:true,attribution:'© open flightmaps association'});
+  }
+  function viewTouchesAny(bounds){try{const v=map.getBounds();return bounds.some(b=>v.intersects(b));}catch(e){return false;}}
+  function currentCenterDescription(centers){
+    if(navContext())return 'NAV: '+centers.map(c=>(c.icao?c.icao+' ':'')+c.name).join(' · ');
+    return centers.map(c=>c.role+' '+(c.icao?c.icao+' ':'')+c.name).join(' · ');
+  }
   function installCandidate(candidates,index,seq){
     if(!vfrActive||seq!==vfrSeq)return;
-    if(index>=candidates.length){setStatus('VFR Routes: δεν ήταν διαθέσιμα τα πλακίδια χάρτη.\nΈλεγξε σύνδεση και δοκίμασε ξανά.',true);return;}
+    if(index>=candidates.length){setStatus('VFR Routes + ύψη: δεν ήταν διαθέσιμα τα πλακίδια χάρτη.\nΈλεγξε σύνδεση και δοκίμασε ξανά.',true);return;}
+    const centers=activeCenters();
+    if(!centers.length){removeLayer();setStatus(navContext()?'NAV: επίλεξε τουλάχιστον ένα ελληνικό αεροδρόμιο από τη λίστα.':'Επίλεξε πρώτα αεροδρόμια Α/Γ, REFILL ή FULL STOP.',true);return;}
+    const localBounds=selectedLocalBounds(centers);
     removeLayer();ensurePane();const code=candidates[index],url=TILE_ROOT+code+'/aero/latest';let loads=0,errors=0,settled=false;
     vfrCycle=code==='latest'?'LATEST':code;
-    setStatus(`VFR Routes: σύνδεση AIRAC ${vfrCycle}…`,true);
-    const layer=L.tileLayer(url,{pane:'pzlVfrRoutesPane',minZoom:7,maxZoom:13,maxNativeZoom:13,opacity:.78,updateWhenIdle:true,keepBuffer:1,attribution:'© open flightmaps association'});
-    vfrLayer=layer;
-    function success(){if(settled||seq!==vfrSeq)return;settled=true;setStatus(`VFR Routes ON · AIRAC ${vfrCycle}\nΠάτησε ένα από τα επιλεγμένα α/δ για κεντράρισμα.`,false);}
+    setStatus(`VFR Routes + ύψη: σύνδεση AIRAC ${vfrCycle}…`,true);
+    const layer=makeLocalTileLayer(url,localBounds);vfrLayer=layer;
+    function success(){if(settled||seq!==vfrSeq)return;settled=true;setStatus(`VFR ON · διαδρομές και altitude labels · AIRAC ${vfrCycle}\n${currentCenterDescription(centers)}`,false);}
     function fail(){if(settled||seq!==vfrSeq)return;settled=true;try{map.removeLayer(layer);}catch(e){}if(vfrLayer===layer)vfrLayer=null;installCandidate(candidates,index+1,seq);}
     layer.on('tileload',()=>{loads++;if(loads===1)success();});
-    layer.on('tileerror',()=>{errors++;if(errors>=5&&loads===0)fail();});
+    layer.on('tileerror',()=>{errors++;if(errors>=5&&loads===0&&map.getZoom()>=VFR_MIN_ZOOM&&viewTouchesAny(localBounds))fail();});
     layer.addTo(map);
-    setTimeout(()=>{if(loads===0)fail();else success();},8500);
+    if(map.getZoom()<VFR_MIN_ZOOM)setStatus(`VFR ON · διαδρομές και ύψη.\nΚάνε zoom ${VFR_MIN_ZOOM} ή μεγαλύτερο για να εμφανιστούν.`,false);
+    setTimeout(()=>{
+      if(seq!==vfrSeq||settled)return;
+      if(loads>0){success();return;}
+      if(map.getZoom()<VFR_MIN_ZOOM||!viewTouchesAny(localBounds)){setStatus(`VFR ON μόνο στις επιλεγμένες περιοχές.\nΠάτησε 🔍 σε αεροδρόμιο ή κάνε zoom ${VFR_MIN_ZOOM}+.`,false);return;}
+      fail();
+    },8500);
+  }
+  function reloadVfr(centerFirst){
+    if(!vfrActive)return;
+    const centers=activeCenters();
+    const seq=++vfrSeq;installCandidate(airacCandidates(),0,seq);
+    if(centerFirst!==false&&centers.length)map.setView([centers[0].lat,centers[0].lon],Math.max(VFR_MIN_ZOOM,Math.min(11,map.getZoom()||10)));
   }
   function activateVfr(centerFirst){
-    if(!mapReady())return;
-    vfrActive=true;document.body.classList.add('pzl-vfr-active');try{localStorage.setItem(VFR_KEY,'1');}catch(e){}
-    const centers=selectedAirports();renderAirportButtons();syncMaster();
-    if(!centers.length){setStatus('Επίλεξε πρώτα αεροδρόμια Α/Γ, REFILL ή FULL STOP.',true);return;}
-    const seq=++vfrSeq;installCandidate(airacCandidates(),0,seq);
-    if(centerFirst!==false){map.setView([centers[0].lat,centers[0].lon],Math.max(9,Math.min(11,map.getZoom()||9)));}
+    if(!mapReady())return;vfrActive=true;document.body.classList.add('pzl-vfr-active');try{localStorage.setItem(VFR_KEY,'1');}catch(e){}
+    renderContextUi();syncMaster();reloadVfr(centerFirst);
   }
   function deactivateVfr(){
     vfrActive=false;++vfrSeq;removeLayer();document.body.classList.remove('pzl-vfr-active');try{localStorage.setItem(VFR_KEY,'0');}catch(e){}
-    setStatus('VFR Routes OFF — standard χάρτης.',false);syncMaster();
+    setStatus('VFR Routes + ύψη OFF — standard χάρτης.',false);syncMaster();
   }
   function toggleVfr(){if(vfrActive)deactivateVfr();else activateVfr(true);}
-  function renderAirportButtons(){
-    if(!airportButtons)return;const centers=selectedAirports();airportButtons.innerHTML='';
-    if(!centers.length){airportButtons.innerHTML='<div class="pzl-vfr-note">Δεν έχουν επιλεγεί αεροδρόμια.</div>';return;}
-    centers.forEach(c=>{
-      const b=document.createElement('button');b.type='button';b.innerHTML=`<b>${esc(c.role)} — ${esc(c.name)}</b><span>Κεντράρισμα και προβολή VFR Routes</span>`;
-      b.onclick=()=>{if(!vfrActive)activateVfr(false);map.setView([c.lat,c.lon],10);setStatus(`VFR Routes · ${c.role} ${c.name} · AIRAC ${vfrCycle||airacCode(0)}`,false);setHidden(vfrPanel,true);};airportButtons.appendChild(b);
+  function zoomAirport(c){if(!vfrActive)activateVfr(false);map.setView([c.lat,c.lon],10);setStatus(`VFR · ${(c.icao?c.icao+' ':'')+c.name} · διαδρομές και altitude labels`,false);setHidden(vfrPanel,true);}
+  function renderFireButtons(){
+    if(!airportButtons)return;const centers=fireSelectedAirports();airportButtons.innerHTML='';
+    if(!centers.length){airportButtons.innerHTML='<div class="pzl-vfr-note">Δεν έχουν επιλεγεί αεροδρόμια Α/Γ, REFILL ή FULL STOP.</div>';return;}
+    centers.forEach(c=>{const b=document.createElement('button');b.type='button';b.innerHTML=`<b>${esc(c.role)} — ${esc(c.icao?c.icao+' · ':'')}${esc(c.name)}</b><span>Προβολή VFR διαδρομών και υψών στην τοπική περιοχή</span>`;b.onclick=()=>zoomAirport(c);airportButtons.appendChild(b);});
+  }
+  function updateNavSelectedBox(){
+    if(!navSelectedBox)return;const c=navSelectedAirports();navSelectedBox.textContent=c.length?`Επιλεγμένα (${c.length}): ${c.map(x=>(x.icao?x.icao+' ':'')+x.name).join(' · ')}`:'Δεν έχει επιλεγεί αεροδρόμιο NAV.';
+  }
+  function filterNavList(){
+    if(!navList)return;const q=String(navSearch&&navSearch.value||'').trim().toLocaleUpperCase('el-GR');
+    navList.querySelectorAll('.pzl-vfr-airport-row').forEach(row=>{const hay=(row.dataset.search||'').toLocaleUpperCase('el-GR');row.hidden=!!q&&!hay.includes(q);});
+  }
+  function renderNavAirportList(){
+    if(!navList)return;const all=allGreekAirports();navList.innerHTML='';
+    all.forEach(c=>{
+      const row=document.createElement('div');row.className='pzl-vfr-airport-row';row.dataset.search=(c.name+' '+(c.icao||''));
+      const chk=document.createElement('input');chk.type='checkbox';chk.checked=navSelectedNames.has(c.name);chk.setAttribute('aria-label','Επιλογή '+c.name);
+      const label=document.createElement('label');label.className='pzl-vfr-airport-label';label.innerHTML=`<b>${esc(c.icao||'LG')} · ${esc(c.name)}</b><small>${c.lat.toFixed(4)}, ${c.lon.toFixed(4)}</small>`;
+      label.onclick=e=>{e.preventDefault();chk.click();};
+      chk.onchange=()=>{
+        if(chk.checked)navSelectedNames.add(c.name);else navSelectedNames.delete(c.name);
+        saveNavSelection();updateNavSelectedBox();lastCentersKey='';if(vfrActive)reloadVfr(false);
+      };
+      const z=document.createElement('button');z.type='button';z.className='pzl-vfr-airport-zoom';z.textContent='🔍';z.title='Προβολή '+c.name;z.onclick=()=>zoomAirport(c);
+      row.append(chk,label,z);navList.appendChild(row);
     });
+    filterNavList();updateNavSelectedBox();
+  }
+  function selectNavAuto(){navSelectedNames=new Set(navAutoNames());saveNavSelection();renderNavAirportList();lastCentersKey='';if(vfrActive)reloadVfr(true);}
+  function clearNavSelection(){navSelectedNames.clear();saveNavSelection();renderNavAirportList();lastCentersKey='';if(vfrActive)reloadVfr(false);}
+  function renderContextUi(){
+    const isNav=navContext();
+    if(contextBadge){contextBadge.classList.toggle('nav-context',isNav);contextBadge.classList.toggle('fire-context',!isNav);contextBadge.textContent=isNav?'NAV — διάλεξε οποιαδήποτε ελληνικά α/δ για VFR routes/ύψη':'FIRE — VFR μόνο για Α/Γ, REFILL και FULL STOP';}
+    setHidden(navTools,!isNav);setHidden(airportButtons,isNav);
+    if(isNav)renderNavAirportList();else renderFireButtons();
   }
   function fitAll(){
-    const c=selectedAirports();if(!c.length){setStatus('Δεν έχουν επιλεγεί αεροδρόμια.',true);return;}
+    const c=activeCenters();if(!c.length){setStatus(navContext()?'Δεν έχουν επιλεγεί αεροδρόμια NAV.':'Δεν έχουν επιλεγεί αεροδρόμια.',true);return;}
     if(!vfrActive)activateVfr(false);
-    if(c.length===1)map.setView([c[0].lat,c[0].lon],10);else{const b=L.latLngBounds(c.map(x=>[x.lat,x.lon]));map.fitBounds(b.pad(.25),{maxZoom:9});if(map.getZoom()<7)map.setZoom(7);}
-    setStatus(`VFR Routes · ${c.map(x=>x.role+' '+x.name).join(' · ')}`,false);setHidden(vfrPanel,true);
+    if(c.length===1)map.setView([c[0].lat,c[0].lon],10);else{const b=L.latLngBounds(c.map(x=>[x.lat,x.lon]));map.fitBounds(b.pad(.18),{maxZoom:9});}
+    setStatus(`VFR Routes + ύψη για:\n${currentCenterDescription(c)}`,false);setHidden(vfrPanel,true);
   }
   function openChooser(){setHidden(chooser,false);syncMaster();}
   function openPzl(){setHidden(chooser,true);const p=document.getElementById('pzlTerrainPanel');if(p)p.hidden=false;}
-  function openVfr(){setHidden(chooser,true);renderAirportButtons();setHidden(vfrPanel,false);if(!vfrActive)activateVfr(true);}
+  function openVfr(){setHidden(chooser,true);renderContextUi();setHidden(vfrPanel,false);if(!vfrActive)activateVfr(true);}
+  function watchContext(){
+    const ctx=contextName(),key=centersKey();
+    if(ctx!==lastContext){lastContext=ctx;renderContextUi();lastCentersKey='';}
+    if(key!==lastCentersKey){lastCentersKey=key;renderContextUi();if(vfrActive)reloadVfr(false);}
+    syncMaster();
+  }
   function buildUi(){
     masterBtn=document.getElementById('pzlMapModeBtn');if(!masterBtn||document.getElementById('pzlMapChooserPanel'))return false;
-    masterBtn.textContent='MAP';masterBtn.title='PZL MAP ή VFR Routes';masterBtn.onclick=openChooser;
+    seedNavSelectionIfNeeded();
+    masterBtn.textContent='MAP';masterBtn.title='PZL MAP ή VFR Routes + ύψη';masterBtn.onclick=openChooser;
     const wrap=document.getElementById('mapWrap');vfrBadge=document.createElement('div');vfrBadge.id='pzlVfrBadge';wrap.appendChild(vfrBadge);
     chooser=document.createElement('div');chooser.id='pzlMapChooserPanel';chooser.hidden=true;
-    chooser.innerHTML=`<div class="pzl-map-menu-card"><div class="pzl-map-menu-head"><b>MAP</b><button id="pzlMapChooserClose" type="button">✕</button></div><div class="pzl-map-choice-grid"><button id="pzlChoosePzlMap" class="pzl-map-choice" type="button"><strong>PZL MAP</strong><small>Κορυφές, ύψη ft MSL, γραμμές ΜΤ/ΥΤ και κεραίες κατόπιν επιλογής.</small></button><button id="pzlChooseVfrRoutes" class="pzl-map-choice" type="button"><strong>VFR ROUTES</strong><small>Αεροναυτικό overlay και κεντράρισμα στα επιλεγμένα αεροδρόμια Α/Γ, REFILL και FULL STOP.</small></button></div></div>`;
+    chooser.innerHTML=`<div class="pzl-map-menu-card"><div class="pzl-map-menu-head"><b>MAP</b><button id="pzlMapChooserClose" type="button">✕</button></div><div class="pzl-map-choice-grid"><button id="pzlChoosePzlMap" class="pzl-map-choice" type="button"><strong>PZL MAP</strong><small>Κορυφές, ύψη ft MSL, γραμμές ΜΤ/ΥΤ και κεραίες κατόπιν επιλογής.</small></button><button id="pzlChooseVfrRoutes" class="pzl-map-choice" type="button"><strong>VFR ROUTES + ΥΨΗ</strong><small>FIRE: μόνο τα 3 επιχειρησιακά α/δ. NAV: επιλογή από όλα τα ελληνικά α/δ.</small></button></div></div>`;
     document.body.appendChild(chooser);
     vfrPanel=document.createElement('div');vfrPanel.id='pzlVfrRoutesPanel';vfrPanel.hidden=true;
-    vfrPanel.innerHTML=`<div class="pzl-map-menu-card"><div class="pzl-map-menu-head"><b>VFR ROUTES</b><button id="pzlVfrClose" type="button">✕</button></div><div class="pzl-vfr-note">Ο STANDARD χάρτης παραμένει από κάτω. Το VFR overlay εμφανίζεται μόνο κατόπιν επιλογής. Πάτησε αεροδρόμιο για να δεις την περιοχή του.</div><button id="pzlVfrToggle" type="button"></button><div id="pzlVfrAirportButtons"></div><div class="pzl-vfr-actions"><button id="pzlVfrFitAll" type="button">ΟΛΑ ΤΑ Α/Δ</button><button id="pzlVfrBack" type="button" class="secondary">← MAP</button></div><div id="pzlVfrStatus"></div><div class="pzl-vfr-warning">Πηγή: OpenFlightMaps. Βοηθητική απεικόνιση και όχι επίσημος/πιστοποιημένος αεροναυτικός χάρτης. Για επιχειρησιακή χρήση να επιβεβαιώνεται πάντα με το ισχύον AIP και τα εγκεκριμένα charts.</div></div>`;
+    vfrPanel.innerHTML=`<div class="pzl-map-menu-card"><div class="pzl-map-menu-head"><b>VFR ROUTES + ΥΨΗ</b><button id="pzlVfrClose" type="button">✕</button></div><div id="pzlVfrContextBadge"></div><div class="pzl-vfr-note">Ο STANDARD χάρτης παραμένει από κάτω. Το overlay εμφανίζει τις VFR διαδρομές και τα altitude labels του αεροναυτικού χάρτη μόνο περίπου ${VFR_RADIUS_KM} km γύρω από τα α/δ που επιλέγεις, από zoom ${VFR_MIN_ZOOM}+.</div><button id="pzlVfrToggle" type="button"></button><div id="pzlVfrAirportButtons"></div><div id="pzlVfrNavTools" hidden><div class="pzl-vfr-nav-title">ΕΛΛΗΝΙΚΑ ΑΕΡΟΔΡΟΜΙΑ — πολλαπλή επιλογή</div><input id="pzlVfrAirportSearch" type="search" placeholder="Αναζήτηση ονόματος ή ICAO π.χ. LGMT"><div class="pzl-vfr-nav-actions"><button id="pzlVfrSelectNavAirports" type="button">Α/Δ NAV</button><button id="pzlVfrShowSelected" type="button">ΕΠΙΛΕΓΜΕΝΑ</button><button id="pzlVfrClearSelection" type="button" class="secondary">ΚΑΘΑΡΙΣΜΟΣ</button></div><div id="pzlVfrGreekAirportList"></div><div id="pzlVfrNavSelected"></div></div><div class="pzl-vfr-actions"><button id="pzlVfrFitAll" type="button">ΠΡΟΒΟΛΗ ΟΛΩΝ</button><button id="pzlVfrBack" type="button" class="secondary">← MAP</button></div><div id="pzlVfrStatus"></div><div class="pzl-vfr-warning">Βοηθητική απεικόνιση. Δεν αντικαθιστά το ισχύον AIP ή εγκεκριμένο αεροναυτικό chart.</div></div>`;
     document.body.appendChild(vfrPanel);
     vfrStatus=document.getElementById('pzlVfrStatus');vfrToggle=document.getElementById('pzlVfrToggle');airportButtons=document.getElementById('pzlVfrAirportButtons');
+    navTools=document.getElementById('pzlVfrNavTools');navList=document.getElementById('pzlVfrGreekAirportList');navSearch=document.getElementById('pzlVfrAirportSearch');navSelectedBox=document.getElementById('pzlVfrNavSelected');contextBadge=document.getElementById('pzlVfrContextBadge');
     document.getElementById('pzlMapChooserClose').onclick=()=>setHidden(chooser,true);chooser.onclick=e=>{if(e.target===chooser)setHidden(chooser,true);};
     document.getElementById('pzlChoosePzlMap').onclick=openPzl;document.getElementById('pzlChooseVfrRoutes').onclick=openVfr;
     document.getElementById('pzlVfrClose').onclick=()=>setHidden(vfrPanel,true);vfrPanel.onclick=e=>{if(e.target===vfrPanel)setHidden(vfrPanel,true);};
     vfrToggle.onclick=toggleVfr;document.getElementById('pzlVfrFitAll').onclick=fitAll;document.getElementById('pzlVfrBack').onclick=()=>{setHidden(vfrPanel,true);openChooser();};
-    ['baseSelect','refillBaseSelect','fullStopBaseSelect'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('change',()=>{renderAirportButtons();if(vfrActive){setStatus('Άλλαξαν τα επιλεγμένα α/δ. Πάτησε το α/δ που θέλεις να δεις.',false);}});});
+    navSearch.oninput=filterNavList;document.getElementById('pzlVfrSelectNavAirports').onclick=selectNavAuto;document.getElementById('pzlVfrShowSelected').onclick=fitAll;document.getElementById('pzlVfrClearSelection').onclick=clearNavSelection;
+    ['baseSelect','refillBaseSelect','fullStopBaseSelect','navDestSelect'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('change',()=>{lastCentersKey='';renderContextUi();if(vfrActive&&!navContext())reloadVfr(false);});});
+    const navBtn=document.getElementById('navModeBtn'),fireBtn=document.getElementById('fireModeBtn');
+    [navBtn,fireBtn].filter(Boolean).forEach(btn=>btn.addEventListener('click',()=>setTimeout(watchContext,80)));
     try{vfrActive=localStorage.getItem(VFR_KEY)==='1';}catch(e){}
-    if(vfrActive)activateVfr(false);else setStatus('VFR Routes OFF — standard χάρτης.',false);
-    syncMaster();
-    setInterval(syncMaster,1200);
-    window.PZL_VFR_ROUTES={on:()=>activateVfr(true),off:deactivateVfr,toggle:toggleVfr,open:openVfr,build:BUILD};
+    renderContextUi();if(vfrActive)activateVfr(false);else setStatus('VFR Routes + ύψη OFF — standard χάρτης.',false);
+    lastContext=contextName();lastCentersKey=centersKey();syncMaster();setInterval(watchContext,1200);
+    window.PZL_VFR_ROUTES={on:()=>activateVfr(true),off:deactivateVfr,toggle:toggleVfr,open:openVfr,build:BUILD,radiusKm:VFR_RADIUS_KM,minZoom:VFR_MIN_ZOOM,selected:()=>activeCenters().map(x=>({...x}))};
     return true;
   }
   function install(){if(!mapReady()||!buildUi())setTimeout(install,450);}
@@ -13438,7 +13591,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
   setTimeout(install,1200);
 })();
 </script>
-<!-- PZL_MAP_MENU_VFR_ROUTES_D424_END -->
+<!-- PZL_NAV_VFR_AIRPORT_SELECTOR_ALTITUDES_D426_END -->
 
 </body>
 </html>

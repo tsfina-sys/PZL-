@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_MAP_MENU_VFR_ROUTES_20260702D424";
+const PZL_BUILD = "PZL_NAV_VFR_AIRPORT_SELECTOR_ALTITUDES_20260702D426";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";
