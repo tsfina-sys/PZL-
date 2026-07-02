@@ -4376,6 +4376,33 @@ function setFireMarker() {
         const drops = document.getElementById('drops');
         if (drops) drops.innerHTML = '';
       } catch(e) {}
+      try {
+        commandTime = null;
+        window.pzlManualCommandTimeActive = false;
+        window.manualNewFireCommandTime = null;
+      } catch(e) {}
+      try { if (typeof pzlResetOperationalProgress === 'function') pzlResetOperationalProgress(true); } catch(e) {}
+      try { if (typeof resetAutoTakeoffFullStopDisplays === 'function') resetAutoTakeoffFullStopDisplays(); } catch(e) {}
+      try {
+        isAirborne = false;
+        airborneMsTotal = 0;
+        lastAirborneTick = null;
+        calculatedFuelBurnedL = 0;
+      } catch(e) {}
+      try {
+        const manualTime = document.getElementById('manualTime');
+        if (manualTime) manualTime.value = '';
+      } catch(e) {}
+      try {
+        setText('dashAirborne', '00:00');
+        setText('dashAirborneState', 'ΟΧΙ');
+        setText('dashDrops', '-');
+        setText('dashFirstDrop', '-');
+        setText('dashCutoff', '-');
+        setText('dashLastLanding', '-');
+        setText('dashFireDist', '-');
+        setText('dashLimit', '-');
+      } catch(e) {}
       try { updateFireModeButtonState(); } catch(e) {}
       try { drawAll(); } catch(e) {}
       try { calculate(); } catch(e) {}
