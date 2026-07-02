@@ -1,1 +1,1 @@
-PZL D433 — VFR διαδρομές/ύψη μόνο στον κύριο χάρτη. Χωρίς PDF ή ξεχωριστή σελίδα.
+PZL D434 — old VFR chart style with direct map connections between VFR reporting points.
