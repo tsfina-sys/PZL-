@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_NAV_ICAO_3_AIRPORTS_20260702AX";
+const PZL_BUILD = "PZL_CHECK_DISTANCE_POINTS_ROUTES_20260702D416";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";

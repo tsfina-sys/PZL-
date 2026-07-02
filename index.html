@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool CLR NAV X2 - v8.2 D67 Cockpit FIX37D415 NAV ICAO LABELS</title>
+  <title>PZL Mission Tool v8.2 D416 CHECK DISTANCE · POINTS · ROUTES</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -1743,7 +1743,7 @@ body.pzl-screen-locked #lockMapBtn {
 <body><button id="metarWindBtn" class="metar-off" onclick="pzlRefreshCheckwxMetars()" style="position:absolute;z-index:1000;top:52px;left:6px">METAR</button>
 <div id="app">
   <div id="mapWrap">
-    <header><span>PZL Mission Tool v8.2 D76</span><span>Cockpit</span></header>
+    <header><span>PZL Mission Tool v8.2 D416</span><span>Cockpit</span></header>
     <div id="topMapGpsBar" style="position:absolute;top:10px;left:70px;z-index:9999;display:flex;gap:8px;"><button id="positionReportBtn" class="secondary">Αναφορά θέσης</button><div class="splitControl topGpsSplit"><button id="gpsBtn">GPS</button><button id="useGpsAsStartBtn" class="secondary">Αφετηρία</button></div><button id="toggleHudBtn" class="secondary">HUD OFF</button><button id="toggleActionsBtn" class="secondary" title="Εμφάνιση/απόκρυψη δεξιού πάνελ">PNL</button><div class="splitControl topFixSplit"><button id="fixBtn" class="secondary" title="Αποθήκευση τρέχουσας θέσης GPS μέχρι 5 σημεία">FIX</button><button id="manualFixBtn" class="secondary" title="Manual FIX: πάτησε και μετά διάλεξε σημείο στον χάρτη">MFIX</button></div></div>
 <div id="map"></div>
     <div id="pzlNetBadge" class="preparing" title="Η εφαρμογή αποθηκεύεται για offline χρήση">ONLINE · προετοιμασία offline</div>
@@ -11799,6 +11799,826 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
   window.PZL_ICAO = merged;
 })();
 </script>
+
+
+<!-- PZL_CHECK_DISTANCE_LIBRARY_ROUTES_START -->
+<style id="pzl-check-distance-library-routes-css">
+/* CHECK DISTANCE + point library + route library */
+#pzlCheckControls{display:flex;flex-direction:column;gap:4px;width:100%;}
+#pzlCheckControls>button{width:100%;margin:0!important;}
+#checkDistanceBtn.active{background:#157347!important;color:#fff!important;}
+#clearCheckDistanceBtn.x2-pending{outline:3px solid #f59e0b!important;box-shadow:0 0 0 3px rgba(245,158,11,.35)!important;}
+#checkDistancePanel{background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.34);border-radius:9px;padding:5px;display:flex;flex-direction:column;gap:4px;color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.3);}
+#checkDistancePanel[hidden]{display:none!important;}
+.pzl-check-slot-row,.pzl-check-search-row,.pzl-check-coord-row{display:flex;gap:3px;align-items:center;min-width:0;}
+.pzl-check-slot-row select{flex:0 0 54%;min-width:0!important;padding:4px 2px!important;font-size:9px!important;}
+#checkNextHint{font-size:7.5px;font-weight:800;line-height:1.05;flex:1;}
+.pzl-check-search-row input{min-width:0!important;width:62%!important;flex:1!important;padding:5px 4px!important;font-size:9px!important;}
+.pzl-check-search-row button{width:38%!important;min-width:0!important;padding:5px 2px!important;font-size:9px!important;}
+#checkCoordToggleBtn{width:100%;padding:4px 3px!important;font-size:9px!important;}
+#checkCoordToggleBtn.active{background:#157347!important;}
+#checkCoordPanel{display:flex;flex-direction:column;gap:3px;}
+#checkCoordPanel[hidden]{display:none!important;}
+.pzl-check-coord-row input{min-width:0!important;width:50%!important;padding:4px 3px!important;font-size:8px!important;}
+.pzl-check-coord-row select{min-width:0!important;width:45%!important;padding:4px 2px!important;font-size:8px!important;}
+.pzl-check-coord-row button{min-width:0!important;flex:1!important;padding:4px 2px!important;font-size:9px!important;}
+#checkLegNavigator{display:grid;grid-template-columns:24px minmax(0,1fr) 24px;gap:3px;align-items:stretch;}
+#checkLegNavigator>button{padding:2px!important;min-width:0!important;font-size:12px!important;}
+#checkLegInfo{background:rgba(255,255,255,.10);border-radius:6px;padding:3px;text-align:center;min-width:0;}
+#checkLegInfo b,#checkLegInfo small{display:block;line-height:1.05;overflow-wrap:anywhere;}
+#checkLegInfo b{font-size:8px;}
+#checkLegInfo small{font-size:7px;margin-top:2px;}
+body.pzl-check-distance-active #map{cursor:crosshair;}
+.pzl-check-icon{background:#00acc1;color:#fff;border:2px solid #fff;border-radius:8px;padding:3px 5px;font-size:11px;font-weight:1000;box-shadow:0 2px 7px rgba(0,0,0,.55);white-space:nowrap;}
+.pzl-check-arrow{color:#ffd54f;font-size:23px;font-weight:1000;line-height:24px;text-align:center;text-shadow:0 2px 4px #000;transform-origin:50% 50%;}
+.pzl-route-icon{background:#7e22ce;color:#fff;border:2px solid #fff;border-radius:7px;padding:3px 4px;font-size:10px;font-weight:1000;box-shadow:0 2px 7px rgba(0,0,0,.5);white-space:nowrap;}
+.pzl-preview-icon{font-size:26px;filter:drop-shadow(0 2px 4px #000);}
+
+#fixPanel .fix-row{grid-template-columns:48px minmax(0,1fr) 39px 31px 29px!important;gap:3px!important;}
+#fixPanel .fix-save{width:29px!important;min-width:29px!important;padding:2px!important;background:#0f6ab4!important;font-size:12px!important;}
+#fixPanel .fix-del{width:28px!important;min-width:28px!important;padding:2px!important;}
+#fixPanel .fix-source{display:block;font-size:8px;color:#475569;font-weight:700;line-height:1.05;margin-top:2px;overflow-wrap:anywhere;}
+
+.pzl-library-body{padding-top:4px!important;}
+.pzl-library-head{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:5px;}
+.pzl-library-head button{padding:5px 8px;font-size:11px;}
+.pzl-library-subtitle{font-weight:900;margin:9px 0 4px;padding-top:6px;border-top:1px solid #d0d5dd;}
+.pzl-lib-empty{font-size:11px;color:#667085;padding:6px;background:#f8fafc;border-radius:7px;}
+.pzl-lib-row,.pzl-route-row{display:grid;grid-template-columns:minmax(0,1fr) 32px 32px 32px;gap:4px;align-items:center;padding:5px 0;border-top:1px solid #e5e7eb;}
+.pzl-route-row{grid-template-columns:minmax(0,1fr) 38px 32px 32px 32px;}
+.pzl-route-row.active{background:#ecfdf3;border-radius:7px;padding-left:4px;padding-right:4px;}
+.pzl-lib-main{min-width:0;}
+.pzl-lib-main b,.pzl-lib-main small{display:block;overflow-wrap:anywhere;}
+.pzl-lib-main b{font-size:12px;}
+.pzl-lib-main small{font-size:9px;color:#667085;margin-top:2px;}
+.pzl-lib-row button,.pzl-route-row button{padding:4px 2px!important;min-width:0!important;font-size:11px!important;}
+.pzl-lib-del{background:#b42318!important;}
+.pzl-route-activate{background:#6b7280!important;font-size:8px!important;}
+.pzl-route-activate.active{background:#157347!important;}
+#pzlActiveRouteInfo{margin-top:7px;background:#f3e8ff;border:1px solid #c084fc;border-radius:8px;padding:7px;font-size:10px;line-height:1.2;}
+#pzlActiveRouteInfo b,#pzlActiveRouteInfo span,#pzlActiveRouteInfo strong{display:block;margin-bottom:3px;}
+#pzlLibraryPreview{display:flex;align-items:center;gap:8px;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:8px;}
+#pzlLibraryPreview[hidden]{display:none!important;}
+#pzlPreviewBack{padding:5px 10px!important;font-size:18px!important;}
+
+.pzl-route-modal,.pzl-choice-overlay{position:fixed;inset:0;z-index:25000;background:rgba(2,6,23,.72);display:flex;align-items:center;justify-content:center;padding:12px;}
+.pzl-route-modal[hidden]{display:none!important;}
+.pzl-route-card,.pzl-choice-card{width:min(94vw,620px);max-height:92vh;overflow:auto;background:#fff;color:#172033;border-radius:14px;padding:12px;box-shadow:0 18px 50px rgba(0,0,0,.48);}
+.pzl-route-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;font-size:16px;}
+.pzl-route-card label{display:block;margin-bottom:7px;}
+.pzl-route-card label input{width:100%;margin-top:3px;}
+#routeDraftList{border:1px solid #d0d5dd;border-radius:9px;padding:5px;max-height:220px;overflow:auto;margin-bottom:8px;}
+.pzl-draft-row{display:grid;grid-template-columns:minmax(0,1fr) 28px 28px 28px;gap:3px;align-items:center;padding:4px 0;border-top:1px solid #e5e7eb;}
+.pzl-draft-row:first-child{border-top:0;}
+.pzl-draft-row b,.pzl-draft-row small{grid-column:1;display:block;overflow-wrap:anywhere;}
+.pzl-draft-row b{font-size:11px;}.pzl-draft-row small{font-size:8px;color:#667085;}
+.pzl-draft-row button{padding:3px!important;min-width:0!important;grid-row:1 / span 2;}
+.pzl-draft-row button[data-draft-up]{grid-column:2;}.pzl-draft-row button[data-draft-down]{grid-column:3;}.pzl-draft-row button[data-draft-del]{grid-column:4;}
+.pzl-route-add-box{background:#f8fafc;border:1px solid #d0d5dd;border-radius:9px;padding:7px;margin-top:6px;}
+.pzl-route-add-box>b{display:block;font-size:11px;margin-bottom:4px;}
+.pzl-route-inline{display:flex;gap:5px;align-items:center;margin-top:4px;}
+.pzl-route-inline input,.pzl-route-inline select{min-width:0!important;flex:1!important;}
+.pzl-route-inline button{flex:0 0 auto;}
+.pzl-route-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:10px;}
+.pzl-choice-title{font-size:16px;font-weight:900;margin-bottom:8px;}
+.pzl-choice-list{display:flex;flex-direction:column;gap:5px;max-height:70vh;overflow:auto;margin-bottom:8px;}
+.pzl-choice-item{display:block!important;width:100%!important;text-align:left!important;background:#1f2937!important;padding:8px!important;}
+.pzl-choice-item b,.pzl-choice-item small{display:block;}.pzl-choice-item small{font-size:10px;opacity:.8;margin-top:2px;}
+.pzl-choice-cancel{width:100%;}
+#pzlFeatureToast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,25px);z-index:30000;background:#111827;color:#fff;padding:9px 13px;border-radius:10px;font-size:12px;font-weight:800;opacity:0;pointer-events:none;transition:.18s;max-width:88vw;text-align:center;}
+#pzlFeatureToast.show{opacity:1;transform:translate(-50%,0);}
+
+@media(max-width:700px){
+  #pzlCheckControls>button{height:26px!important;min-height:26px!important;font-size:8.4px!important;line-height:1!important;padding:3px 2px!important;}
+  #clearCheckDistanceBtn{font-size:7.7px!important;}
+  #checkDistancePanel{padding:3px;gap:3px;}
+  #fixPanel .fix-row{grid-template-columns:43px minmax(0,1fr) 34px 27px 26px!important;gap:2px!important;}
+  #fixPanel .fix-save{width:25px!important;min-width:25px!important;font-size:10px!important;}
+  #fixPanel .fix-del{width:25px!important;min-width:25px!important;}
+  .pzl-route-card{width:96vw;padding:9px;}
+  .pzl-route-inline input,.pzl-route-inline select,.pzl-route-inline button{font-size:11px!important;padding:6px!important;}
+}
+
+</style>
+<script id="pzl-check-distance-library-routes-js">
+(function(){
+  'use strict';
+
+  const CHECK_KEY = 'pzl_check_distance_points_v1';
+  const LIB_KEY = 'pzl_saved_point_library_v1';
+  const ROUTE_KEY = 'pzl_saved_route_library_v1';
+  const ACTIVE_ROUTE_KEY = 'pzl_active_saved_route_v1';
+  const MAX_CHECKS = 5;
+  const CHECK_SPEED_KMH = 180;
+
+  let checkMode = false;
+  let checkPoints = loadJson(CHECK_KEY, [null,null,null,null,null]);
+  if (!Array.isArray(checkPoints)) checkPoints = [null,null,null,null,null];
+  checkPoints = Array.from({length:MAX_CHECKS}, (_,i) => sanitizePoint(checkPoints[i], 'check_'+(i+1), 'CHECK '+(i+1)));
+  let checkSlot = Math.max(0, checkPoints.findIndex(p => !p));
+  if (checkSlot < 0) checkSlot = 0;
+  let checkLegIndex = 0;
+  let checkMarkers = [];
+  let checkLayers = [];
+  let checkArrowMarker = null;
+  let clearCheckArmedAt = 0;
+  let clearCheckTimer = null;
+
+  let pointLibrary = loadJson(LIB_KEY, []);
+  if (!Array.isArray(pointLibrary)) pointLibrary = [];
+  pointLibrary = pointLibrary.map((p,i) => sanitizeLibraryPoint(p, i)).filter(Boolean);
+
+  let routeLibrary = loadJson(ROUTE_KEY, []);
+  if (!Array.isArray(routeLibrary)) routeLibrary = [];
+  routeLibrary = routeLibrary.map(sanitizeRoute).filter(Boolean);
+  let activeRouteId = localStorage.getItem(ACTIVE_ROUTE_KEY) || null;
+  let activeRouteLayers = [];
+  let previewLayers = [];
+  let previewTimer = null;
+  let previewMapState = null;
+  let routeDraft = null;
+  let routeDraftId = null;
+
+  let baseAllFixEntries = null;
+  let baseDeleteFix = null;
+
+  function loadJson(key, fallback){
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch(e) { return fallback; }
+  }
+  function saveJson(key, value){
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
+  }
+  function uid(prefix){
+    return String(prefix || 'id') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+  }
+  function finite(v){ return Number.isFinite(Number(v)); }
+  function esc(value){
+    return String(value == null ? '' : value)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function normalize(value){
+    try {
+      if (typeof pzlNormalizeSearchText === 'function') return pzlNormalizeSearchText(value);
+    } catch(e) {}
+    return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim();
+  }
+  function sanitizePoint(p, id, name){
+    if (!p || !finite(p.lat) || !finite(p.lon)) return null;
+    return {
+      id:id,
+      name:name,
+      label:String(p.label || p.sourceName || name),
+      lat:Number(p.lat),
+      lon:Number(p.lon),
+      time:String(p.time || ''),
+      sourceType:String(p.sourceType || 'check')
+    };
+  }
+  function sanitizeLibraryPoint(p, index){
+    if (!p || !finite(p.lat) || !finite(p.lon)) return null;
+    return {
+      id:String(p.id || uid('libpt')),
+      name:String(p.name || ('POINT '+(index+1))),
+      lat:Number(p.lat),
+      lon:Number(p.lon),
+      sourceType:String(p.sourceType || 'saved'),
+      createdAt:Number(p.createdAt || Date.now())
+    };
+  }
+  function sanitizeRoute(route){
+    if (!route || !Array.isArray(route.points)) return null;
+    const points = route.points.filter(p => p && finite(p.lat) && finite(p.lon)).map((p,i) => ({
+      id:String(p.id || uid('rpt')),
+      name:String(p.name || ('POINT '+(i+1))),
+      lat:Number(p.lat), lon:Number(p.lon), sourceType:String(p.sourceType || 'route')
+    }));
+    return {id:String(route.id || uid('route')), name:String(route.name || 'ROUTE'), points, updatedAt:Number(route.updatedAt || Date.now())};
+  }
+  function nowTime(){
+    return new Date().toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  }
+  function havKm(a,b){
+    if (!a || !b) return null;
+    try { if (typeof haversineKm === 'function') return Number(haversineKm(a,b)); } catch(e) {}
+    const R=6371, dLat=(Number(b.lat)-Number(a.lat))*Math.PI/180, dLon=(Number(b.lon)-Number(a.lon))*Math.PI/180;
+    const la1=Number(a.lat)*Math.PI/180, la2=Number(b.lat)*Math.PI/180;
+    const q=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)**2;
+    return 2*R*Math.atan2(Math.sqrt(q),Math.sqrt(1-q));
+  }
+  function brgDeg(a,b){
+    if (!a || !b) return null;
+    try { if (typeof bearingDeg === 'function') return Number(bearingDeg(a,b)); } catch(e) {}
+    const p1=Number(a.lat)*Math.PI/180, p2=Number(b.lat)*Math.PI/180, dl=(Number(b.lon)-Number(a.lon))*Math.PI/180;
+    const y=Math.sin(dl)*Math.cos(p2), x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);
+    return (Math.atan2(y,x)*180/Math.PI+360)%360;
+  }
+  function fmtBrg(v){ return finite(v) ? String(Math.round((Number(v)+360)%360)).padStart(3,'0')+'°' : '---°'; }
+  function fmtKm(v){ return finite(v) ? Number(v).toFixed(1)+' km' : '- km'; }
+  function fmtTime180(km){
+    if (!finite(km)) return '-';
+    const total=Math.max(0,Math.round(Number(km)/CHECK_SPEED_KMH*60));
+    const h=Math.floor(total/60), m=total%60;
+    return h ? String(h)+':'+String(m).padStart(2,'0') : String(m)+"'";
+  }
+  function fmtCoord(lat, lon){
+    try { if (typeof formatLatLonDDM === 'function') return formatLatLonDDM(Number(lat),Number(lon)); } catch(e) {}
+    return Number(lat).toFixed(5)+', '+Number(lon).toFixed(5);
+  }
+  function uniqueName(base){
+    const root=String(base || 'POINT').trim() || 'POINT';
+    const used=new Set(pointLibrary.map(p => normalize(p.name)));
+    if (!used.has(normalize(root))) return root;
+    let i=2;
+    while (used.has(normalize(root+' '+i))) i++;
+    return root+' '+i;
+  }
+  function toast(text){
+    let el=document.getElementById('pzlFeatureToast');
+    if (!el) {
+      el=document.createElement('div'); el.id='pzlFeatureToast'; document.body.appendChild(el);
+    }
+    el.textContent=text; el.classList.add('show');
+    clearTimeout(el._timer); el._timer=setTimeout(() => el.classList.remove('show'),1800);
+  }
+
+  function checkEntryList(){
+    return checkPoints.map((point,index) => point ? ({id:point.id,type:'check',index,label:'CHECK '+(index+1),point}) : null).filter(Boolean);
+  }
+  function currentFixEntries(){
+    let out=[];
+    try {
+      if (Array.isArray(savedFixPoints)) savedFixPoints.forEach((p,i) => out.push({id:p.id || ('fix_'+i),name:'FIX '+(i+1),lat:Number(p.lat),lon:Number(p.lon),sourceType:'fix'}));
+      if (Array.isArray(manualFixPoints)) manualFixPoints.forEach((p,i) => out.push({id:p.id || ('mfix_'+i),name:'MFix'+(i+1),lat:Number(p.lat),lon:Number(p.lon),sourceType:'mfix'}));
+    } catch(e) {}
+    checkPoints.forEach((p,i) => { if (p) out.push({id:p.id,name:'CHECK '+(i+1),lat:p.lat,lon:p.lon,sourceType:'check'}); });
+    return out;
+  }
+  function searchableLocalPoints(){
+    const out=[];
+    pointLibrary.forEach(p => out.push({id:p.id,name:p.name,lat:p.lat,lon:p.lon,sourceType:'library',display_name:p.name+' — αποθηκευμένο σημείο'}));
+    currentFixEntries().forEach(p => out.push({id:p.id,name:p.name,lat:p.lat,lon:p.lon,sourceType:p.sourceType,display_name:p.name+' — τρέχον σημείο'}));
+    const seen=new Set();
+    return out.filter(p => {
+      const k=Number(p.lat).toFixed(6)+','+Number(p.lon).toFixed(6)+'|'+normalize(p.name);
+      if (seen.has(k)) return false; seen.add(k); return true;
+    });
+  }
+  function airportCatalog(){
+    const out=[];
+    const seen=new Set();
+    function add(name,data){
+      if (!name || !data || !finite(data.lat) || !finite(data.lon)) return;
+      let icao='';
+      try { icao=(window.PZL_ICAO && window.PZL_ICAO[name]) || data.icao || ''; } catch(e) { icao=data.icao || ''; }
+      const key=normalize(name)+'|'+Number(data.lat).toFixed(5)+','+Number(data.lon).toFixed(5);
+      if (seen.has(key)) return; seen.add(key);
+      out.push({id:'airport_'+key,name:String(name),icao:String(icao || '').toUpperCase(),lat:Number(data.lat),lon:Number(data.lon),sourceType:'airport',display_name:(icao ? String(icao).toUpperCase()+' — ' : '')+String(name)});
+    }
+    try { Object.entries(bases || {}).forEach(([n,d]) => add(n,d)); } catch(e) {}
+    try { Object.entries(airports || {}).forEach(([n,d]) => add(n,d)); } catch(e) {}
+    try { Object.entries(navExtraAirports || {}).forEach(([n,d]) => add(n,d)); } catch(e) {}
+    return out;
+  }
+  async function resolveTextCandidates(query, includeOsm){
+    const q=normalize(query);
+    if (!q) return [];
+    const local=searchableLocalPoints().filter(p => normalize(p.name).includes(q) || normalize(p.display_name).includes(q));
+    const airportsFound=airportCatalog().filter(p => normalize(p.name).includes(q) || normalize(p.icao)===q || normalize(p.display_name).includes(q));
+    const exact=local.concat(airportsFound).filter(p => normalize(p.name)===q || normalize(p.icao)===q);
+    if (exact.length) return exact;
+    let result=local.concat(airportsFound);
+    if (includeOsm) {
+      try {
+        if (typeof pzlSearchGreekPlaces === 'function') {
+          const osm=await pzlSearchGreekPlaces(String(query));
+          (osm || []).forEach((item,i) => {
+            if (!finite(item.lat) || !finite(item.lon)) return;
+            result.push({id:'osm_'+(item.osm_id || i),name:String(item.display_name || query),display_name:String(item.display_name || query),lat:Number(item.lat),lon:Number(item.lon),sourceType:'place'});
+          });
+        }
+      } catch(e) {}
+    }
+    const seen=new Set();
+    return result.filter(p => {
+      const k=Number(p.lat).toFixed(5)+','+Number(p.lon).toFixed(5)+'|'+normalize(p.name);
+      if (seen.has(k)) return false; seen.add(k); return true;
+    }).slice(0,30);
+  }
+  function chooseCandidate(items, title){
+    if (!items || !items.length) return Promise.resolve(null);
+    if (items.length===1) return Promise.resolve(items[0]);
+    return new Promise(resolve => {
+      const overlay=document.createElement('div'); overlay.className='pzl-choice-overlay';
+      const card=document.createElement('div'); card.className='pzl-choice-card';
+      card.innerHTML='<div class="pzl-choice-title">'+esc(title || 'Επίλεξε σημείο')+'</div><div class="pzl-choice-list"></div><button type="button" class="secondary pzl-choice-cancel">Ακύρωση</button>';
+      const list=card.querySelector('.pzl-choice-list');
+      items.forEach((item,index) => {
+        const b=document.createElement('button'); b.type='button'; b.className='pzl-choice-item';
+        b.innerHTML='<b>'+esc(item.name || item.display_name)+'</b><small>'+esc(item.display_name && item.display_name!==item.name ? item.display_name : fmtCoord(item.lat,item.lon))+'</small>';
+        b.addEventListener('click', () => { overlay.remove(); resolve(item); });
+        list.appendChild(b);
+      });
+      card.querySelector('.pzl-choice-cancel').addEventListener('click', () => { overlay.remove(); resolve(null); });
+      overlay.addEventListener('click', ev => { if (ev.target===overlay) { overlay.remove(); resolve(null); } });
+      overlay.appendChild(card); document.body.appendChild(overlay);
+    });
+  }
+
+  function parseAxis(raw, axis, format){
+    let text=String(raw || '').trim().toUpperCase().replace(/,/g,'.').replace(/[−–—]/g,'-');
+    if (!text) return null;
+    let sign=1;
+    if (/[SW]/.test(text) || /^-/.test(text)) sign=-1;
+    text=text.replace(/[NSEW]/g,'').trim();
+    const degDigits=axis==='lat'?2:3;
+    let deg, min=0, sec=0;
+    const nums=text.match(/\d+(?:\.\d+)?/g) || [];
+    if (format==='dd') {
+      const v=Number(text.replace(/[^0-9.+-]/g,''));
+      if (!isFinite(v)) return null;
+      deg=Math.abs(v); if (v<0) sign=-1;
+    } else if (format==='ddm') {
+      if (nums.length>=2 || /[°'\s]/.test(text)) {
+        deg=Number(nums[0]); min=Number(nums[1]);
+      } else {
+        const compact=text.replace(/[^0-9.]/g,'');
+        if (compact.length<=degDigits) return null;
+        deg=Number(compact.slice(0,degDigits));
+        const rest=compact.slice(degDigits);
+        if (rest.includes('.')) min=Number(rest);
+        else if (rest.length<=2) min=Number(rest);
+        else min=Number(rest.slice(0,2)+'.'+rest.slice(2));
+      }
+    } else if (format==='dms') {
+      if (nums.length>=3 || /[°'"\s]/.test(text)) {
+        deg=Number(nums[0]); min=Number(nums[1]); sec=Number(nums[2]);
+      } else {
+        const compact=text.replace(/[^0-9.]/g,'');
+        if (compact.length<degDigits+4) return null;
+        deg=Number(compact.slice(0,degDigits));
+        min=Number(compact.slice(degDigits,degDigits+2));
+        sec=Number(compact.slice(degDigits+2));
+      }
+    } else return null;
+    if (![deg,min,sec].every(isFinite) || min>=60 || sec>=60) return null;
+    let value=deg+min/60+sec/3600;
+    value*=sign;
+    if (axis==='lat' && (value<-90 || value>90)) return null;
+    if (axis==='lon' && (value<-180 || value>180)) return null;
+    return value;
+  }
+  function parseCoordFields(latRaw, lonRaw, format){
+    const lat=parseAxis(latRaw,'lat',format), lon=parseAxis(lonRaw,'lon',format);
+    return finite(lat)&&finite(lon) ? {lat:Number(lat),lon:Number(lon)} : null;
+  }
+
+  function ensurePanes(){
+    try {
+      if (!map.getPane('pzlCheckPane')) { map.createPane('pzlCheckPane'); map.getPane('pzlCheckPane').style.zIndex='690'; }
+      if (!map.getPane('pzlRoutePane')) { map.createPane('pzlRoutePane'); map.getPane('pzlRoutePane').style.zIndex='675'; }
+      if (!map.getPane('pzlPreviewPane')) { map.createPane('pzlPreviewPane'); map.getPane('pzlPreviewPane').style.zIndex='730'; }
+    } catch(e) {}
+  }
+  function removeLayers(list){
+    list.forEach(layer => { try { map.removeLayer(layer); } catch(e) {} });
+    list.length=0;
+  }
+  function checkIcon(slot){
+    return L.divIcon({className:'pzl-check-icon-wrap',html:'<div class="pzl-check-icon">C'+slot+'</div>',iconSize:[34,28],iconAnchor:[17,14]});
+  }
+  function routeIcon(index){
+    return L.divIcon({className:'pzl-route-icon-wrap',html:'<div class="pzl-route-icon">R'+index+'</div>',iconSize:[32,26],iconAnchor:[16,13]});
+  }
+  function previewIcon(){
+    return L.divIcon({className:'pzl-preview-icon-wrap',html:'<div class="pzl-preview-icon">🔍</div>',iconSize:[38,38],iconAnchor:[19,19]});
+  }
+  function checkLegs(){
+    const legs=[];
+    for(let i=0;i<MAX_CHECKS-1;i++) if(checkPoints[i]&&checkPoints[i+1]) legs.push({from:i,to:i+1,a:checkPoints[i],b:checkPoints[i+1],closing:false});
+    if(checkPoints[4]&&checkPoints[0]) legs.push({from:4,to:0,a:checkPoints[4],b:checkPoints[0],closing:true});
+    return legs;
+  }
+  function renderCheckMap(){
+    ensurePanes(); removeLayers(checkMarkers); removeLayers(checkLayers);
+    if (checkArrowMarker) { try { map.removeLayer(checkArrowMarker); } catch(e) {} checkArrowMarker=null; }
+    checkPoints.forEach((p,i) => {
+      if (!p) return;
+      const marker=L.marker([p.lat,p.lon],{icon:checkIcon(i+1),pane:'pzlCheckPane',zIndexOffset:800,bubblingMouseEvents:false}).addTo(map);
+      marker.bindPopup('<b>CHECK '+(i+1)+'</b><br>'+esc(p.label)+'<br>'+esc(fmtCoord(p.lat,p.lon)));
+      marker.on('click', () => { try { pzlSelectHudFix(p.id); } catch(e) {} });
+      checkMarkers.push(marker);
+    });
+    const legs=checkLegs();
+    if (checkLegIndex>=legs.length) checkLegIndex=Math.max(0,legs.length-1);
+    legs.forEach((leg,i) => {
+      const selected=i===checkLegIndex;
+      const line=L.polyline([[leg.a.lat,leg.a.lon],[leg.b.lat,leg.b.lon]],{
+        pane:'pzlCheckPane',color:selected?'#ffd54f':'#00bcd4',weight:selected?5:3,opacity:.92,dashArray:leg.closing?'8 7':null,interactive:false
+      }).addTo(map);
+      checkLayers.push(line);
+    });
+    const selected=legs[checkLegIndex];
+    if (selected) {
+      const mid={lat:(selected.a.lat+selected.b.lat)/2,lon:(selected.a.lon+selected.b.lon)/2};
+      const angle=brgDeg(selected.a,selected.b) || 0;
+      const icon=L.divIcon({className:'pzl-check-arrow-wrap',html:'<div class="pzl-check-arrow" style="transform:rotate('+angle+'deg)">▲</div>',iconSize:[24,24],iconAnchor:[12,12]});
+      checkArrowMarker=L.marker([mid.lat,mid.lon],{icon,pane:'pzlCheckPane',interactive:false,zIndexOffset:900}).addTo(map);
+    }
+    renderCheckControls();
+    try { renderSavedFixPanel(); } catch(e) {}
+    try { updateHsiHud(); } catch(e) {}
+  }
+  function renderCheckControls(){
+    const btn=document.getElementById('checkDistanceBtn');
+    const panel=document.getElementById('checkDistancePanel');
+    const slotSel=document.getElementById('checkSlotSelect');
+    const hint=document.getElementById('checkNextHint');
+    const legInfo=document.getElementById('checkLegInfo');
+    const prev=document.getElementById('checkLegPrev'), next=document.getElementById('checkLegNext');
+    if (btn) {
+      btn.classList.toggle('active',checkMode);
+      btn.textContent=checkMode?'CHECK DIST ON':'CHECK DISTANCE';
+    }
+    if (panel) panel.hidden=!checkMode;
+    document.body.classList.toggle('pzl-check-distance-active',checkMode);
+    if (slotSel) slotSel.value=String(checkSlot+1);
+    if (hint) hint.textContent='Επόμενο: CHECK '+(checkSlot+1)+' · '+checkPoints.filter(Boolean).length+'/5';
+    const legs=checkLegs();
+    if (prev) prev.disabled=legs.length<2;
+    if (next) next.disabled=legs.length<2;
+    if (legInfo) {
+      if (!legs.length) legInfo.innerHTML='<b>Δεν υπάρχει πλήρες σκέλος.</b><small>Βάλε τουλάχιστον δύο διαδοχικά CHECK.</small>';
+      else {
+        const leg=legs[checkLegIndex] || legs[0], km=havKm(leg.a,leg.b), brg=brgDeg(leg.a,leg.b);
+        legInfo.innerHTML='<b>CHECK '+(leg.from+1)+' → CHECK '+(leg.to+1)+'</b><small>'+fmtBrg(brg)+' · '+fmtKm(km)+' · '+fmtTime180(km)+' @ 180</small>';
+      }
+    }
+    ['checkSearchBox','checkSearchBtn','checkCoordToggleBtn'].forEach(id => { const el=document.getElementById(id); if(el) el.disabled=!checkMode; });
+  }
+  function persistChecks(){ saveJson(CHECK_KEY,checkPoints); }
+  function nextEmptySlot(after){
+    for(let step=1;step<=MAX_CHECKS;step++) { const idx=(after+step)%MAX_CHECKS; if(!checkPoints[idx]) return idx; }
+    return after;
+  }
+  function setCheckPoint(slot, point){
+    slot=Math.max(0,Math.min(MAX_CHECKS-1,Number(slot)||0));
+    checkPoints[slot]={id:'check_'+(slot+1),name:'CHECK '+(slot+1),label:String(point.name || point.label || ('CHECK '+(slot+1))),lat:Number(point.lat),lon:Number(point.lon),time:nowTime(),sourceType:String(point.sourceType || 'check')};
+    checkSlot=nextEmptySlot(slot);
+    persistChecks();
+    renderCheckMap();
+    const fixPanel=document.getElementById('fixPanel'); if(fixPanel) fixPanel.open=true;
+    toast('CHECK '+(slot+1)+' καταγράφηκε');
+  }
+  function deleteCheckSlot(index){
+    if(index<0 || index>=MAX_CHECKS) return;
+    const old=checkPoints[index];
+    try { if(old && activeHudFixId===old.id) activeHudFixId=null; } catch(e) {}
+    checkPoints[index]=null; checkSlot=index; persistChecks(); renderCheckMap();
+  }
+  function clearActiveChecks(){
+    try { if (String(activeHudFixId || '').startsWith('check_')) activeHudFixId=null; } catch(e) {}
+    checkPoints=[null,null,null,null,null]; checkSlot=0; checkLegIndex=0; persistChecks(); renderCheckMap();
+    toast('Τα CHECK αφαιρέθηκαν από τον χάρτη. Η αποθηκευμένη λίστα παρέμεινε.');
+  }
+  function setCheckMode(flag){
+    checkMode=!!flag;
+    if (checkMode) {
+      try { if (typeof pzlSetManualFixMode === 'function') pzlSetManualFixMode(false); } catch(e) {}
+    }
+    renderCheckControls();
+  }
+  async function checkSearch(){
+    if (!checkMode) return;
+    const input=document.getElementById('checkSearchBox');
+    const q=input ? input.value.trim() : '';
+    if (!q) return;
+    const items=await resolveTextCandidates(q,true);
+    if (!items.length) return alert('Δεν βρέθηκε σημείο CHECK.');
+    const chosen=await chooseCandidate(items,'CHECK '+(checkSlot+1)+' — επίλεξε σημείο');
+    if (!chosen) return;
+    setCheckPoint(checkSlot,chosen);
+    try { map.setView([chosen.lat,chosen.lon],Math.max(Number(map.getZoom())||0,11)); } catch(e) {}
+  }
+  function checkCoordGo(){
+    if (!checkMode) return;
+    const format=(document.getElementById('checkCoordFormat') || {}).value || 'ddm';
+    const lat=(document.getElementById('checkCoordLat') || {}).value || '';
+    const lon=(document.getElementById('checkCoordLon') || {}).value || '';
+    const p=parseCoordFields(lat,lon,format);
+    if(!p) return alert('Δεν αναγνωρίστηκαν οι συντεταγμένες CHECK.');
+    setCheckPoint(checkSlot,{...p,name:'Συντεταγμένες '+fmtCoord(p.lat,p.lon),sourceType:'coordinates'});
+    try { map.setView([p.lat,p.lon],Math.max(Number(map.getZoom())||0,12)); } catch(e) {}
+  }
+
+  function saveEntryToLibrary(entry){
+    if (!entry || !entry.point || !finite(entry.point.lat) || !finite(entry.point.lon)) return;
+    const name=uniqueName(entry.label || entry.point.name || 'POINT');
+    pointLibrary.push({id:uid('libpt'),name,lat:Number(entry.point.lat),lon:Number(entry.point.lon),sourceType:String(entry.type || 'saved'),createdAt:Date.now()});
+    saveJson(LIB_KEY,pointLibrary); renderLibrary();
+    const panel=document.getElementById('pzlPointRoutePanel'); if(panel) panel.open=true;
+    toast(name+' αποθηκεύτηκε');
+  }
+  function renameLibraryPoint(id){
+    const p=pointLibrary.find(x => x.id===id); if(!p) return;
+    const next=prompt('Νέο όνομα σημείου:',p.name); if(next===null) return;
+    const value=String(next).trim(); if(!value) return;
+    p.name=value; saveJson(LIB_KEY,pointLibrary); renderLibrary();
+  }
+  function deleteLibraryPoint(id){
+    const p=pointLibrary.find(x => x.id===id); if(!p) return;
+    if(!confirm('Διαγραφή του αποθηκευμένου σημείου «'+p.name+'»;')) return;
+    pointLibrary=pointLibrary.filter(x => x.id!==id); saveJson(LIB_KEY,pointLibrary); renderLibrary();
+  }
+
+  function stopPreview(restoreMap){
+    if(previewTimer){clearTimeout(previewTimer);previewTimer=null;}
+    removeLayers(previewLayers);
+    const main=document.getElementById('pzlLibraryMain'), preview=document.getElementById('pzlLibraryPreview');
+    if(main) main.hidden=false; if(preview) preview.hidden=true;
+    if(restoreMap && previewMapState) {
+      try { map.setView(previewMapState.center,previewMapState.zoom,{animate:false}); } catch(e) {}
+    }
+    previewMapState=null;
+  }
+  function beginPreview(title, points, lines){
+    stopPreview(false); ensurePanes();
+    try { previewMapState={center:map.getCenter(),zoom:map.getZoom()}; } catch(e) {previewMapState=null;}
+    const main=document.getElementById('pzlLibraryMain'), preview=document.getElementById('pzlLibraryPreview'), label=document.getElementById('pzlPreviewTitle');
+    if(main) main.hidden=true; if(preview) preview.hidden=false; if(label) label.textContent=title+' · επιστροφή σε 5"';
+    (points || []).forEach((p,i) => {
+      const icon=(points.length===1)?previewIcon():routeIcon(i+1);
+      previewLayers.push(L.marker([p.lat,p.lon],{icon,pane:'pzlPreviewPane',zIndexOffset:1100}).addTo(map));
+    });
+    if(lines && lines.length>1) previewLayers.push(L.polyline(lines.map(p => [p.lat,p.lon]),{pane:'pzlPreviewPane',color:'#ff9800',weight:5,opacity:.95}).addTo(map));
+    try {
+      if(points.length===1) map.setView([points[0].lat,points[0].lon],Math.max(Number(map.getZoom())||0,13));
+      else if(points.length>1) map.fitBounds(L.latLngBounds(points.map(p => [p.lat,p.lon])),{padding:[35,35],maxZoom:12});
+    } catch(e) {}
+    previewTimer=setTimeout(() => stopPreview(true),5000);
+  }
+  function previewLibraryPoint(id){ const p=pointLibrary.find(x => x.id===id); if(p) beginPreview(p.name,[p],null); }
+  function previewRoute(id){ const r=routeLibrary.find(x => x.id===id); if(r&&r.points.length) beginPreview(r.name,r.points,r.points); }
+
+  function routeStats(route){
+    const legs=[]; let total=0;
+    if(route&&Array.isArray(route.points)) for(let i=0;i<route.points.length-1;i++) {
+      const a=route.points[i],b=route.points[i+1],km=havKm(a,b)||0; total+=km;
+      legs.push({from:a.name,to:b.name,km,brg:brgDeg(a,b)});
+    }
+    return {legs,total,time:fmtTime180(total)};
+  }
+  function renderActiveRoute(fit){
+    ensurePanes(); removeLayers(activeRouteLayers);
+    const route=routeLibrary.find(r => r.id===activeRouteId);
+    if(!route || !route.points.length) { activeRouteId=null; localStorage.removeItem(ACTIVE_ROUTE_KEY); renderLibrary(); return; }
+    route.points.forEach((p,i) => {
+      const m=L.marker([p.lat,p.lon],{icon:routeIcon(i+1),pane:'pzlRoutePane',zIndexOffset:650,bubblingMouseEvents:false}).addTo(map);
+      m.bindPopup('<b>'+esc(route.name)+'</b><br>'+(i+1)+'. '+esc(p.name)); activeRouteLayers.push(m);
+    });
+    if(route.points.length>1) activeRouteLayers.push(L.polyline(route.points.map(p => [p.lat,p.lon]),{pane:'pzlRoutePane',color:'#8e44ad',weight:4,opacity:.9}).addTo(map));
+    if(fit) try { map.fitBounds(L.latLngBounds(route.points.map(p => [p.lat,p.lon])),{padding:[40,40],maxZoom:11}); } catch(e) {}
+    renderLibrary();
+  }
+  function toggleRoute(id){
+    activeRouteId=activeRouteId===id?null:id;
+    if(activeRouteId) localStorage.setItem(ACTIVE_ROUTE_KEY,activeRouteId); else localStorage.removeItem(ACTIVE_ROUTE_KEY);
+    renderActiveRoute(!!activeRouteId);
+  }
+  function deleteRoute(id){
+    const r=routeLibrary.find(x => x.id===id); if(!r) return;
+    if(!confirm('Διαγραφή route «'+r.name+'»;')) return;
+    routeLibrary=routeLibrary.filter(x => x.id!==id); saveJson(ROUTE_KEY,routeLibrary);
+    if(activeRouteId===id){activeRouteId=null;localStorage.removeItem(ACTIVE_ROUTE_KEY);removeLayers(activeRouteLayers);}
+    renderLibrary();
+  }
+
+  function renderLibrary(){
+    const list=document.getElementById('pzlSavedPointList');
+    const routes=document.getElementById('pzlSavedRouteList');
+    const savedSelect=document.getElementById('routeSavedPointSelect');
+    if(list){
+      if(!pointLibrary.length) list.innerHTML='<div class="pzl-lib-empty">Πάτησε 💾 σε FIX, MFIX ή CHECK για μόνιμη αποθήκευση.</div>';
+      else list.innerHTML=pointLibrary.map(p => '<div class="pzl-lib-row"><div class="pzl-lib-main"><b>'+esc(p.name)+'</b><small>'+esc(fmtCoord(p.lat,p.lon))+'</small></div><button type="button" data-lib-preview="'+esc(p.id)+'" title="Προεπισκόπηση 5 δευτ.">🔍</button><button type="button" data-lib-rename="'+esc(p.id)+'" title="Αλλαγή ονόματος">✎</button><button type="button" class="pzl-lib-del" data-lib-delete="'+esc(p.id)+'" title="Διαγραφή">✕</button></div>').join('');
+      list.querySelectorAll('[data-lib-preview]').forEach(b => b.onclick=() => previewLibraryPoint(b.dataset.libPreview));
+      list.querySelectorAll('[data-lib-rename]').forEach(b => b.onclick=() => renameLibraryPoint(b.dataset.libRename));
+      list.querySelectorAll('[data-lib-delete]').forEach(b => b.onclick=() => deleteLibraryPoint(b.dataset.libDelete));
+    }
+    if(routes){
+      if(!routeLibrary.length) routes.innerHTML='<div class="pzl-lib-empty">Δεν υπάρχουν αποθηκευμένα routes.</div>';
+      else routes.innerHTML=routeLibrary.map(r => {
+        const stats=routeStats(r), active=r.id===activeRouteId;
+        return '<div class="pzl-route-row'+(active?' active':'')+'"><div class="pzl-lib-main"><b>'+esc(r.name)+'</b><small>'+r.points.length+' σημεία · '+fmtKm(stats.total)+' · '+stats.time+' @ 180</small></div><button type="button" class="pzl-route-activate'+(active?' active':'')+'" data-route-active="'+esc(r.id)+'">'+(active?'ON':'ACT')+'</button><button type="button" data-route-preview="'+esc(r.id)+'">🔍</button><button type="button" data-route-edit="'+esc(r.id)+'">✎</button><button type="button" class="pzl-lib-del" data-route-delete="'+esc(r.id)+'">✕</button></div>';
+      }).join('');
+      routes.querySelectorAll('[data-route-active]').forEach(b => b.onclick=() => toggleRoute(b.dataset.routeActive));
+      routes.querySelectorAll('[data-route-preview]').forEach(b => b.onclick=() => previewRoute(b.dataset.routePreview));
+      routes.querySelectorAll('[data-route-edit]').forEach(b => b.onclick=() => openRouteBuilder(b.dataset.routeEdit));
+      routes.querySelectorAll('[data-route-delete]').forEach(b => b.onclick=() => deleteRoute(b.dataset.routeDelete));
+    }
+    if(savedSelect){
+      const current=savedSelect.value;
+      savedSelect.innerHTML=pointLibrary.length?pointLibrary.map(p => '<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join(''):'<option value="">Δεν υπάρχουν σημεία</option>';
+      if(pointLibrary.some(p => p.id===current)) savedSelect.value=current;
+      savedSelect.disabled=!pointLibrary.length;
+      const add=document.getElementById('routeAddSavedBtn'); if(add) add.disabled=!pointLibrary.length;
+    }
+    const info=document.getElementById('pzlActiveRouteInfo');
+    if(info){
+      const r=routeLibrary.find(x=>x.id===activeRouteId);
+      if(!r) info.hidden=true;
+      else {
+        const stats=routeStats(r); info.hidden=false;
+        info.innerHTML='<b>ACTIVE: '+esc(r.name)+'</b>'+stats.legs.map((l,i) => '<span>'+(i+1)+'. '+esc(l.from)+' → '+esc(l.to)+' · '+fmtBrg(l.brg)+' · '+fmtKm(l.km)+' · '+fmtTime180(l.km)+'</span>').join('')+'<strong>Σύνολο: '+fmtKm(stats.total)+' · '+stats.time+' @ 180</strong>';
+      }
+    }
+  }
+
+  function openRouteBuilder(id){
+    const route=routeLibrary.find(r => r.id===id);
+    routeDraftId=route?route.id:null;
+    routeDraft=route?route.points.map(p => ({...p,id:uid('draft')})):[];
+    const modal=document.getElementById('pzlRouteBuilderModal'); if(!modal) return;
+    const name=document.getElementById('routeBuilderName'); if(name) name.value=route?route.name:('ROUTE '+(routeLibrary.length+1));
+    modal.hidden=false; renderRouteDraft(); renderLibrary();
+  }
+  function closeRouteBuilder(){ const modal=document.getElementById('pzlRouteBuilderModal'); if(modal) modal.hidden=true; routeDraft=null; routeDraftId=null; }
+  function renderRouteDraft(){
+    const list=document.getElementById('routeDraftList'); if(!list) return;
+    if(!routeDraft || !routeDraft.length) list.innerHTML='<div class="pzl-lib-empty">Πρόσθεσε αποθηκευμένο σημείο, α/δ, περιοχή ή συντεταγμένες.</div>';
+    else list.innerHTML=routeDraft.map((p,i) => '<div class="pzl-draft-row"><b>'+(i+1)+'. '+esc(p.name)+'</b><small>'+esc(fmtCoord(p.lat,p.lon))+'</small><button type="button" data-draft-up="'+i+'">↑</button><button type="button" data-draft-down="'+i+'">↓</button><button type="button" class="pzl-lib-del" data-draft-del="'+i+'">✕</button></div>').join('');
+    list.querySelectorAll('[data-draft-up]').forEach(b => b.onclick=() => moveDraft(Number(b.dataset.draftUp),-1));
+    list.querySelectorAll('[data-draft-down]').forEach(b => b.onclick=() => moveDraft(Number(b.dataset.draftDown),1));
+    list.querySelectorAll('[data-draft-del]').forEach(b => b.onclick=() => {routeDraft.splice(Number(b.dataset.draftDel),1);renderRouteDraft();});
+  }
+  function moveDraft(index,delta){
+    const to=index+delta; if(!routeDraft || to<0 || to>=routeDraft.length) return;
+    const item=routeDraft.splice(index,1)[0]; routeDraft.splice(to,0,item); renderRouteDraft();
+  }
+  function addDraftPoint(point){
+    if(!routeDraft) return; if(routeDraft.length>=25) return alert('Μέχρι 25 σημεία ανά route.');
+    routeDraft.push({id:uid('draft'),name:String(point.name || point.display_name || ('POINT '+(routeDraft.length+1))),lat:Number(point.lat),lon:Number(point.lon),sourceType:String(point.sourceType || 'route')});
+    renderRouteDraft();
+  }
+  async function routeSearchAdd(){
+    const input=document.getElementById('routeSearchBox'); const q=input?input.value.trim():''; if(!q)return;
+    const items=await resolveTextCandidates(q,true); if(!items.length)return alert('Δεν βρέθηκε σημείο route.');
+    const chosen=await chooseCandidate(items,'Πρόσθεσε σημείο στο route'); if(chosen)addDraftPoint(chosen);
+  }
+  function routeCoordAdd(){
+    const fmt=(document.getElementById('routeCoordFormat')||{}).value||'ddm';
+    const lat=(document.getElementById('routeCoordLat')||{}).value||'',lon=(document.getElementById('routeCoordLon')||{}).value||'';
+    const p=parseCoordFields(lat,lon,fmt); if(!p)return alert('Δεν αναγνωρίστηκαν οι συντεταγμένες route.');
+    addDraftPoint({...p,name:'COORD '+fmtCoord(p.lat,p.lon),sourceType:'coordinates'});
+  }
+  function saveRouteDraft(){
+    if(!routeDraft || routeDraft.length<2)return alert('Το route χρειάζεται τουλάχιστον 2 σημεία.');
+    const name=String((document.getElementById('routeBuilderName')||{}).value||'').trim()||'ROUTE';
+    if(routeDraftId){
+      const r=routeLibrary.find(x=>x.id===routeDraftId); if(r){r.name=name;r.points=routeDraft.map(p=>({...p,id:uid('rpt')}));r.updatedAt=Date.now();}
+    } else routeLibrary.push({id:uid('route'),name,points:routeDraft.map(p=>({...p,id:uid('rpt')})),updatedAt:Date.now()});
+    saveJson(ROUTE_KEY,routeLibrary); const wasActive=activeRouteId===routeDraftId; closeRouteBuilder(); renderLibrary(); if(wasActive)renderActiveRoute(false); toast('Το route αποθηκεύτηκε');
+  }
+
+  function installFixPanelExtension(){
+    if (typeof pzlAllFixEntries !== 'function' || typeof renderSavedFixPanel !== 'function') return;
+    if (window.__pzlCheckFixExtensionInstalled) return;
+    window.__pzlCheckFixExtensionInstalled=true;
+    baseAllFixEntries=pzlAllFixEntries;
+    baseDeleteFix=typeof pzlDeleteFix==='function'?pzlDeleteFix:null;
+    pzlAllFixEntries=function(){ return baseAllFixEntries().concat(checkEntryList()); };
+    pzlDeleteFix=function(type,index){
+      if(type==='check'){deleteCheckSlot(Number(index));return;}
+      if(baseDeleteFix) return baseDeleteFix(type,index);
+    };
+    pzlFixRowHtml=function(entry){
+      const p=entry.point, nav=(typeof pzlFixNavData==='function')?pzlFixNavData(p):null, selected=entry.id===activeHudFixId;
+      let coord='';
+      try { coord=fixFormatCoord(p.lat,true)+'<br>'+fixFormatCoord(p.lon,false); } catch(e) { coord=esc(fmtCoord(p.lat,p.lon)); }
+      const navText=(typeof pzlFormatFixNav==='function')?pzlFormatFixNav(nav):'';
+      const extra=p.label && normalize(p.label)!==normalize(entry.label)?'<span class="fix-source">'+esc(p.label)+'</span>':'';
+      return '<div class="fix-row'+(selected?' active-hud-fix':'')+'"><b>'+esc(entry.label)+'</b><span class="fix-coord">'+coord+(p.time?'<br>'+esc(p.time):'')+extra+'<span class="fix-nav" data-fix-nav-id="'+esc(entry.id)+'">'+esc(navText)+'</span></span><button class="fix-hud-select'+(selected?' selected':'')+'" data-fix-select="'+esc(entry.id)+'" type="button">'+(selected?'ON':'HUD')+'</button><button class="fix-save" data-fix-save="'+esc(entry.id)+'" type="button" title="Μόνιμη αποθήκευση">💾</button><button class="fix-del" data-fix-type="'+esc(entry.type)+'" data-fix-del="'+entry.index+'" type="button">✕</button></div>';
+    };
+    renderSavedFixPanel=function(){
+      const list=document.getElementById('fixPanelList'); if(!list)return;
+      try { if(typeof pzlEnsureFixIds==='function')pzlEnsureFixIds(); } catch(e) {}
+      let out='<div class="fix-group-title">GPS FIX ('+(savedFixPoints||[]).length+'/5)</div>';
+      if(savedFixPoints&&savedFixPoints.length)savedFixPoints.forEach((point,index)=>out+=pzlFixRowHtml({id:point.id,type:'fix',index,label:'FIX '+(index+1),point})); else out+='<div class="fix-empty-line">Δεν υπάρχει GPS FIX.</div>';
+      out+='<div class="fix-group-title">Manual FIX ('+(manualFixPoints||[]).length+'/5)</div>';
+      if(manualFixPoints&&manualFixPoints.length)manualFixPoints.forEach((point,index)=>out+=pzlFixRowHtml({id:point.id,type:'mfix',index,label:'MFix'+(index+1),point})); else out+='<div class="fix-empty-line">Πάτησε MFIX και μετά σημείο στον χάρτη.</div>';
+      const count=checkPoints.filter(Boolean).length;
+      out+='<div class="fix-group-title">CHECK DISTANCE ('+count+'/5)</div>';
+      if(count)checkEntryList().forEach(entry=>out+=pzlFixRowHtml(entry)); else out+='<div class="fix-empty-line">Πάτησε CHECK DISTANCE και επίλεξε έως 5 σημεία.</div>';
+      list.innerHTML=out;
+      list.querySelectorAll('[data-fix-select]').forEach(btn=>btn.onclick=()=>pzlSelectHudFix(btn.getAttribute('data-fix-select')));
+      list.querySelectorAll('[data-fix-save]').forEach(btn=>btn.onclick=()=>{const entry=pzlAllFixEntries().find(e=>e.id===btn.getAttribute('data-fix-save'));if(entry)saveEntryToLibrary(entry);});
+      list.querySelectorAll('[data-fix-del]').forEach(btn=>btn.onclick=()=>{const idx=Number(btn.getAttribute('data-fix-del'));if(!isNaN(idx))pzlDeleteFix(btn.getAttribute('data-fix-type'),idx);});
+      try { updateFixClearButtonVisibility(); } catch(e) {}
+    };
+    try { renderSavedFixPanel(); } catch(e) {}
+  }
+
+  function installUi(){
+    const actions=document.querySelector('.map-actions');
+    const navSplit=actions && actions.querySelector('.navSplit');
+    if(actions && navSplit && !document.getElementById('pzlCheckControls')){
+      const wrap=document.createElement('div'); wrap.id='pzlCheckControls';
+      wrap.innerHTML='<button id="checkDistanceBtn" type="button" class="secondary">CHECK DISTANCE</button><button id="clearCheckDistanceBtn" type="button" class="danger">CLR CHECK DIST <span class="x2-mark">x2</span></button><div id="checkDistancePanel" hidden><div class="pzl-check-slot-row"><select id="checkSlotSelect" aria-label="CHECK slot"><option value="1">CHECK 1</option><option value="2">CHECK 2</option><option value="3">CHECK 3</option><option value="4">CHECK 4</option><option value="5">CHECK 5</option></select><span id="checkNextHint"></span></div><div class="pzl-check-search-row"><input id="checkSearchBox" placeholder="CHECK SRCH" autocomplete="off"><button id="checkSearchBtn" type="button">SRCH</button></div><button id="checkCoordToggleBtn" type="button" class="secondary">CHECK Coord</button><div id="checkCoordPanel" hidden><div class="pzl-check-coord-row"><input id="checkCoordLat" inputmode="decimal" placeholder="LAT 390315"><input id="checkCoordLon" inputmode="decimal" placeholder="LON 0263626"></div><div class="pzl-check-coord-row"><select id="checkCoordFormat"><option value="dd">DD</option><option value="ddm" selected>DDM</option><option value="dms">DMS</option></select><button id="checkCoordGo" type="button">GO</button></div></div><div id="checkLegNavigator"><button id="checkLegPrev" type="button">◀</button><div id="checkLegInfo"></div><button id="checkLegNext" type="button">▶</button></div></div>';
+      actions.insertBefore(wrap,navSplit);
+      document.getElementById('checkDistanceBtn').addEventListener('click',()=>setCheckMode(!checkMode));
+      document.getElementById('clearCheckDistanceBtn').addEventListener('click',function(){
+        const now=Date.now();
+        if(now-clearCheckArmedAt<=800){clearCheckArmedAt=0;clearTimeout(clearCheckTimer);this.classList.remove('x2-pending');clearActiveChecks();return;}
+        clearCheckArmedAt=now;this.classList.add('x2-pending');
+        clearTimeout(clearCheckTimer);clearCheckTimer=setTimeout(()=>{clearCheckArmedAt=0;this.classList.remove('x2-pending');},850);
+      });
+      document.getElementById('checkSlotSelect').addEventListener('change',function(){checkSlot=Math.max(0,Math.min(4,Number(this.value)-1));renderCheckControls();});
+      document.getElementById('checkSearchBtn').addEventListener('click',checkSearch);
+      document.getElementById('checkSearchBox').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();checkSearch();}});
+      document.getElementById('checkCoordToggleBtn').addEventListener('click',function(){const p=document.getElementById('checkCoordPanel');p.hidden=!p.hidden;this.classList.toggle('active',!p.hidden);});
+      document.getElementById('checkCoordGo').addEventListener('click',checkCoordGo);
+      document.getElementById('checkLegPrev').addEventListener('click',()=>{const legs=checkLegs();if(legs.length){checkLegIndex=(checkLegIndex-1+legs.length)%legs.length;renderCheckMap();}});
+      document.getElementById('checkLegNext').addEventListener('click',()=>{const legs=checkLegs();if(legs.length){checkLegIndex=(checkLegIndex+1)%legs.length;renderCheckMap();}});
+    }
+
+    const fixPanel=document.getElementById('fixPanel');
+    if(fixPanel && !document.getElementById('pzlPointRoutePanel')){
+      const panel=document.createElement('details'); panel.id='pzlPointRoutePanel'; panel.className='collapsible-panel';
+      panel.innerHTML='<summary>💾 Αποθηκευμένα σημεία / Routes</summary><div class="collapsible-body pzl-library-body"><div id="pzlLibraryMain"><div class="pzl-library-head"><b>Αποθηκευμένα σημεία</b><button id="createRouteBtn" type="button">Create route</button></div><div id="pzlSavedPointList"></div><div class="pzl-library-subtitle">Routes</div><div id="pzlSavedRouteList"></div><div id="pzlActiveRouteInfo" hidden></div></div><div id="pzlLibraryPreview" hidden><button id="pzlPreviewBack" type="button" class="secondary">←</button><b id="pzlPreviewTitle">Προεπισκόπηση</b></div></div>';
+      fixPanel.insertAdjacentElement('afterend',panel);
+      panel.querySelector('#createRouteBtn').addEventListener('click',()=>openRouteBuilder(null));
+      panel.querySelector('#pzlPreviewBack').addEventListener('click',()=>stopPreview(true));
+    }
+
+    if(!document.getElementById('pzlRouteBuilderModal')){
+      const modal=document.createElement('div'); modal.id='pzlRouteBuilderModal'; modal.className='pzl-route-modal'; modal.hidden=true;
+      modal.innerHTML='<div class="pzl-route-card"><div class="pzl-route-title"><b>Create route / Edit route</b><button id="routeBuilderClose" type="button" class="secondary">✕</button></div><label>Όνομα route<input id="routeBuilderName" type="text" maxlength="60"></label><div id="routeDraftList"></div><div class="pzl-route-add-box"><b>Από αποθηκευμένη λίστα</b><div class="pzl-route-inline"><select id="routeSavedPointSelect"></select><button id="routeAddSavedBtn" type="button">ADD</button></div></div><div class="pzl-route-add-box"><b>Α/Δ ICAO ή πόλη / χωριό</b><div class="pzl-route-inline"><input id="routeSearchBox" placeholder="π.χ. LGMT ή Μόλυβος"><button id="routeSearchAddBtn" type="button">SRCH</button></div></div><div class="pzl-route-add-box"><b>Συντεταγμένες</b><div class="pzl-route-inline"><input id="routeCoordLat" placeholder="LAT"><input id="routeCoordLon" placeholder="LON"></div><div class="pzl-route-inline"><select id="routeCoordFormat"><option value="dd">DD</option><option value="ddm" selected>DDM</option><option value="dms">DMS</option></select><button id="routeCoordAddBtn" type="button">ADD COORD</button></div></div><div class="pzl-route-actions"><button id="routeBuilderCancel" type="button" class="secondary">Cancel</button><button id="routeBuilderSave" type="button">Save route</button></div></div>';
+      document.body.appendChild(modal);
+      modal.querySelector('#routeBuilderClose').onclick=closeRouteBuilder;
+      modal.querySelector('#routeBuilderCancel').onclick=closeRouteBuilder;
+      modal.querySelector('#routeBuilderSave').onclick=saveRouteDraft;
+      modal.querySelector('#routeAddSavedBtn').onclick=()=>{const id=(document.getElementById('routeSavedPointSelect')||{}).value;const p=pointLibrary.find(x=>x.id===id);if(p)addDraftPoint(p);};
+      modal.querySelector('#routeSearchAddBtn').onclick=routeSearchAdd;
+      modal.querySelector('#routeSearchBox').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();routeSearchAdd();}});
+      modal.querySelector('#routeCoordAddBtn').onclick=routeCoordAdd;
+      modal.addEventListener('click',ev=>{if(ev.target===modal)closeRouteBuilder();});
+    }
+
+    const mapEl=document.getElementById('map');
+    if(mapEl && !mapEl.dataset.pzlCheckCapture){
+      mapEl.dataset.pzlCheckCapture='1';
+      mapEl.addEventListener('click',function(ev){
+        if(!checkMode)return;
+        if(ev.target && ev.target.closest && ev.target.closest('.leaflet-control'))return;
+        ev.preventDefault();ev.stopImmediatePropagation();
+        try {
+          if(typeof mapLocked!=='undefined'&&mapLocked){alert('Ξεκλείδωσε πρώτα τον χάρτη για CHECK.');return;}
+          const ll=map.mouseEventToLatLng(ev);setCheckPoint(checkSlot,{lat:ll.lat,lon:ll.lng,name:'Επιλογή χάρτη',sourceType:'map'});
+        } catch(e) {}
+      },true);
+    }
+
+    if(!document.documentElement.dataset.pzlFireLocalSearch){
+      document.documentElement.dataset.pzlFireLocalSearch='1';
+      document.addEventListener('click',async function(ev){
+        const btn=ev.target&&ev.target.closest?ev.target.closest('#searchBtn'):null;
+        if(!btn)return;
+        let access=false;
+        try{access=(typeof mode!=='undefined'&&mode==='fire'&&fireSelectionArmed===true);}catch(e){}
+        if(!access)return;
+        const input=document.getElementById('searchBox'),q=input?input.value.trim():'';if(!q)return;
+        const matches=searchableLocalPoints().filter(p=>normalize(p.name).includes(normalize(q)));
+        if(!matches.length)return;
+        ev.preventDefault();ev.stopImmediatePropagation();
+        const chosen=await chooseCandidate(matches,'Αποθηκευμένο σημείο ως φωτιά');if(!chosen)return;
+        try {
+          firePoint={lat:Number(chosen.lat),lon:Number(chosen.lon),label:String(chosen.name)};
+          setFireMarker();mode='fire';fireSelectionArmed=false;updateFireModeButtonState();map.setView([firePoint.lat,firePoint.lon],Math.max(Number(map.getZoom())||0,12));
+          if(typeof calculate==='function')calculate();
+        } catch(e) { console.error(e); }
+      },true);
+    }
+
+    installFixPanelExtension();
+    renderCheckMap(); renderLibrary();
+    if(activeRouteId && routeLibrary.some(r=>r.id===activeRouteId))renderActiveRoute(false); else {activeRouteId=null;localStorage.removeItem(ACTIVE_ROUTE_KEY);}
+    setTimeout(()=>{try{window.dispatchEvent(new Event('resize'));}catch(e){}},250);
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installUi);else installUi();
+  setTimeout(installUi,700);
+
+  window.PZL_CHECK_DISTANCE={
+    get points(){return checkPoints.filter(Boolean).map(p=>({...p}));},
+    get savedPoints(){return pointLibrary.map(p=>({...p}));},
+    get routes(){return routeLibrary.map(r=>({...r,points:r.points.map(p=>({...p}))}));}
+  };
+})();
+
+</script>
+<!-- PZL_CHECK_DISTANCE_LIBRARY_ROUTES_END -->
 
 </body>
 </html>
