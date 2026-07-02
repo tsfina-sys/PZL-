@@ -1,11 +1,4 @@
-PZL_EMPTY_BASE_SELECTS_FIXED_20260701AS
-Built 2026-07-01
-
-- Τα τρία πεδία αεροδρομίων ανοίγουν κενά.
-- Η εφαρμογή δεν κρασάρει όταν δεν έχει επιλεγεί ακόμη αεροδρόμιο.
-- Δεν σχεδιάζονται διάδρομος, άνεμος ή Fire route πριν την επιλογή Αρχικής Α/Γ.
-- Οι υπολογισμοί Fire περιμένουν να επιλεγούν Αρχική Α/Γ, Επαναπλήρωση και Full Stop.
-- Το HUD εμφανίζει παύλες μέχρι να γίνουν οι επιλογές.
-- Το GPS report δεν προσπαθεί να υπολογίσει εναλλακτικό χωρίς επιλεγμένη Αρχική Α/Γ.
-- Το TF/Full Stop εμφανίζει σαφές μήνυμα αντί για σφάλμα.
-- Όλες οι προηγούμενες λειτουργίες NAV, METAR, ALTR, CLR FIRE, FIX/MFIX και offline παραμένουν.
+PZL_3D_CUBE_PANEL_TRY_20260702AT
+Built 2026-07-02
+- Experimental 3D cube lower panel with 6 faces and drag/zoom.
+- Original lower detail panels moved onto cube faces and hidden below.
