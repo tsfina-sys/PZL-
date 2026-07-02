@@ -11306,10 +11306,14 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
       pzlNavMarkers.push(marker);
     });
     pzlNavDestinationMarker = L.circleMarker([info.dest.lat, info.dest.lon], {pane:'pzlNavMarkerPane', radius:9, color:'#14532d', weight:2, fillColor:'#22c55e', fillOpacity:0.95}).addTo(map);
-    pzlNavDestinationMarker.bindTooltip('LDG ' + info.dest.name, {permanent:true, direction:'top', offset:[0,-10], className:'tinyLabel'});
+    const destIcao = (typeof ICAO !== 'undefined' && ICAO && ICAO[info.dest.name]) ? ICAO[info.dest.name] : '';
+    const destLabel = destIcao ? (destIcao + ' ' + info.dest.name) : ('LDG ' + info.dest.name);
+    pzlNavDestinationMarker.bindTooltip(destLabel, {permanent:true, direction:'top', offset:[0,-10], className:'tinyLabel'});
     if (info.alt) {
       pzlNavAltMarker = L.circleMarker([info.alt.lat, info.alt.lon], {pane:'pzlNavMarkerPane', radius:8, color:'#1d4ed8', weight:2, fillColor:'#60a5fa', fillOpacity:0.9}).addTo(map);
-      pzlNavAltMarker.bindTooltip('ALT ' + info.alt.name, {permanent:false, direction:'top', offset:[0,-10], className:'tinyLabel'});
+      const altIcao = (typeof ICAO !== 'undefined' && ICAO && ICAO[info.alt.name]) ? ICAO[info.alt.name] : '';
+      const altLabel = altIcao ? (altIcao + ' ' + info.alt.name) : ('ALT ' + info.alt.name);
+      pzlNavAltMarker.bindTooltip(altLabel, {permanent:false, direction:'top', offset:[0,-10], className:'tinyLabel'});
       pzlNavAltLine = L.polyline([[info.dest.lat, info.dest.lon],[info.alt.lat, info.alt.lon]], {pane:'pzlNavRoutePane', color:'#2563eb', weight:2, opacity:0.55, dashArray:'4,6'}).addTo(map);
     }
   }
