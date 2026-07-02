@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool v8.2 D416 CHECK DISTANCE · POINTS · ROUTES</title>
+  <title>PZL Mission Tool v8.2 D417 CLR NAV PANEL · 200 CHECKS</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -11292,8 +11292,18 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     const summary = document.getElementById('navSummaryBox');
     const list = document.getElementById('navRouteList');
     const altNameEl = document.getElementById('navAltName');
-    if (altNameEl) altNameEl.textContent = info && info.alt ? info.alt.name : '-';
     if (!summary || !list) return;
+    // CLR NAV: keep the selected destination available, but remove all live NAV
+    // calculations/cards from the panel. The 3-second refresh must not restore them.
+    if (!pzlNavModeActive && !pzlNavRoutePoints.length) {
+      if (altNameEl) altNameEl.textContent = '-';
+      summary.textContent = '';
+      summary.style.display = 'none';
+      list.innerHTML = '';
+      return;
+    }
+    summary.style.display = '';
+    if (altNameEl) altNameEl.textContent = info && info.alt ? info.alt.name : '-';
     if (!info || !info.pos || !info.dest) {
       summary.textContent = 'Ενεργοποίησε GPS ή Test Mode και επίλεξε κλιμάκιο προορισμού.';
       list.innerHTML = '<div class="nav-empty">Δεν υπάρχουν διαθέσιμα στοιχεία ναυτιλίας.</div>';
@@ -11813,6 +11823,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 .pzl-check-slot-row,.pzl-check-search-row,.pzl-check-coord-row{display:flex;gap:3px;align-items:center;min-width:0;}
 .pzl-check-slot-row select{flex:0 0 54%;min-width:0!important;padding:4px 2px!important;font-size:9px!important;}
 #checkNextHint{font-size:7.5px;font-weight:800;line-height:1.05;flex:1;}
+#checkSlotSelect{max-height:44vh;}
 .pzl-check-search-row input{min-width:0!important;width:62%!important;flex:1!important;padding:5px 4px!important;font-size:9px!important;}
 .pzl-check-search-row button{width:38%!important;min-width:0!important;padding:5px 2px!important;font-size:9px!important;}
 #checkCoordToggleBtn{width:100%;padding:4px 3px!important;font-size:9px!important;}
@@ -11908,12 +11919,12 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
   const LIB_KEY = 'pzl_saved_point_library_v1';
   const ROUTE_KEY = 'pzl_saved_route_library_v1';
   const ACTIVE_ROUTE_KEY = 'pzl_active_saved_route_v1';
-  const MAX_CHECKS = 5;
+  const MAX_CHECKS = 200;
   const CHECK_SPEED_KMH = 180;
 
   let checkMode = false;
-  let checkPoints = loadJson(CHECK_KEY, [null,null,null,null,null]);
-  if (!Array.isArray(checkPoints)) checkPoints = [null,null,null,null,null];
+  let checkPoints = loadJson(CHECK_KEY, []);
+  if (!Array.isArray(checkPoints)) checkPoints = [];
   checkPoints = Array.from({length:MAX_CHECKS}, (_,i) => sanitizePoint(checkPoints[i], 'check_'+(i+1), 'CHECK '+(i+1)));
   let checkSlot = Math.max(0, checkPoints.findIndex(p => !p));
   if (checkSlot < 0) checkSlot = 0;
@@ -12188,7 +12199,8 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
     list.length=0;
   }
   function checkIcon(slot){
-    return L.divIcon({className:'pzl-check-icon-wrap',html:'<div class="pzl-check-icon">C'+slot+'</div>',iconSize:[34,28],iconAnchor:[17,14]});
+    const width = slot >= 100 ? 50 : (slot >= 10 ? 42 : 34);
+    return L.divIcon({className:'pzl-check-icon-wrap',html:'<div class="pzl-check-icon">C'+slot+'</div>',iconSize:[width,28],iconAnchor:[Math.round(width/2),14]});
   }
   function routeIcon(index){
     return L.divIcon({className:'pzl-route-icon-wrap',html:'<div class="pzl-route-icon">R'+index+'</div>',iconSize:[32,26],iconAnchor:[16,13]});
@@ -12198,8 +12210,17 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
   }
   function checkLegs(){
     const legs=[];
-    for(let i=0;i<MAX_CHECKS-1;i++) if(checkPoints[i]&&checkPoints[i+1]) legs.push({from:i,to:i+1,a:checkPoints[i],b:checkPoints[i+1],closing:false});
-    if(checkPoints[4]&&checkPoints[0]) legs.push({from:4,to:0,a:checkPoints[4],b:checkPoints[0],closing:true});
+    const populated=[];
+    checkPoints.forEach((point,index)=>{ if(point) populated.push(index); });
+    for(let i=0;i<populated.length-1;i++) {
+      const from=populated[i], to=populated[i+1];
+      legs.push({from,to,a:checkPoints[from],b:checkPoints[to],closing:false});
+    }
+    // Cyclic selection: from the last active CHECK back to the first one.
+    if(populated.length>=2) {
+      const from=populated[populated.length-1], to=populated[0];
+      legs.push({from,to,a:checkPoints[from],b:checkPoints[to],closing:true});
+    }
     return legs;
   }
   function renderCheckMap(){
@@ -12246,7 +12267,7 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
     if (panel) panel.hidden=!checkMode;
     document.body.classList.toggle('pzl-check-distance-active',checkMode);
     if (slotSel) slotSel.value=String(checkSlot+1);
-    if (hint) hint.textContent='Επόμενο: CHECK '+(checkSlot+1)+' · '+checkPoints.filter(Boolean).length+'/5';
+    if (hint) hint.textContent='Επόμενο: CHECK '+(checkSlot+1)+' · '+checkPoints.filter(Boolean).length+'/'+MAX_CHECKS;
     const legs=checkLegs();
     if (prev) prev.disabled=legs.length<2;
     if (next) next.disabled=legs.length<2;
@@ -12281,7 +12302,7 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
   }
   function clearActiveChecks(){
     try { if (String(activeHudFixId || '').startsWith('check_')) activeHudFixId=null; } catch(e) {}
-    checkPoints=[null,null,null,null,null]; checkSlot=0; checkLegIndex=0; persistChecks(); renderCheckMap();
+    checkPoints=Array(MAX_CHECKS).fill(null); checkSlot=0; checkLegIndex=0; persistChecks(); renderCheckMap();
     toast('Τα CHECK αφαιρέθηκαν από τον χάρτη. Η αποθηκευμένη λίστα παρέμεινε.');
   }
   function setCheckMode(flag){
@@ -12509,8 +12530,8 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
       out+='<div class="fix-group-title">Manual FIX ('+(manualFixPoints||[]).length+'/5)</div>';
       if(manualFixPoints&&manualFixPoints.length)manualFixPoints.forEach((point,index)=>out+=pzlFixRowHtml({id:point.id,type:'mfix',index,label:'MFix'+(index+1),point})); else out+='<div class="fix-empty-line">Πάτησε MFIX και μετά σημείο στον χάρτη.</div>';
       const count=checkPoints.filter(Boolean).length;
-      out+='<div class="fix-group-title">CHECK DISTANCE ('+count+'/5)</div>';
-      if(count)checkEntryList().forEach(entry=>out+=pzlFixRowHtml(entry)); else out+='<div class="fix-empty-line">Πάτησε CHECK DISTANCE και επίλεξε έως 5 σημεία.</div>';
+      out+='<div class="fix-group-title">CHECK DISTANCE ('+count+'/'+MAX_CHECKS+')</div>';
+      if(count)checkEntryList().forEach(entry=>out+=pzlFixRowHtml(entry)); else out+='<div class="fix-empty-line">Πάτησε CHECK DISTANCE και επίλεξε έως '+MAX_CHECKS+' σημεία.</div>';
       list.innerHTML=out;
       list.querySelectorAll('[data-fix-select]').forEach(btn=>btn.onclick=()=>pzlSelectHudFix(btn.getAttribute('data-fix-select')));
       list.querySelectorAll('[data-fix-save]').forEach(btn=>btn.onclick=()=>{const entry=pzlAllFixEntries().find(e=>e.id===btn.getAttribute('data-fix-save'));if(entry)saveEntryToLibrary(entry);});
@@ -12525,7 +12546,8 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
     const navSplit=actions && actions.querySelector('.navSplit');
     if(actions && navSplit && !document.getElementById('pzlCheckControls')){
       const wrap=document.createElement('div'); wrap.id='pzlCheckControls';
-      wrap.innerHTML='<button id="checkDistanceBtn" type="button" class="secondary">CHECK DISTANCE</button><button id="clearCheckDistanceBtn" type="button" class="danger">CLR CHECK DIST <span class="x2-mark">x2</span></button><div id="checkDistancePanel" hidden><div class="pzl-check-slot-row"><select id="checkSlotSelect" aria-label="CHECK slot"><option value="1">CHECK 1</option><option value="2">CHECK 2</option><option value="3">CHECK 3</option><option value="4">CHECK 4</option><option value="5">CHECK 5</option></select><span id="checkNextHint"></span></div><div class="pzl-check-search-row"><input id="checkSearchBox" placeholder="CHECK SRCH" autocomplete="off"><button id="checkSearchBtn" type="button">SRCH</button></div><button id="checkCoordToggleBtn" type="button" class="secondary">CHECK Coord</button><div id="checkCoordPanel" hidden><div class="pzl-check-coord-row"><input id="checkCoordLat" inputmode="decimal" placeholder="LAT 390315"><input id="checkCoordLon" inputmode="decimal" placeholder="LON 0263626"></div><div class="pzl-check-coord-row"><select id="checkCoordFormat"><option value="dd">DD</option><option value="ddm" selected>DDM</option><option value="dms">DMS</option></select><button id="checkCoordGo" type="button">GO</button></div></div><div id="checkLegNavigator"><button id="checkLegPrev" type="button">◀</button><div id="checkLegInfo"></div><button id="checkLegNext" type="button">▶</button></div></div>';
+      const checkSlotOptions=Array.from({length:MAX_CHECKS},(_,i)=>'<option value="'+(i+1)+'">CHECK '+(i+1)+'</option>').join('');
+      wrap.innerHTML='<button id="checkDistanceBtn" type="button" class="secondary">CHECK DISTANCE</button><button id="clearCheckDistanceBtn" type="button" class="danger">CLR CHECK DIST <span class="x2-mark">x2</span></button><div id="checkDistancePanel" hidden><div class="pzl-check-slot-row"><select id="checkSlotSelect" aria-label="CHECK slot">'+checkSlotOptions+'</select><span id="checkNextHint"></span></div><div class="pzl-check-search-row"><input id="checkSearchBox" placeholder="CHECK SRCH" autocomplete="off"><button id="checkSearchBtn" type="button">SRCH</button></div><button id="checkCoordToggleBtn" type="button" class="secondary">CHECK Coord</button><div id="checkCoordPanel" hidden><div class="pzl-check-coord-row"><input id="checkCoordLat" inputmode="decimal" placeholder="LAT 390315"><input id="checkCoordLon" inputmode="decimal" placeholder="LON 0263626"></div><div class="pzl-check-coord-row"><select id="checkCoordFormat"><option value="dd">DD</option><option value="ddm" selected>DDM</option><option value="dms">DMS</option></select><button id="checkCoordGo" type="button">GO</button></div></div><div id="checkLegNavigator"><button id="checkLegPrev" type="button">◀</button><div id="checkLegInfo"></div><button id="checkLegNext" type="button">▶</button></div></div>';
       actions.insertBefore(wrap,navSplit);
       document.getElementById('checkDistanceBtn').addEventListener('click',()=>setCheckMode(!checkMode));
       document.getElementById('clearCheckDistanceBtn').addEventListener('click',function(){
@@ -12534,7 +12556,7 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
         clearCheckArmedAt=now;this.classList.add('x2-pending');
         clearTimeout(clearCheckTimer);clearCheckTimer=setTimeout(()=>{clearCheckArmedAt=0;this.classList.remove('x2-pending');},850);
       });
-      document.getElementById('checkSlotSelect').addEventListener('change',function(){checkSlot=Math.max(0,Math.min(4,Number(this.value)-1));renderCheckControls();});
+      document.getElementById('checkSlotSelect').addEventListener('change',function(){checkSlot=Math.max(0,Math.min(MAX_CHECKS-1,Number(this.value)-1));renderCheckControls();});
       document.getElementById('checkSearchBtn').addEventListener('click',checkSearch);
       document.getElementById('checkSearchBox').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();checkSearch();}});
       document.getElementById('checkCoordToggleBtn').addEventListener('click',function(){const p=document.getElementById('checkCoordPanel');p.hidden=!p.hidden;this.classList.toggle('active',!p.hidden);});
