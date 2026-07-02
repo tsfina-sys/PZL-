@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool v8.2 D67 Cockpit FIX37D415 NAV ICAO LABELS</title>
+  <title>PZL Mission Tool CLR NAV X2 - v8.2 D67 Cockpit FIX37D415 NAV ICAO LABELS</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -9184,6 +9184,7 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
 (function(){
   const WINDOW_MS = 800;
   const labels = {
+    clearNavBtn: "CLR NAV x2",
     clearViaBtn: "CLR x2",
     clearReturnWpBtn: "CLR RTB x2",
     clearFireBtn: "CLR FIRE x2",
@@ -9195,7 +9196,7 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
   const lastTap = Object.create(null);
 
   function installX2Guard(){
-    ["clearViaBtn","clearReturnWpBtn","clearFireBtn","generalResetBtn","takeoffBtn","setManualTimeBtn","newFireWithWaterBtn"].forEach(function(id){
+    ["clearNavBtn","clearViaBtn","clearReturnWpBtn","clearFireBtn","generalResetBtn","takeoffBtn","setManualTimeBtn","newFireWithWaterBtn"].forEach(function(id){
       const btn = document.getElementById(id);
       if(!btn || btn.dataset.pzlX2Guard === "1") return;
       btn.dataset.pzlX2Guard = "1";
@@ -9283,7 +9284,7 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
 #topMapGpsBar .topGpsSplit #useGpsAsStartBtn{border-radius:0 8px 8px 0!important;}
 #newFireWithWaterBtn{font-weight:800!important;}
 #newFireWithWaterBtn .x2-mark{display:inline!important;font-size:.82em!important;font-weight:900!important;margin-left:3px!important;}
-#newFireWithWaterBtn.x2-pending,#takeoffBtn.x2-pending,#setManualTimeBtn.x2-pending,#clearViaBtn.x2-pending,#clearReturnWpBtn.x2-pending,#clearFireBtn.x2-pending,#generalResetBtn.x2-pending{filter:brightness(1.28)!important;box-shadow:0 0 0 2px #ffd24a,0 1px 6px rgba(0,0,0,.3)!important;}
+#newFireWithWaterBtn.x2-pending,#takeoffBtn.x2-pending,#setManualTimeBtn.x2-pending,#clearNavBtn.x2-pending,#clearViaBtn.x2-pending,#clearReturnWpBtn.x2-pending,#clearFireBtn.x2-pending,#generalResetBtn.x2-pending{filter:brightness(1.28)!important;box-shadow:0 0 0 2px #ffd24a,0 1px 6px rgba(0,0,0,.3)!important;}
 @media(max-width:700px){
   #topMapGpsBar{gap:4px!important;left:70px!important;}
   #topMapGpsBar .topGpsSplit{flex-basis:160px!important;width:160px!important;}
