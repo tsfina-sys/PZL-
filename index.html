@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_NAV_DEST_ALL_AIRPORTS_20260702AU">
+<meta name="pzl-build" content="PZL_NAV_DEST_GREECE_BALKANS_20260702AV">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -2222,6 +2222,106 @@ function getRemainingAirborneMinutesForNewFire() {
       "ΧΙΟΣ": {lat:38.3432, lon:26.1406},
       "ΕΛΕΥΣΙΝΑ": {lat:38.0638, lon:23.5550}
     };
+
+
+    // Πρόσθετοι προορισμοί μόνο για το NAV.
+    // Δεν αλλάζουν τη λογική των κλιμακίων ή του δυναμικού ALTR.
+    const navExtraAirportGroups = [
+      {
+        label: "ΕΛΛΑΔΑ — ΛΟΙΠΑ Α/Δ",
+        airports: {
+          "ΑΘΗΝΑ": {lat:37.9364, lon:23.9445, icao:"LGAV"},
+          "ΘΕΣΣΑΛΟΝΙΚΗ": {lat:40.5197, lon:22.9709, icao:"LGTS"},
+          "ΗΡΑΚΛΕΙΟ": {lat:35.3397, lon:25.1803, icao:"LGIR"},
+          "ΧΑΝΙΑ": {lat:35.5317, lon:24.1497, icao:"LGSA"},
+          "ΡΟΔΟΣ": {lat:36.4054, lon:28.0862, icao:"LGRP"},
+          "ΚΩΣ": {lat:36.7933, lon:27.0917, icao:"LGKO"},
+          "ΣΑΝΤΟΡΙΝΗ": {lat:36.3992, lon:25.4793, icao:"LGSR"},
+          "ΜΥΚΟΝΟΣ": {lat:37.4351, lon:25.3481, icao:"LGMK"},
+          "ΖΑΚΥΝΘΟΣ": {lat:37.7509, lon:20.8843, icao:"LGZA"},
+          "ΣΑΜΟΣ": {lat:37.6899, lon:26.9117, icao:"LGSM"},
+          "ΣΚΙΑΘΟΣ": {lat:39.1771, lon:23.5037, icao:"LGSK"},
+          "ΚΑΡΠΑΘΟΣ": {lat:35.4214, lon:27.1460, icao:"LGKP"},
+          "ΙΩΑΝΝΙΝΑ": {lat:39.6964, lon:20.8225, icao:"LGIO"},
+          "ΑΡΑΞΟΣ": {lat:38.1511, lon:21.4256, icao:"LGRX"},
+          "ΛΗΜΝΟΣ": {lat:39.9171, lon:25.2363, icao:"LGLM"},
+          "ΣΚΥΡΟΣ": {lat:38.9676, lon:24.4872, icao:"LGSY"},
+          "ΚΟΖΑΝΗ": {lat:40.2861, lon:21.8408, icao:"LGKZ"},
+          "ΚΑΣΤΟΡΙΑ": {lat:40.4463, lon:21.2822, icao:"LGKA"},
+          "ΚΥΘΗΡΑ": {lat:36.2743, lon:23.0170, icao:"LGKC"},
+          "ΜΗΛΟΣ": {lat:36.6961, lon:24.4775, icao:"LGML"},
+          "ΝΑΞΟΣ": {lat:37.0811, lon:25.3681, icao:"LGNX"},
+          "ΠΑΡΟΣ": {lat:37.0205, lon:25.1132, icao:"LGPA"},
+          "ΣΥΡΟΣ": {lat:37.4228, lon:24.9509, icao:"LGSO"},
+          "ΙΚΑΡΙΑ": {lat:37.6827, lon:26.3471, icao:"LGIK"},
+          "ΛΕΡΟΣ": {lat:37.1849, lon:26.8003, icao:"LGLE"},
+          "ΑΣΤΥΠΑΛΑΙΑ": {lat:36.5799, lon:26.3758, icao:"LGPL"},
+          "ΚΑΛΥΜΝΟΣ": {lat:36.9633, lon:26.9406, icao:"LGKY"},
+          "ΚΑΣΟΣ": {lat:35.4214, lon:26.9100, icao:"LGKS"},
+          "ΣΗΤΕΙΑ": {lat:35.2161, lon:26.1013, icao:"LGST"},
+          "ΛΑΡΙΣΑ": {lat:39.6503, lon:22.4655, icao:"LGLR"},
+          "ΤΑΝΑΓΡΑ": {lat:38.3398, lon:23.5650, icao:"LGTG"},
+          "ΜΕΓΑΡΑ": {lat:37.9811, lon:23.3654, icao:"LGMG"}
+        }
+      },
+      {
+        label: "ΑΛΒΑΝΙΑ",
+        airports: {
+          "ΤΙΡΑΝΑ": {lat:41.4147, lon:19.7206, icao:"LATI"},
+          "ΚΟΥΚΕΣ": {lat:42.0358, lon:20.4159, icao:"LAKU"},
+          "ΚΟΥΤΣΟΒΑ": {lat:40.7719, lon:19.9019, icao:"LAKV"},
+          "ΓΚΙΑΝΤΕΡ": {lat:41.8952, lon:19.5987, icao:"LAGJ"},
+          "ΒΛΩΡΑ": {lat:40.4761, lon:19.4742, icao:"LAVL"},
+          "ΑΡΓΥΡΟΚΑΣΤΡΟ": {lat:40.0875, lon:20.1531, icao:"LAGK"},
+          "ΚΟΡΥΤΣΑ": {lat:40.6506, lon:20.7414, icao:"LAKO"},
+          "ΑΓΙΟΙ ΣΑΡΑΝΤΑ": {lat:39.8592, lon:20.0250, icao:"LASR"},
+          "ΣΚΟΔΡΑ": {lat:42.0678, lon:19.5147, icao:"LASK"},
+          "ΣΙΓΙΑΚ": {lat:41.3137, lon:19.5492, icao:"LASJ"}
+        }
+      },
+      {
+        label: "ΒΟΥΛΓΑΡΙΑ",
+        airports: {
+          "ΣΟΦΙΑ": {lat:42.6967, lon:23.4114, icao:"LBSF"},
+          "ΦΙΛΙΠΠΟΥΠΟΛΗ": {lat:42.0678, lon:24.8508, icao:"LBPD"},
+          "ΒΑΡΝΑ": {lat:43.2321, lon:27.8251, icao:"LBWN"},
+          "ΜΠΟΥΡΓΚΑΣ": {lat:42.5696, lon:27.5152, icao:"LBBG"},
+          "ΓΚΟΡΝΑ ΟΡΙΑΧΟΒΙΤΣΑ": {lat:43.1514, lon:25.7129, icao:"LBGO"},
+          "ΡΟΥΣΕ": {lat:43.6948, lon:26.0567, icao:"LBRS"},
+          "ΜΠΑΛΤΣΙΚ": {lat:43.4238, lon:28.1813, icao:"LBWB"},
+          "ΜΠΕΖΜΕΡ": {lat:42.4549, lon:26.3522, icao:"LBIA"},
+          "ΓΚΡΑΦ ΙΓΚΝΑΤΙΕΒΟ": {lat:42.2904, lon:24.7140, icao:"LBPG"},
+          "ΝΤΟΛΝΑ ΜΙΤΡΟΠΟΛΙΑ": {lat:43.4514, lon:24.5028, icao:"LBPL"},
+          "ΠΡΙΜΟΡΣΚΟ": {lat:42.2678, lon:27.7081, icao:"LBPR"},
+          "ΣΤΑΡΑ ΖΑΓΚΟΡΑ": {lat:42.3767, lon:25.6550, icao:"LBSZ"},
+          "ΤΑΡΓΚΟΒΙΣΤΕ": {lat:43.3066, lon:26.7009, icao:"LBTG"}
+        }
+      },
+      {
+        label: "ΒΟΡΕΙΑ ΜΑΚΕΔΟΝΙΑ (ΣΚΟΠΙΑ)",
+        airports: {
+          "ΣΚΟΠΙΑ": {lat:41.9616, lon:21.6214, icao:"LWSK"},
+          "ΟΧΡΙΔΑ": {lat:41.1800, lon:20.7423, icao:"LWOH"},
+          "ΣΤΕΝΚΟΒΕΤΣ": {lat:42.0606, lon:21.3883},
+          "ΓΚΡΑΝΤΣΚΟ": {lat:41.5775, lon:21.9428},
+          "ΚΟΥΜΑΝΟΒΟ": {lat:42.1322, lon:21.7142},
+          "ΜΑΛΟ ΚΟΝΙΑΡΙ": {lat:41.3678, lon:21.4303},
+          "ΝΕΓΚΟΤΙΝΟ": {lat:41.4917, lon:22.0900},
+          "ΝΤΟΛΝΕΝΙ": {lat:41.4283, lon:21.4547},
+          "ΒΕΛΕΣ": {lat:41.7697, lon:21.9539},
+          "ΣΤΙΠ": {lat:41.7422, lon:22.1875},
+          "ΛΟΓΚΟΒΑΡΝΤΙ": {lat:41.0294, lon:21.3467},
+          "ΤΕΤΟΒΟ": {lat:42.0186, lon:20.9838}
+        }
+      }
+    ];
+
+    const navExtraAirports = {};
+    navExtraAirportGroups.forEach(group => {
+      Object.entries(group.airports).forEach(([name, data]) => {
+        navExtraAirports[name] = {...data, group:group.label};
+      });
+    });
 
 
     const positionReferencePoints = [
@@ -8830,6 +8930,13 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
   const CHECKWX_KEY = "a8122bb537b640e5ae6de8cc11a07267";
   const XW_LIMIT = 13, WIND_LIMIT = 29.5;
   const ICAO = {"ΚΕΡΚΥΡΑ":"LGKR","ΑΚΤΙΟ":"LGPZ","ΚΑΒΑΛΑ":"LGKV","ΑΛΕΞΑΝΔΡΟΥΠΟΛΗ":"LGAL","ΚΕΦΑΛΛΟΝΙΑ":"LGKF","ΑΝΔΡΑΒΙΔΑ":"LGAD","ΤΡΙΠΟΛΗ":"LGTP","ΚΑΛΑΜΑΤΑ":"LGKL","ΛΑΜΙΑ":"LGLM","ΒΟΛΟΣ":"LGBL","ΜΥΤΙΛΗΝΗ":"LGMT","ΧΙΟΣ":"LGHI","ΤΑΤΟΪ":"LGTT","ΕΛΕΥΣΙΝΑ":"LGEL"};
+  try {
+    if (typeof navExtraAirports !== 'undefined') {
+      Object.entries(navExtraAirports).forEach(([name, data]) => {
+        if (data && data.icao) ICAO[name] = data.icao;
+      });
+    }
+  } catch(e) {}
 
   const FULLSTOP_ALT_METAR = {
     "ΚΕΡΚΥΡΑ":"ΑΚΤΙΟ",
@@ -9914,7 +10021,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_NAV_DEST_ALL_AIRPORTS_20260702AU */
+/* PZL_NAV_DEST_GREECE_BALKANS_20260702AV */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
@@ -10834,7 +10941,9 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
         ? bases[name]
         : ((typeof airports !== 'undefined' && airports && airports[name])
             ? airports[name]
-            : null);
+            : ((typeof navExtraAirports !== 'undefined' && navExtraAirports && navExtraAirports[name])
+                ? navExtraAirports[name]
+                : null));
     return source
       ? {lat:Number(source.lat), lon:Number(source.lon), name}
       : null;
@@ -11463,6 +11572,21 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
         altGroup.appendChild(opt);
       });
       sel.appendChild(altGroup);
+    }
+
+    if (typeof navExtraAirportGroups !== 'undefined') {
+      navExtraAirportGroups.forEach(group => {
+        const optGroup = document.createElement('optgroup');
+        optGroup.label = group.label;
+        Object.entries(group.airports).forEach(([name, data]) => {
+          if (baseSet.has(name) || alternateNames.includes(name)) return;
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = data.icao ? `${name} (${data.icao})` : name;
+          optGroup.appendChild(opt);
+        });
+        if (optGroup.children.length) sel.appendChild(optGroup);
+      });
     }
 
     if (navAirportPointByName(current)) {
