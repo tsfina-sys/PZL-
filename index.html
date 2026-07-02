@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool v8.2 D417 CLR NAV PANEL · 200 CHECKS</title>
+  <title>PZL Mission Tool v8.2 D418 TAP MAP · TEMP ROUTES</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -11899,6 +11899,30 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
 #pzlFeatureToast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,25px);z-index:30000;background:#111827;color:#fff;padding:9px 13px;border-radius:10px;font-size:12px;font-weight:800;opacity:0;pointer-events:none;transition:.18s;max-width:88vw;text-align:center;}
 #pzlFeatureToast.show{opacity:1;transform:translate(-50%,0);}
 
+
+/* D418: TAP MAP + TEMP point management + route/point dependency safety */
+.pzl-temp-row{display:grid;grid-template-columns:minmax(0,1fr) 30px 30px 30px 30px;gap:4px;align-items:center;padding:5px 0;border-top:1px solid #e5e7eb;}
+.pzl-temp-row button{padding:4px 2px!important;min-width:0!important;font-size:11px!important;}
+.pzl-temp-save{background:#0f6ab4!important;}
+.pzl-library-subtitle-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:9px 0 4px;padding-top:6px;border-top:1px solid #d0d5dd;font-weight:900;}
+.pzl-library-subtitle-row button{padding:4px 7px!important;font-size:10px!important;}
+#pzlTapMapBar{position:fixed;left:50%;top:54px;transform:translateX(-50%);z-index:27000;background:rgba(15,23,42,.95);color:#fff;border:2px solid #22c55e;border-radius:12px;padding:7px;box-shadow:0 8px 24px rgba(0,0,0,.48);display:flex;align-items:center;gap:6px;max-width:96vw;}
+#pzlTapMapBar[hidden]{display:none!important;}
+#pzlTapMapBar b{font-size:11px;white-space:nowrap;}
+#pzlTapMapBar button{padding:6px 9px!important;font-size:10px!important;min-width:0!important;}
+body.pzl-route-tap-map #map{cursor:crosshair!important;}
+.pzl-temp-icon{background:#f97316;color:#fff;border:2px solid #fff;border-radius:8px;padding:3px 5px;font-size:10px;font-weight:1000;box-shadow:0 2px 7px rgba(0,0,0,.55);white-space:nowrap;}
+.pzl-tap-route-line{pointer-events:none;}
+#pzlTempManagerList,#pzlPointDependencyList{border:1px solid #d0d5dd;border-radius:9px;padding:5px;max-height:55vh;overflow:auto;}
+.pzl-temp-manager-note,.pzl-dependency-note{font-size:11px;line-height:1.25;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:7px;margin-bottom:7px;}
+.pzl-dep-route{display:grid;grid-template-columns:minmax(0,1fr) 74px;gap:5px;align-items:center;padding:6px 0;border-top:1px solid #e5e7eb;}
+.pzl-dep-route:first-child{border-top:0;}
+.pzl-dep-route b,.pzl-dep-route small{display:block;overflow-wrap:anywhere;}
+.pzl-dep-route small{font-size:9px;color:#667085;margin-top:2px;}
+.pzl-dep-route button{padding:5px!important;font-size:9px!important;}
+.pzl-warning-active{color:#b42318;font-weight:900;}
+.pzl-route-map-box button{width:100%;background:#157347!important;}
+
 @media(max-width:700px){
   #pzlCheckControls>button{height:26px!important;min-height:26px!important;font-size:8.4px!important;line-height:1!important;padding:3px 2px!important;}
   #clearCheckDistanceBtn{font-size:7.7px!important;}
@@ -11919,6 +11943,8 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
   const LIB_KEY = 'pzl_saved_point_library_v1';
   const ROUTE_KEY = 'pzl_saved_route_library_v1';
   const ACTIVE_ROUTE_KEY = 'pzl_active_saved_route_v1';
+  const TEMP_KEY = 'pzl_temp_point_library_v1';
+  const MAX_TEMP_POINTS = 200;
   const MAX_CHECKS = 200;
   const CHECK_SPEED_KMH = 180;
 
@@ -11939,6 +11965,10 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
   if (!Array.isArray(pointLibrary)) pointLibrary = [];
   pointLibrary = pointLibrary.map((p,i) => sanitizeLibraryPoint(p, i)).filter(Boolean);
 
+  let tempLibrary = loadJson(TEMP_KEY, []);
+  if (!Array.isArray(tempLibrary)) tempLibrary = [];
+  tempLibrary = tempLibrary.map((p,i) => sanitizeTempPoint(p, i)).filter(Boolean).slice(0,MAX_TEMP_POINTS);
+
   let routeLibrary = loadJson(ROUTE_KEY, []);
   if (!Array.isArray(routeLibrary)) routeLibrary = [];
   routeLibrary = routeLibrary.map(sanitizeRoute).filter(Boolean);
@@ -11949,6 +11979,14 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
   let previewMapState = null;
   let routeDraft = null;
   let routeDraftId = null;
+  let tapMapMode = false;
+  let tapDraftLayers = [];
+  let tapSessionTempIds = [];
+  let pendingRouteDeleteId = null;
+  let tempManagerFilterIds = null;
+  let dependencyState = null;
+  let pointEditState = null;
+  let previewReturnModalId = null;
 
   let baseAllFixEntries = null;
   let baseDeleteFix = null;
@@ -12000,13 +12038,39 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
       createdAt:Number(p.createdAt || Date.now())
     };
   }
+  function sanitizeTempPoint(p, index){
+    if (!p || !finite(p.lat) || !finite(p.lon)) return null;
+    let slot=Number(p.slot);
+    if(!Number.isInteger(slot) || slot<1 || slot>MAX_TEMP_POINTS){
+      const m=String(p.id||p.name||'').match(/(?:temp|TEMP)[ _-]?(\d+)/i);
+      slot=m?Number(m[1]):index+1;
+    }
+    slot=Math.max(1,Math.min(MAX_TEMP_POINTS,slot));
+    return {
+      id:String(p.id || ('temp_'+slot)), slot,
+      name:String(p.name || ('TEMP '+slot)),
+      lat:Number(p.lat), lon:Number(p.lon), sourceType:'temp',
+      createdAt:Number(p.createdAt || Date.now())
+    };
+  }
   function sanitizeRoute(route){
     if (!route || !Array.isArray(route.points)) return null;
-    const points = route.points.filter(p => p && finite(p.lat) && finite(p.lon)).map((p,i) => ({
-      id:String(p.id || uid('rpt')),
-      name:String(p.name || ('POINT '+(i+1))),
-      lat:Number(p.lat), lon:Number(p.lon), sourceType:String(p.sourceType || 'route')
-    }));
+    const points = route.points.filter(p => p && finite(p.lat) && finite(p.lon)).map((p,i) => {
+      let libraryPointId=p.libraryPointId?String(p.libraryPointId):null;
+      let tempPointId=p.tempPointId?String(p.tempPointId):null;
+      if(!libraryPointId && !tempPointId){
+        const libMatches=pointLibrary.filter(x=>Math.abs(x.lat-Number(p.lat))<1e-7&&Math.abs(x.lon-Number(p.lon))<1e-7&&(normalize(x.name)===normalize(p.name)||pointLibrary.filter(y=>Math.abs(y.lat-Number(p.lat))<1e-7&&Math.abs(y.lon-Number(p.lon))<1e-7).length===1));
+        if(libMatches.length===1) libraryPointId=libMatches[0].id;
+        const tmpMatches=tempLibrary.filter(x=>Math.abs(x.lat-Number(p.lat))<1e-7&&Math.abs(x.lon-Number(p.lon))<1e-7&&(normalize(x.name)===normalize(p.name)||tempLibrary.filter(y=>Math.abs(y.lat-Number(p.lat))<1e-7&&Math.abs(y.lon-Number(p.lon))<1e-7).length===1));
+        if(!libraryPointId&&tmpMatches.length===1) tempPointId=tmpMatches[0].id;
+      }
+      return {
+        id:String(p.id || uid('rpt')),
+        name:String(p.name || ('POINT '+(i+1))),
+        lat:Number(p.lat), lon:Number(p.lon), sourceType:String(p.sourceType || 'route'),
+        libraryPointId, tempPointId
+      };
+    });
     return {id:String(route.id || uid('route')), name:String(route.name || 'ROUTE'), points, updatedAt:Number(route.updatedAt || Date.now())};
   }
   function nowTime(){
@@ -12046,6 +12110,39 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
     let i=2;
     while (used.has(normalize(root+' '+i))) i++;
     return root+' '+i;
+  }
+  function persistTemp(){ saveJson(TEMP_KEY,tempLibrary); }
+  function nextTempSlot(){
+    const used=new Set(tempLibrary.map(p=>Number(p.slot)));
+    for(let i=1;i<=MAX_TEMP_POINTS;i++) if(!used.has(i)) return i;
+    return null;
+  }
+  function tempById(id){ return tempLibrary.find(p=>p.id===id)||null; }
+  function savedById(id){ return pointLibrary.find(p=>p.id===id)||null; }
+  function routePointUses(point,type,id){
+    return !!point && (type==='temp'?point.tempPointId===id:point.libraryPointId===id);
+  }
+  function routesUsingPoint(type,id){ return routeLibrary.filter(r=>r.points.some(p=>routePointUses(p,type,id))); }
+  function draftUsesPoint(type,id){ return Array.isArray(routeDraft)&&routeDraft.some(p=>routePointUses(p,type,id)); }
+  function routeTempIds(route){ return Array.from(new Set((route&&route.points||[]).map(p=>p.tempPointId).filter(Boolean))); }
+  function tempUsedElsewhere(id,excludeRouteId){
+    if(routeLibrary.some(r=>r.id!==excludeRouteId&&r.points.some(p=>p.tempPointId===id))) return true;
+    if(Array.isArray(routeDraft)&&routeDraft.some(p=>p.tempPointId===id)) return true;
+    return false;
+  }
+  function serializeDraftPoint(p){
+    return {id:uid('rpt'),name:String(p.name||'POINT'),lat:Number(p.lat),lon:Number(p.lon),sourceType:String(p.sourceType||'route'),libraryPointId:p.libraryPointId||null,tempPointId:p.tempPointId||null};
+  }
+  function actionChoice(title,message,actions){
+    return new Promise(resolve=>{
+      const overlay=document.createElement('div');overlay.className='pzl-choice-overlay';
+      const card=document.createElement('div');card.className='pzl-choice-card';
+      card.innerHTML='<div class="pzl-choice-title">'+esc(title)+'</div><div class="pzl-temp-manager-note">'+esc(message)+'</div><div class="pzl-choice-list"></div>';
+      const list=card.querySelector('.pzl-choice-list');
+      (actions||[]).forEach(a=>{const b=document.createElement('button');b.type='button';b.className='pzl-choice-item'+(a.danger?' danger':'');b.textContent=a.label;b.style.background=a.danger?'#b42318':'';b.onclick=()=>{overlay.remove();resolve(a.value);};list.appendChild(b);});
+      const cancel=document.createElement('button');cancel.type='button';cancel.className='secondary pzl-choice-cancel';cancel.textContent='Ακύρωση';cancel.onclick=()=>{overlay.remove();resolve(null);};card.appendChild(cancel);
+      overlay.onclick=ev=>{if(ev.target===overlay){overlay.remove();resolve(null);}};overlay.appendChild(card);document.body.appendChild(overlay);
+    });
   }
   function toast(text){
     let el=document.getElementById('pzlFeatureToast');
@@ -12192,6 +12289,7 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
       if (!map.getPane('pzlCheckPane')) { map.createPane('pzlCheckPane'); map.getPane('pzlCheckPane').style.zIndex='690'; }
       if (!map.getPane('pzlRoutePane')) { map.createPane('pzlRoutePane'); map.getPane('pzlRoutePane').style.zIndex='675'; }
       if (!map.getPane('pzlPreviewPane')) { map.createPane('pzlPreviewPane'); map.getPane('pzlPreviewPane').style.zIndex='730'; }
+      if (!map.getPane('pzlTapPane')) { map.createPane('pzlTapPane'); map.getPane('pzlTapPane').style.zIndex='720'; }
     } catch(e) {}
   }
   function removeLayers(list){
@@ -12207,6 +12305,10 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
   }
   function previewIcon(){
     return L.divIcon({className:'pzl-preview-icon-wrap',html:'<div class="pzl-preview-icon">🔍</div>',iconSize:[38,38],iconAnchor:[19,19]});
+  }
+  function tempIcon(slot){
+    const width=slot>=100?58:(slot>=10?50:43);
+    return L.divIcon({className:'pzl-temp-icon-wrap',html:'<div class="pzl-temp-icon">TEMP '+slot+'</div>',iconSize:[width,28],iconAnchor:[Math.round(width/2),14]});
   }
   function checkLegs(){
     const legs=[];
@@ -12335,6 +12437,126 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
     try { map.setView([p.lat,p.lon],Math.max(Number(map.getZoom())||0,12)); } catch(e) {}
   }
 
+  function createTempPoint(lat,lon){
+    const slot=nextTempSlot();
+    if(slot===null){alert('Η προσωρινή λίστα έχει φτάσει τα 200 σημεία. Αποθήκευσε ή διέγραψε TEMP σημεία.');return null;}
+    const p={id:'temp_'+slot,slot,name:'TEMP '+slot,lat:Number(lat),lon:Number(lon),sourceType:'temp',createdAt:Date.now()};
+    tempLibrary.push(p);tempLibrary.sort((a,b)=>a.slot-b.slot);persistTemp();return p;
+  }
+  function syncRouteRefsFromTemp(tempId, savedPoint){
+    routeLibrary.forEach(r=>r.points.forEach(p=>{if(p.tempPointId===tempId){p.tempPointId=null;p.libraryPointId=savedPoint.id;p.name=savedPoint.name;p.lat=savedPoint.lat;p.lon=savedPoint.lon;p.sourceType='saved';}}));
+    if(Array.isArray(routeDraft)) routeDraft.forEach(p=>{if(p.tempPointId===tempId){p.tempPointId=null;p.libraryPointId=savedPoint.id;p.name=savedPoint.name;p.lat=savedPoint.lat;p.lon=savedPoint.lon;p.sourceType='saved';}});
+    saveJson(ROUTE_KEY,routeLibrary);
+  }
+  function promoteTempPoint(id){
+    const p=tempById(id);if(!p)return;
+    const saved={id:uid('libpt'),name:uniqueName(p.name),lat:p.lat,lon:p.lon,sourceType:'temp',createdAt:Date.now()};
+    pointLibrary.push(saved);syncRouteRefsFromTemp(id,saved);tempLibrary=tempLibrary.filter(x=>x.id!==id);persistTemp();saveJson(LIB_KEY,pointLibrary);
+    renderLibrary();renderRouteDraft();renderTapDraftMap();renderTempManager();toast(saved.name+' μεταφέρθηκε στην αποθηκευμένη λίστα');
+  }
+  function applyPointEdit(type,id,name,lat,lon){
+    const p=type==='temp'?tempById(id):savedById(id);if(!p)return;
+    p.name=String(name||p.name).trim()||p.name;p.lat=Number(lat);p.lon=Number(lon);
+    routeLibrary.forEach(r=>r.points.forEach(q=>{if(routePointUses(q,type,id)){q.name=p.name;q.lat=p.lat;q.lon=p.lon;}}));
+    if(Array.isArray(routeDraft))routeDraft.forEach(q=>{if(routePointUses(q,type,id)){q.name=p.name;q.lat=p.lat;q.lon=p.lon;}});
+    if(type==='temp')persistTemp();else saveJson(LIB_KEY,pointLibrary);saveJson(ROUTE_KEY,routeLibrary);
+    renderLibrary();renderRouteDraft();renderTempManager();renderTapDraftMap();if(activeRouteId)renderActiveRoute(false);toast('Το σημείο ενημερώθηκε');
+  }
+  function openPointEdit(type,id){
+    const p=type==='temp'?tempById(id):savedById(id);if(!p)return;pointEditState={type,id};
+    const modal=document.getElementById('pzlPointEditModal');if(!modal)return;
+    document.getElementById('pzlPointEditName').value=p.name;
+    document.getElementById('pzlPointEditLat').value=Number(p.lat).toFixed(6);
+    document.getElementById('pzlPointEditLon').value=Number(p.lon).toFixed(6);
+    modal.hidden=false;
+  }
+  function closePointEdit(){const modal=document.getElementById('pzlPointEditModal');if(modal)modal.hidden=true;pointEditState=null;}
+  function savePointEdit(){
+    if(!pointEditState)return;const name=String((document.getElementById('pzlPointEditName')||{}).value||'').trim();
+    const lat=Number((document.getElementById('pzlPointEditLat')||{}).value),lon=Number((document.getElementById('pzlPointEditLon')||{}).value);
+    if(!name||!Number.isFinite(lat)||!Number.isFinite(lon)||lat<-90||lat>90||lon<-180||lon>180)return alert('Έλεγξε όνομα και συντεταγμένες DD.');
+    const {type,id}=pointEditState;applyPointEdit(type,id,name,lat,lon);closePointEdit();
+  }
+  function renameTempPoint(id){openPointEdit('temp',id);}
+  function renameLibraryPoint(id){openPointEdit('saved',id);}
+  function forceDeletePoint(type,id){
+    if(type==='temp') {tempLibrary=tempLibrary.filter(x=>x.id!==id);persistTemp();}
+    else {pointLibrary=pointLibrary.filter(x=>x.id!==id);saveJson(LIB_KEY,pointLibrary);}
+    renderLibrary();renderTempManager();toast('Το σημείο διαγράφηκε');
+  }
+  function cancelUnsavedDraftForPoint(type,id){
+    if(!draftUsesPoint(type,id))return true;
+    const editing=routeDraftId?routeLibrary.find(r=>r.id===routeDraftId):null;
+    const message=editing?'Το σημείο υπάρχει στις μη αποθηκευμένες αλλαγές του route «'+editing.name+'». Η ακύρωση θα απορρίψει τις αλλαγές και θα κλείσει το route editor. Συνέχεια;':'Το σημείο ανήκει στο ενεργό μη αποθηκευμένο route. Αν διαγραφεί, το route θα απενεργοποιηθεί και θα ακυρωθεί. Συνέχεια;';
+    if(!confirm(message))return false;
+    stopTapMap(false);routeDraft=null;routeDraftId=null;const modal=document.getElementById('pzlRouteBuilderModal');if(modal)modal.hidden=true;return true;
+  }
+  function requestDeletePoint(type,id){
+    const p=type==='temp'?tempById(id):savedById(id);if(!p)return;
+    const refs=routesUsingPoint(type,id), draftRef=draftUsesPoint(type,id);
+    if(refs.length||draftRef){openPointDependency(type,id);return;}
+    if(confirm('Διαγραφή του σημείου «'+p.name+'»;'))forceDeletePoint(type,id);
+  }
+  function renderPointDependency(){
+    const modal=document.getElementById('pzlPointDependencyModal'),list=document.getElementById('pzlPointDependencyList'),note=document.getElementById('pzlPointDependencyNote'),del=document.getElementById('pzlDependencyDeletePoint');if(!modal||!list||!dependencyState)return;
+    const {type,id}=dependencyState,p=type==='temp'?tempById(id):savedById(id);if(!p){modal.hidden=true;dependencyState=null;return;}
+    const refs=routesUsingPoint(type,id),draftRef=draftUsesPoint(type,id);
+    note.innerHTML='Το σημείο <b>'+esc(p.name)+'</b> χρησιμοποιείται σε route. Πρέπει πρώτα να διαγράψεις τα σχετικά routes.'+(refs.some(r=>r.id===activeRouteId)?'<br><span class="pzl-warning-active">Το ACTIVE route θα απενεργοποιηθεί.</span>':'')+(draftRef?'<br><span class="pzl-warning-active">Υπάρχει και μη αποθηκευμένο route ή μη αποθηκευμένες αλλαγές. Η ακύρωση θα κλείσει το route editor.</span>':'');
+    let html=refs.map(r=>'<div class="pzl-dep-route"><div><b>'+esc(r.name)+'</b><small>'+(r.id===activeRouteId?'ACTIVE · ':'')+r.points.length+' σημεία</small></div><button type="button" class="danger" data-dep-del-route="'+esc(r.id)+'">ΔΙΑΓΡΑΦΗ ROUTE</button></div>').join('');
+    if(draftRef){const edited=routeDraftId?routeLibrary.find(r=>r.id===routeDraftId):null;html+='<div class="pzl-dep-route"><div><b>'+(edited?'Μη αποθηκευμένες αλλαγές: '+esc(edited.name):'Μη αποθηκευμένο route')+'</b><small>'+(edited?'Η ακύρωση απορρίπτει τις αλλαγές.':'Η ακύρωση το απενεργοποιεί.')+'</small></div><button type="button" class="danger" id="pzlCancelDraftRoute">'+(edited?'ΑΚΥΡΩΣΗ EDIT':'ΑΚΥΡΩΣΗ ROUTE')+'</button></div>';}
+    if(!html)html='<div class="pzl-lib-empty">Δεν υπάρχει πλέον route που να χρησιμοποιεί το σημείο.</div>';
+    list.innerHTML=html;
+    list.querySelectorAll('[data-dep-del-route]').forEach(b=>b.onclick=async()=>{const rid=b.dataset.depDelRoute;if(!routeLibrary.some(x=>x.id===rid))return;await deleteRoute(rid);renderPointDependency();});
+    const cancelDraft=document.getElementById('pzlCancelDraftRoute');if(cancelDraft)cancelDraft.onclick=()=>{if(cancelUnsavedDraftForPoint(type,id))renderPointDependency();};
+    del.disabled=refs.length>0||draftRef;del.textContent='Διαγραφή σημείου';
+  }
+  function openPointDependency(type,id){dependencyState={type,id};const modal=document.getElementById('pzlPointDependencyModal');if(modal){modal.hidden=false;renderPointDependency();}}
+  function closePointDependency(){const modal=document.getElementById('pzlPointDependencyModal');if(modal)modal.hidden=true;dependencyState=null;}
+
+  function renderTapDraftMap(){
+    ensurePanes();removeLayers(tapDraftLayers);if(!tapMapMode||!Array.isArray(routeDraft))return;
+    routeDraft.forEach((p,i)=>{const t=p.tempPointId?tempById(p.tempPointId):null;const icon=t?tempIcon(t.slot):routeIcon(i+1);tapDraftLayers.push(L.marker([p.lat,p.lon],{icon,pane:'pzlTapPane',zIndexOffset:1000,interactive:false}).addTo(map));});
+    if(routeDraft.length>1)tapDraftLayers.push(L.polyline(routeDraft.map(p=>[p.lat,p.lon]),{pane:'pzlTapPane',color:'#22c55e',weight:4,opacity:.95,dashArray:'8 5',interactive:false,className:'pzl-tap-route-line'}).addTo(map));
+    const label=document.getElementById('pzlTapMapLabel'),slot=nextTempSlot();if(label)label.textContent='TAP MAP · '+routeDraft.length+' σημεία · επόμενο '+(slot?'TEMP '+slot:'TEMP FULL');
+  }
+  function startTapMap(){
+    if(!Array.isArray(routeDraft))return;
+    try{if(typeof mapLocked!=='undefined'&&mapLocked){alert('Ξεκλείδωσε πρώτα τον χάρτη για TAP MAP.');return;}}catch(e){}
+    tapMapMode=true;tapSessionTempIds=[];setCheckMode(false);document.body.classList.add('pzl-route-tap-map');const modal=document.getElementById('pzlRouteBuilderModal');if(modal)modal.hidden=true;const bar=document.getElementById('pzlTapMapBar');if(bar)bar.hidden=false;renderTapDraftMap();toast('Άγγιξε τον χάρτη για TEMP σημεία');
+  }
+  function stopTapMap(reopen){tapMapMode=false;document.body.classList.remove('pzl-route-tap-map');removeLayers(tapDraftLayers);const bar=document.getElementById('pzlTapMapBar');if(bar)bar.hidden=true;if(reopen){const modal=document.getElementById('pzlRouteBuilderModal');if(modal)modal.hidden=false;renderRouteDraft();renderLibrary();}}
+  function undoTapPoint(){
+    if(!tapMapMode||!routeDraft||!routeDraft.length)return;let idx=-1;for(let i=routeDraft.length-1;i>=0;i--){if(routeDraft[i].tempPointId&&tapSessionTempIds.includes(routeDraft[i].tempPointId)){idx=i;break;}}if(idx<0)return;
+    const [p]=routeDraft.splice(idx,1);tapSessionTempIds=tapSessionTempIds.filter(id=>id!==p.tempPointId);if(!tempUsedElsewhere(p.tempPointId,null)){tempLibrary=tempLibrary.filter(x=>x.id!==p.tempPointId);persistTemp();}renderTapDraftMap();renderLibrary();
+  }
+  function addTapPoint(lat,lon){
+    if(!routeDraft||routeDraft.length>=MAX_TEMP_POINTS){alert('Μέχρι 200 σημεία ανά route.');return;}
+    const t=createTempPoint(lat,lon);if(!t)return;tapSessionTempIds.push(t.id);addDraftPoint({...t,tempPointId:t.id});renderTapDraftMap();renderLibrary();
+  }
+
+  function renderTempManager(){
+    const list=document.getElementById('pzlTempManagerList'),note=document.getElementById('pzlTempManagerNote');if(!list)return;
+    let items=tempLibrary.slice().sort((a,b)=>a.slot-b.slot);if(Array.isArray(tempManagerFilterIds))items=items.filter(p=>tempManagerFilterIds.includes(p.id));
+    if(note)note.innerHTML=pendingRouteDeleteId?'Αποθήκευσε όσα TEMP θέλεις. Με <b>ΟΛΟΚΛΗΡΩΣΗ</b> θα επιλέξεις διαγραφή ή αποθήκευση του route.':'Εδώ μπορείς να αποθηκεύσεις, να μετονομάσεις, να προεπισκοπήσεις ή να διαγράψεις TEMP σημεία.';
+    list.innerHTML=items.length?items.map(p=>'<div class="pzl-temp-row"><div class="pzl-lib-main"><b>'+esc(p.name)+'</b><small>'+esc(fmtCoord(p.lat,p.lon))+'</small></div><button type="button" class="pzl-temp-save" data-tm-save="'+esc(p.id)+'">💾</button><button type="button" data-tm-preview="'+esc(p.id)+'">🔍</button><button type="button" data-tm-rename="'+esc(p.id)+'">✎</button><button type="button" class="pzl-lib-del" data-tm-delete="'+esc(p.id)+'">✕</button></div>').join(''):'<div class="pzl-lib-empty">Δεν υπάρχουν TEMP σημεία σε αυτή τη λίστα.</div>';
+    list.querySelectorAll('[data-tm-save]').forEach(b=>b.onclick=()=>promoteTempPoint(b.dataset.tmSave));
+    list.querySelectorAll('[data-tm-preview]').forEach(b=>b.onclick=()=>previewTempPoint(b.dataset.tmPreview));
+    list.querySelectorAll('[data-tm-rename]').forEach(b=>b.onclick=()=>renameTempPoint(b.dataset.tmRename));
+    list.querySelectorAll('[data-tm-delete]').forEach(b=>b.onclick=()=>requestDeletePoint('temp',b.dataset.tmDelete));
+    const finish=document.getElementById('pzlTempManagerFinish');if(finish)finish.textContent=pendingRouteDeleteId?'ΟΛΟΚΛΗΡΩΣΗ':'ΚΛΕΙΣΙΜΟ';
+  }
+  function openTempManager(filterIds,pendingRouteId){tempManagerFilterIds=Array.isArray(filterIds)?filterIds:null;pendingRouteDeleteId=pendingRouteId||null;const modal=document.getElementById('pzlTempManagerModal');if(modal){modal.hidden=false;renderTempManager();}}
+  async function finishTempManager(){
+    const modal=document.getElementById('pzlTempManagerModal');if(modal)modal.hidden=true;
+    const rid=pendingRouteDeleteId;pendingRouteDeleteId=null;tempManagerFilterIds=null;
+    if(!rid)return;
+    const r=routeLibrary.find(x=>x.id===rid);if(!r)return;
+    const choice=await actionChoice('Ολοκλήρωση TEMP','Τι θέλεις να γίνει με το route «'+r.name+'»;',[{label:'ΔΙΑΓΡΑΦΗ ROUTE',value:'delete',danger:true},{label:'ΑΠΟΘΗΚΕΥΣΗ ROUTE',value:'keep'}]);
+    if(choice==='delete')deleteRouteNow(rid,true);else if(choice==='keep'){saveJson(ROUTE_KEY,routeLibrary);renderLibrary();toast('Το route διατηρήθηκε αποθηκευμένο');}
+    if(dependencyState)renderPointDependency();
+  }
+  function previewTempPoint(id){const p=tempById(id);if(!p)return;const tm=document.getElementById('pzlTempManagerModal');if(tm&&!tm.hidden){previewReturnModalId='pzlTempManagerModal';tm.hidden=true;}beginPreview(p.name,[p],null);}
+
   function saveEntryToLibrary(entry){
     if (!entry || !entry.point || !finite(entry.point.lat) || !finite(entry.point.lon)) return;
     const name=uniqueName(entry.label || entry.point.name || 'POINT');
@@ -12343,17 +12565,7 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
     const panel=document.getElementById('pzlPointRoutePanel'); if(panel) panel.open=true;
     toast(name+' αποθηκεύτηκε');
   }
-  function renameLibraryPoint(id){
-    const p=pointLibrary.find(x => x.id===id); if(!p) return;
-    const next=prompt('Νέο όνομα σημείου:',p.name); if(next===null) return;
-    const value=String(next).trim(); if(!value) return;
-    p.name=value; saveJson(LIB_KEY,pointLibrary); renderLibrary();
-  }
-  function deleteLibraryPoint(id){
-    const p=pointLibrary.find(x => x.id===id); if(!p) return;
-    if(!confirm('Διαγραφή του αποθηκευμένου σημείου «'+p.name+'»;')) return;
-    pointLibrary=pointLibrary.filter(x => x.id!==id); saveJson(LIB_KEY,pointLibrary); renderLibrary();
-  }
+  function deleteLibraryPoint(id){ requestDeletePoint('saved',id); }
 
   function stopPreview(restoreMap){
     if(previewTimer){clearTimeout(previewTimer);previewTimer=null;}
@@ -12364,6 +12576,7 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
       try { map.setView(previewMapState.center,previewMapState.zoom,{animate:false}); } catch(e) {}
     }
     previewMapState=null;
+    if(previewReturnModalId){const m=document.getElementById(previewReturnModalId);if(m){m.hidden=false;if(previewReturnModalId==='pzlTempManagerModal')renderTempManager();}previewReturnModalId=null;}
   }
   function beginPreview(title, points, lines){
     stopPreview(false); ensurePanes();
@@ -12409,30 +12622,52 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
     if(activeRouteId) localStorage.setItem(ACTIVE_ROUTE_KEY,activeRouteId); else localStorage.removeItem(ACTIVE_ROUTE_KEY);
     renderActiveRoute(!!activeRouteId);
   }
-  function deleteRoute(id){
-    const r=routeLibrary.find(x => x.id===id); if(!r) return;
-    if(!confirm('Διαγραφή route «'+r.name+'»;')) return;
-    routeLibrary=routeLibrary.filter(x => x.id!==id); saveJson(ROUTE_KEY,routeLibrary);
+  function deleteRouteNow(id,deleteOrphanTemps){
+    const r=routeLibrary.find(x=>x.id===id);if(!r)return;
+    const tempIds=routeTempIds(r);routeLibrary=routeLibrary.filter(x=>x.id!==id);saveJson(ROUTE_KEY,routeLibrary);
     if(activeRouteId===id){activeRouteId=null;localStorage.removeItem(ACTIVE_ROUTE_KEY);removeLayers(activeRouteLayers);}
-    renderLibrary();
+    if(routeDraftId===id){stopTapMap(false);routeDraft=null;routeDraftId=null;const modal=document.getElementById('pzlRouteBuilderModal');if(modal)modal.hidden=true;}
+    if(deleteOrphanTemps){tempIds.forEach(tid=>{if(!tempUsedElsewhere(tid,id))tempLibrary=tempLibrary.filter(p=>p.id!==tid);});persistTemp();}
+    renderLibrary();renderTempManager();toast('Το route διαγράφηκε');
+  }
+  async function deleteRoute(id){
+    const r=routeLibrary.find(x => x.id===id); if(!r) return;
+    const tempIds=routeTempIds(r).filter(id=>tempById(id));
+    if(tempIds.length){
+      const choice=await actionChoice('TEMP σημεία στο route','Το route «'+r.name+'» έχει '+tempIds.length+' TEMP σημεία που δεν έχουν μεταφερθεί στην αποθηκευμένη λίστα.',[{label:'TEMP — άνοιγμα προσωρινής λίστας',value:'temp'},{label:'ΔΙΑΓΡΑΦΗ ROUTE + TEMP',value:'delete',danger:true}]);
+      if(choice==='temp'){openTempManager(tempIds,id);return;}
+      if(choice==='delete'){deleteRouteNow(id,true);return;}
+      return;
+    }
+    if(!confirm('Διαγραφή route «'+r.name+'»;'+(activeRouteId===id?' Θα απενεργοποιηθεί.':''))) return;
+    deleteRouteNow(id,true);
   }
 
   function renderLibrary(){
     const list=document.getElementById('pzlSavedPointList');
+    const temps=document.getElementById('pzlTempPointList');
     const routes=document.getElementById('pzlSavedRouteList');
     const savedSelect=document.getElementById('routeSavedPointSelect');
     if(list){
-      if(!pointLibrary.length) list.innerHTML='<div class="pzl-lib-empty">Πάτησε 💾 σε FIX, MFIX ή CHECK για μόνιμη αποθήκευση.</div>';
-      else list.innerHTML=pointLibrary.map(p => '<div class="pzl-lib-row"><div class="pzl-lib-main"><b>'+esc(p.name)+'</b><small>'+esc(fmtCoord(p.lat,p.lon))+'</small></div><button type="button" data-lib-preview="'+esc(p.id)+'" title="Προεπισκόπηση 5 δευτ.">🔍</button><button type="button" data-lib-rename="'+esc(p.id)+'" title="Αλλαγή ονόματος">✎</button><button type="button" class="pzl-lib-del" data-lib-delete="'+esc(p.id)+'" title="Διαγραφή">✕</button></div>').join('');
+      if(!pointLibrary.length) list.innerHTML='<div class="pzl-lib-empty">Πάτησε 💾 σε FIX, MFIX, CHECK ή TEMP για μόνιμη αποθήκευση.</div>';
+      else list.innerHTML=pointLibrary.map(p => '<div class="pzl-lib-row"><div class="pzl-lib-main"><b>'+esc(p.name)+'</b><small>'+esc(fmtCoord(p.lat,p.lon))+'</small></div><button type="button" data-lib-preview="'+esc(p.id)+'" title="Προεπισκόπηση 5 δευτ.">🔍</button><button type="button" data-lib-rename="'+esc(p.id)+'" title="Επεξεργασία ονόματος / συντεταγμένων">✎</button><button type="button" class="pzl-lib-del" data-lib-delete="'+esc(p.id)+'" title="Διαγραφή">✕</button></div>').join('');
       list.querySelectorAll('[data-lib-preview]').forEach(b => b.onclick=() => previewLibraryPoint(b.dataset.libPreview));
       list.querySelectorAll('[data-lib-rename]').forEach(b => b.onclick=() => renameLibraryPoint(b.dataset.libRename));
       list.querySelectorAll('[data-lib-delete]').forEach(b => b.onclick=() => deleteLibraryPoint(b.dataset.libDelete));
     }
+    if(temps){
+      const arr=tempLibrary.slice().sort((a,b)=>a.slot-b.slot);
+      temps.innerHTML=arr.length?arr.map(p=>'<div class="pzl-temp-row"><div class="pzl-lib-main"><b>'+esc(p.name)+'</b><small>'+esc(fmtCoord(p.lat,p.lon))+'</small></div><button type="button" class="pzl-temp-save" data-temp-save="'+esc(p.id)+'" title="Μεταφορά στην αποθηκευμένη λίστα">💾</button><button type="button" data-temp-preview="'+esc(p.id)+'">🔍</button><button type="button" data-temp-rename="'+esc(p.id)+'">✎</button><button type="button" class="pzl-lib-del" data-temp-delete="'+esc(p.id)+'">✕</button></div>').join(''):'<div class="pzl-lib-empty">Δεν υπάρχουν TEMP σημεία.</div>';
+      temps.querySelectorAll('[data-temp-save]').forEach(b=>b.onclick=()=>promoteTempPoint(b.dataset.tempSave));
+      temps.querySelectorAll('[data-temp-preview]').forEach(b=>b.onclick=()=>previewTempPoint(b.dataset.tempPreview));
+      temps.querySelectorAll('[data-temp-rename]').forEach(b=>b.onclick=()=>renameTempPoint(b.dataset.tempRename));
+      temps.querySelectorAll('[data-temp-delete]').forEach(b=>b.onclick=()=>requestDeletePoint('temp',b.dataset.tempDelete));
+    }
     if(routes){
       if(!routeLibrary.length) routes.innerHTML='<div class="pzl-lib-empty">Δεν υπάρχουν αποθηκευμένα routes.</div>';
       else routes.innerHTML=routeLibrary.map(r => {
-        const stats=routeStats(r), active=r.id===activeRouteId;
-        return '<div class="pzl-route-row'+(active?' active':'')+'"><div class="pzl-lib-main"><b>'+esc(r.name)+'</b><small>'+r.points.length+' σημεία · '+fmtKm(stats.total)+' · '+stats.time+' @ 180</small></div><button type="button" class="pzl-route-activate'+(active?' active':'')+'" data-route-active="'+esc(r.id)+'">'+(active?'ON':'ACT')+'</button><button type="button" data-route-preview="'+esc(r.id)+'">🔍</button><button type="button" data-route-edit="'+esc(r.id)+'">✎</button><button type="button" class="pzl-lib-del" data-route-delete="'+esc(r.id)+'">✕</button></div>';
+        const stats=routeStats(r), active=r.id===activeRouteId, tempCount=routeTempIds(r).filter(id=>tempById(id)).length;
+        return '<div class="pzl-route-row'+(active?' active':'')+'"><div class="pzl-lib-main"><b>'+esc(r.name)+'</b><small>'+r.points.length+' σημεία · '+fmtKm(stats.total)+' · '+stats.time+' @ 180'+(tempCount?' · TEMP '+tempCount:'')+'</small></div><button type="button" class="pzl-route-activate'+(active?' active':'')+'" data-route-active="'+esc(r.id)+'">'+(active?'ON':'ACT')+'</button><button type="button" data-route-preview="'+esc(r.id)+'">🔍</button><button type="button" data-route-edit="'+esc(r.id)+'">✎</button><button type="button" class="pzl-lib-del" data-route-delete="'+esc(r.id)+'">✕</button></div>';
       }).join('');
       routes.querySelectorAll('[data-route-active]').forEach(b => b.onclick=() => toggleRoute(b.dataset.routeActive));
       routes.querySelectorAll('[data-route-preview]').forEach(b => b.onclick=() => previewRoute(b.dataset.routePreview));
@@ -12465,22 +12700,22 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
     const name=document.getElementById('routeBuilderName'); if(name) name.value=route?route.name:('ROUTE '+(routeLibrary.length+1));
     modal.hidden=false; renderRouteDraft(); renderLibrary();
   }
-  function closeRouteBuilder(){ const modal=document.getElementById('pzlRouteBuilderModal'); if(modal) modal.hidden=true; routeDraft=null; routeDraftId=null; }
+  function closeRouteBuilder(){ stopTapMap(false);const modal=document.getElementById('pzlRouteBuilderModal'); if(modal) modal.hidden=true; routeDraft=null; routeDraftId=null; }
   function renderRouteDraft(){
     const list=document.getElementById('routeDraftList'); if(!list) return;
-    if(!routeDraft || !routeDraft.length) list.innerHTML='<div class="pzl-lib-empty">Πρόσθεσε αποθηκευμένο σημείο, α/δ, περιοχή ή συντεταγμένες.</div>';
-    else list.innerHTML=routeDraft.map((p,i) => '<div class="pzl-draft-row"><b>'+(i+1)+'. '+esc(p.name)+'</b><small>'+esc(fmtCoord(p.lat,p.lon))+'</small><button type="button" data-draft-up="'+i+'">↑</button><button type="button" data-draft-down="'+i+'">↓</button><button type="button" class="pzl-lib-del" data-draft-del="'+i+'">✕</button></div>').join('');
+    if(!routeDraft || !routeDraft.length) list.innerHTML='<div class="pzl-lib-empty">Πρόσθεσε TAP MAP, αποθηκευμένο σημείο, α/δ, περιοχή ή συντεταγμένες.</div>';
+    else list.innerHTML=routeDraft.map((p,i) => '<div class="pzl-draft-row"><b>'+(i+1)+'. '+esc(p.name)+(p.tempPointId?' [TEMP]':'')+'</b><small>'+esc(fmtCoord(p.lat,p.lon))+'</small><button type="button" data-draft-up="'+i+'">↑</button><button type="button" data-draft-down="'+i+'">↓</button><button type="button" class="pzl-lib-del" data-draft-del="'+i+'">✕</button></div>').join('');
     list.querySelectorAll('[data-draft-up]').forEach(b => b.onclick=() => moveDraft(Number(b.dataset.draftUp),-1));
     list.querySelectorAll('[data-draft-down]').forEach(b => b.onclick=() => moveDraft(Number(b.dataset.draftDown),1));
-    list.querySelectorAll('[data-draft-del]').forEach(b => b.onclick=() => {routeDraft.splice(Number(b.dataset.draftDel),1);renderRouteDraft();});
+    list.querySelectorAll('[data-draft-del]').forEach(b => b.onclick=() => {const idx=Number(b.dataset.draftDel),p=routeDraft[idx];routeDraft.splice(idx,1);if(p&&p.tempPointId&&!tempUsedElsewhere(p.tempPointId,routeDraftId)){tempLibrary=tempLibrary.filter(x=>x.id!==p.tempPointId);persistTemp();}renderRouteDraft();renderLibrary();});
   }
   function moveDraft(index,delta){
     const to=index+delta; if(!routeDraft || to<0 || to>=routeDraft.length) return;
     const item=routeDraft.splice(index,1)[0]; routeDraft.splice(to,0,item); renderRouteDraft();
   }
   function addDraftPoint(point){
-    if(!routeDraft) return; if(routeDraft.length>=25) return alert('Μέχρι 25 σημεία ανά route.');
-    routeDraft.push({id:uid('draft'),name:String(point.name || point.display_name || ('POINT '+(routeDraft.length+1))),lat:Number(point.lat),lon:Number(point.lon),sourceType:String(point.sourceType || 'route')});
+    if(!routeDraft) return; if(routeDraft.length>=MAX_TEMP_POINTS) return alert('Μέχρι 200 σημεία ανά route.');
+    routeDraft.push({id:uid('draft'),name:String(point.name || point.display_name || ('POINT '+(routeDraft.length+1))),lat:Number(point.lat),lon:Number(point.lon),sourceType:String(point.sourceType || 'route'),libraryPointId:point.libraryPointId||(point.sourceType==='library'?point.id:null),tempPointId:point.tempPointId||(point.sourceType==='temp'?point.id:null)});
     renderRouteDraft();
   }
   async function routeSearchAdd(){
@@ -12497,9 +12732,10 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
   function saveRouteDraft(){
     if(!routeDraft || routeDraft.length<2)return alert('Το route χρειάζεται τουλάχιστον 2 σημεία.');
     const name=String((document.getElementById('routeBuilderName')||{}).value||'').trim()||'ROUTE';
+    const points=routeDraft.map(serializeDraftPoint);
     if(routeDraftId){
-      const r=routeLibrary.find(x=>x.id===routeDraftId); if(r){r.name=name;r.points=routeDraft.map(p=>({...p,id:uid('rpt')}));r.updatedAt=Date.now();}
-    } else routeLibrary.push({id:uid('route'),name,points:routeDraft.map(p=>({...p,id:uid('rpt')})),updatedAt:Date.now()});
+      const r=routeLibrary.find(x=>x.id===routeDraftId); if(r){r.name=name;r.points=points;r.updatedAt=Date.now();}
+    } else {routeDraftId=uid('route');routeLibrary.push({id:routeDraftId,name,points,updatedAt:Date.now()});}
     saveJson(ROUTE_KEY,routeLibrary); const wasActive=activeRouteId===routeDraftId; closeRouteBuilder(); renderLibrary(); if(wasActive)renderActiveRoute(false); toast('Το route αποθηκεύτηκε');
   }
 
@@ -12568,36 +12804,58 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
     const fixPanel=document.getElementById('fixPanel');
     if(fixPanel && !document.getElementById('pzlPointRoutePanel')){
       const panel=document.createElement('details'); panel.id='pzlPointRoutePanel'; panel.className='collapsible-panel';
-      panel.innerHTML='<summary>💾 Αποθηκευμένα σημεία / Routes</summary><div class="collapsible-body pzl-library-body"><div id="pzlLibraryMain"><div class="pzl-library-head"><b>Αποθηκευμένα σημεία</b><button id="createRouteBtn" type="button">Create route</button></div><div id="pzlSavedPointList"></div><div class="pzl-library-subtitle">Routes</div><div id="pzlSavedRouteList"></div><div id="pzlActiveRouteInfo" hidden></div></div><div id="pzlLibraryPreview" hidden><button id="pzlPreviewBack" type="button" class="secondary">←</button><b id="pzlPreviewTitle">Προεπισκόπηση</b></div></div>';
+      panel.innerHTML='<summary>💾 Αποθηκευμένα / TEMP / Routes</summary><div class="collapsible-body pzl-library-body"><div id="pzlLibraryMain"><div class="pzl-library-head"><b>Αποθηκευμένα σημεία</b><button id="createRouteBtn" type="button">Create route</button></div><div id="pzlSavedPointList"></div><div class="pzl-library-subtitle-row"><span>Προσωρινά σημεία (TEMP)</span><button id="openTempManagerBtn" type="button" class="secondary">TEMP LIST</button></div><div id="pzlTempPointList"></div><div class="pzl-library-subtitle">Routes</div><div id="pzlSavedRouteList"></div><div id="pzlActiveRouteInfo" hidden></div></div><div id="pzlLibraryPreview" hidden><button id="pzlPreviewBack" type="button" class="secondary">←</button><b id="pzlPreviewTitle">Προεπισκόπηση</b></div></div>';
       fixPanel.insertAdjacentElement('afterend',panel);
       panel.querySelector('#createRouteBtn').addEventListener('click',()=>openRouteBuilder(null));
+      panel.querySelector('#openTempManagerBtn').addEventListener('click',()=>openTempManager(null,null));
       panel.querySelector('#pzlPreviewBack').addEventListener('click',()=>stopPreview(true));
     }
 
     if(!document.getElementById('pzlRouteBuilderModal')){
       const modal=document.createElement('div'); modal.id='pzlRouteBuilderModal'; modal.className='pzl-route-modal'; modal.hidden=true;
-      modal.innerHTML='<div class="pzl-route-card"><div class="pzl-route-title"><b>Create route / Edit route</b><button id="routeBuilderClose" type="button" class="secondary">✕</button></div><label>Όνομα route<input id="routeBuilderName" type="text" maxlength="60"></label><div id="routeDraftList"></div><div class="pzl-route-add-box"><b>Από αποθηκευμένη λίστα</b><div class="pzl-route-inline"><select id="routeSavedPointSelect"></select><button id="routeAddSavedBtn" type="button">ADD</button></div></div><div class="pzl-route-add-box"><b>Α/Δ ICAO ή πόλη / χωριό</b><div class="pzl-route-inline"><input id="routeSearchBox" placeholder="π.χ. LGMT ή Μόλυβος"><button id="routeSearchAddBtn" type="button">SRCH</button></div></div><div class="pzl-route-add-box"><b>Συντεταγμένες</b><div class="pzl-route-inline"><input id="routeCoordLat" placeholder="LAT"><input id="routeCoordLon" placeholder="LON"></div><div class="pzl-route-inline"><select id="routeCoordFormat"><option value="dd">DD</option><option value="ddm" selected>DDM</option><option value="dms">DMS</option></select><button id="routeCoordAddBtn" type="button">ADD COORD</button></div></div><div class="pzl-route-actions"><button id="routeBuilderCancel" type="button" class="secondary">Cancel</button><button id="routeBuilderSave" type="button">Save route</button></div></div>';
+      modal.innerHTML='<div class="pzl-route-card"><div class="pzl-route-title"><b>Create route / Edit route</b><button id="routeBuilderClose" type="button" class="secondary">✕</button></div><label>Όνομα route<input id="routeBuilderName" type="text" maxlength="60"></label><div id="routeDraftList"></div><div class="pzl-route-add-box pzl-route-map-box"><b>Επιλογή σημείων από τον χάρτη (TEMP 1–200)</b><button id="routeTapMapBtn" type="button">TAP MAP</button></div><div class="pzl-route-add-box"><b>Από αποθηκευμένη λίστα</b><div class="pzl-route-inline"><select id="routeSavedPointSelect"></select><button id="routeAddSavedBtn" type="button">ADD</button></div></div><div class="pzl-route-add-box"><b>Α/Δ ICAO ή πόλη / χωριό</b><div class="pzl-route-inline"><input id="routeSearchBox" placeholder="π.χ. LGMT ή Μόλυβος"><button id="routeSearchAddBtn" type="button">SRCH</button></div></div><div class="pzl-route-add-box"><b>Συντεταγμένες</b><div class="pzl-route-inline"><input id="routeCoordLat" placeholder="LAT"><input id="routeCoordLon" placeholder="LON"></div><div class="pzl-route-inline"><select id="routeCoordFormat"><option value="dd">DD</option><option value="ddm" selected>DDM</option><option value="dms">DMS</option></select><button id="routeCoordAddBtn" type="button">ADD COORD</button></div></div><div class="pzl-route-actions"><button id="routeBuilderCancel" type="button" class="secondary">Cancel</button><button id="routeBuilderSave" type="button">Save route</button></div></div>';
       document.body.appendChild(modal);
       modal.querySelector('#routeBuilderClose').onclick=closeRouteBuilder;
       modal.querySelector('#routeBuilderCancel').onclick=closeRouteBuilder;
       modal.querySelector('#routeBuilderSave').onclick=saveRouteDraft;
-      modal.querySelector('#routeAddSavedBtn').onclick=()=>{const id=(document.getElementById('routeSavedPointSelect')||{}).value;const p=pointLibrary.find(x=>x.id===id);if(p)addDraftPoint(p);};
+      modal.querySelector('#routeTapMapBtn').onclick=startTapMap;
+      modal.querySelector('#routeAddSavedBtn').onclick=()=>{const id=(document.getElementById('routeSavedPointSelect')||{}).value;const p=pointLibrary.find(x=>x.id===id);if(p)addDraftPoint({...p,libraryPointId:p.id});};
       modal.querySelector('#routeSearchAddBtn').onclick=routeSearchAdd;
       modal.querySelector('#routeSearchBox').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();routeSearchAdd();}});
       modal.querySelector('#routeCoordAddBtn').onclick=routeCoordAdd;
       modal.addEventListener('click',ev=>{if(ev.target===modal)closeRouteBuilder();});
     }
 
+    if(!document.getElementById('pzlTapMapBar')){
+      const bar=document.createElement('div');bar.id='pzlTapMapBar';bar.hidden=true;bar.innerHTML='<b id="pzlTapMapLabel">TAP MAP</b><button id="pzlTapUndo" type="button" class="secondary">UNDO</button><button id="pzlTapDone" type="button">DONE</button>';document.body.appendChild(bar);
+      bar.querySelector('#pzlTapUndo').onclick=undoTapPoint;bar.querySelector('#pzlTapDone').onclick=()=>stopTapMap(true);
+    }
+    if(!document.getElementById('pzlTempManagerModal')){
+      const tm=document.createElement('div');tm.id='pzlTempManagerModal';tm.className='pzl-route-modal';tm.hidden=true;tm.innerHTML='<div class="pzl-route-card"><div class="pzl-route-title"><b>Προσωρινή λίστα TEMP</b><button id="pzlTempManagerClose" type="button" class="secondary">✕</button></div><div id="pzlTempManagerNote" class="pzl-temp-manager-note"></div><div id="pzlTempManagerList"></div><div class="pzl-route-actions"><button id="pzlTempManagerFinish" type="button">ΚΛΕΙΣΙΜΟ</button></div></div>';document.body.appendChild(tm);
+      tm.querySelector('#pzlTempManagerClose').onclick=finishTempManager;tm.querySelector('#pzlTempManagerFinish').onclick=finishTempManager;tm.onclick=ev=>{if(ev.target===tm)finishTempManager();};
+    }
+    if(!document.getElementById('pzlPointDependencyModal')){
+      const dm=document.createElement('div');dm.id='pzlPointDependencyModal';dm.className='pzl-route-modal';dm.hidden=true;dm.innerHTML='<div class="pzl-route-card"><div class="pzl-route-title"><b>ROUTE που χρησιμοποιούν το σημείο</b><button id="pzlDependencyClose" type="button" class="secondary">✕</button></div><div id="pzlPointDependencyNote" class="pzl-dependency-note"></div><div id="pzlPointDependencyList"></div><div class="pzl-route-actions"><button id="pzlDependencyCancel" type="button" class="secondary">Πίσω</button><button id="pzlDependencyDeletePoint" type="button" class="danger">Διαγραφή σημείου</button></div></div>';document.body.appendChild(dm);
+      dm.querySelector('#pzlDependencyClose').onclick=closePointDependency;dm.querySelector('#pzlDependencyCancel').onclick=closePointDependency;dm.querySelector('#pzlDependencyDeletePoint').onclick=()=>{if(!dependencyState)return;const {type,id}=dependencyState;if(routesUsingPoint(type,id).length||draftUsesPoint(type,id))return;forceDeletePoint(type,id);closePointDependency();};
+    }
+
+    if(!document.getElementById('pzlPointEditModal')){
+      const em=document.createElement('div');em.id='pzlPointEditModal';em.className='pzl-route-modal';em.hidden=true;em.innerHTML='<div class="pzl-route-card"><div class="pzl-route-title"><b>Επεξεργασία σημείου</b><button id="pzlPointEditClose" type="button" class="secondary">✕</button></div><label>Όνομα<input id="pzlPointEditName" type="text" maxlength="80"></label><div class="pzl-route-add-box"><b>Συντεταγμένες DD</b><div class="pzl-route-inline"><input id="pzlPointEditLat" inputmode="decimal" placeholder="LAT"><input id="pzlPointEditLon" inputmode="decimal" placeholder="LON"></div></div><div class="pzl-route-actions"><button id="pzlPointEditCancel" type="button" class="secondary">Ακύρωση</button><button id="pzlPointEditSave" type="button">Αποθήκευση</button></div></div>';document.body.appendChild(em);
+      em.querySelector('#pzlPointEditClose').onclick=closePointEdit;em.querySelector('#pzlPointEditCancel').onclick=closePointEdit;em.querySelector('#pzlPointEditSave').onclick=savePointEdit;em.onclick=ev=>{if(ev.target===em)closePointEdit();};
+    }
+
     const mapEl=document.getElementById('map');
     if(mapEl && !mapEl.dataset.pzlCheckCapture){
       mapEl.dataset.pzlCheckCapture='1';
       mapEl.addEventListener('click',function(ev){
-        if(!checkMode)return;
+        if(!tapMapMode&&!checkMode)return;
         if(ev.target && ev.target.closest && ev.target.closest('.leaflet-control'))return;
         ev.preventDefault();ev.stopImmediatePropagation();
         try {
-          if(typeof mapLocked!=='undefined'&&mapLocked){alert('Ξεκλείδωσε πρώτα τον χάρτη για CHECK.');return;}
-          const ll=map.mouseEventToLatLng(ev);setCheckPoint(checkSlot,{lat:ll.lat,lon:ll.lng,name:'Επιλογή χάρτη',sourceType:'map'});
+          if(typeof mapLocked!=='undefined'&&mapLocked){alert('Ξεκλείδωσε πρώτα τον χάρτη.');return;}
+          const ll=map.mouseEventToLatLng(ev);
+          if(tapMapMode){addTapPoint(ll.lat,ll.lng);return;}
+          if(checkMode)setCheckPoint(checkSlot,{lat:ll.lat,lon:ll.lng,name:'Επιλογή χάρτη',sourceType:'map'});
         } catch(e) {}
       },true);
     }
@@ -12635,6 +12893,7 @@ body.pzl-check-distance-active #map{cursor:crosshair;}
   window.PZL_CHECK_DISTANCE={
     get points(){return checkPoints.filter(Boolean).map(p=>({...p}));},
     get savedPoints(){return pointLibrary.map(p=>({...p}));},
+    get tempPoints(){return tempLibrary.map(p=>({...p}));},
     get routes(){return routeLibrary.map(r=>({...r,points:r.points.map(p=>({...p}))}));}
   };
 })();

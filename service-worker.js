@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_CLR_NAV_PANEL_200_CHECKS_20260702D417";
+const PZL_BUILD = "PZL_TAP_MAP_TEMP_ROUTE_SAFETY_20260702D418";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";
