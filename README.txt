@@ -1,1 +1,1 @@
-PZL D434 — old VFR chart style with direct map connections between VFR reporting points.
+PZL D435 - exact solid LGMT VFR routes and published altitudes from uploaded AIP chart; no schematic dashed links.
