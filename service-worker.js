@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_TAP_MAP_TEMP_ROUTE_SAFETY_20260702D418";
+const PZL_BUILD = "PZL_DDM_POINT_EDIT_20260702D419";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";

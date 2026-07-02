@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool v8.2 D418 TAP MAP · TEMP ROUTES</title>
+  <title>PZL Mission Tool v8.2 D419 DDM POINT EDIT</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -12462,20 +12462,30 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     if(type==='temp')persistTemp();else saveJson(LIB_KEY,pointLibrary);saveJson(ROUTE_KEY,routeLibrary);
     renderLibrary();renderRouteDraft();renderTempManager();renderTapDraftMap();if(activeRouteId)renderActiveRoute(false);toast('Το σημείο ενημερώθηκε');
   }
+  function pointEditDdmAxis(value,isLat){
+    try { if(typeof fixFormatCoord==='function') return fixFormatCoord(Number(value),!!isLat); } catch(e) {}
+    const v=Number(value), hemi=isLat?(v>=0?'N':'S'):(v>=0?'E':'W'), abs=Math.abs(v);
+    let deg=Math.floor(abs), min=(abs-deg)*60;
+    if(Math.round(min*100)>=6000){deg+=1;min=0;}
+    return hemi+String(deg).padStart(isLat?2:3,'0')+'°'+min.toFixed(2).padStart(5,'0')+"'";
+  }
   function openPointEdit(type,id){
     const p=type==='temp'?tempById(id):savedById(id);if(!p)return;pointEditState={type,id};
     const modal=document.getElementById('pzlPointEditModal');if(!modal)return;
     document.getElementById('pzlPointEditName').value=p.name;
-    document.getElementById('pzlPointEditLat').value=Number(p.lat).toFixed(6);
-    document.getElementById('pzlPointEditLon').value=Number(p.lon).toFixed(6);
+    document.getElementById('pzlPointEditLat').value=pointEditDdmAxis(p.lat,true);
+    document.getElementById('pzlPointEditLon').value=pointEditDdmAxis(p.lon,false);
     modal.hidden=false;
   }
   function closePointEdit(){const modal=document.getElementById('pzlPointEditModal');if(modal)modal.hidden=true;pointEditState=null;}
   function savePointEdit(){
-    if(!pointEditState)return;const name=String((document.getElementById('pzlPointEditName')||{}).value||'').trim();
-    const lat=Number((document.getElementById('pzlPointEditLat')||{}).value),lon=Number((document.getElementById('pzlPointEditLon')||{}).value);
-    if(!name||!Number.isFinite(lat)||!Number.isFinite(lon)||lat<-90||lat>90||lon<-180||lon>180)return alert('Έλεγξε όνομα και συντεταγμένες DD.');
-    const {type,id}=pointEditState;applyPointEdit(type,id,name,lat,lon);closePointEdit();
+    if(!pointEditState)return;
+    const name=String((document.getElementById('pzlPointEditName')||{}).value||'').trim();
+    const latRaw=String((document.getElementById('pzlPointEditLat')||{}).value||'').trim();
+    const lonRaw=String((document.getElementById('pzlPointEditLon')||{}).value||'').trim();
+    const parsed=parseCoordFields(latRaw,lonRaw,'ddm');
+    if(!name||!parsed)return alert("Έλεγξε όνομα και συντεταγμένες DDM, π.χ. N39°03.15' και E026°36.26'.");
+    const {type,id}=pointEditState;applyPointEdit(type,id,name,parsed.lat,parsed.lon);closePointEdit();
   }
   function renameTempPoint(id){openPointEdit('temp',id);}
   function renameLibraryPoint(id){openPointEdit('saved',id);}
@@ -12840,7 +12850,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     }
 
     if(!document.getElementById('pzlPointEditModal')){
-      const em=document.createElement('div');em.id='pzlPointEditModal';em.className='pzl-route-modal';em.hidden=true;em.innerHTML='<div class="pzl-route-card"><div class="pzl-route-title"><b>Επεξεργασία σημείου</b><button id="pzlPointEditClose" type="button" class="secondary">✕</button></div><label>Όνομα<input id="pzlPointEditName" type="text" maxlength="80"></label><div class="pzl-route-add-box"><b>Συντεταγμένες DD</b><div class="pzl-route-inline"><input id="pzlPointEditLat" inputmode="decimal" placeholder="LAT"><input id="pzlPointEditLon" inputmode="decimal" placeholder="LON"></div></div><div class="pzl-route-actions"><button id="pzlPointEditCancel" type="button" class="secondary">Ακύρωση</button><button id="pzlPointEditSave" type="button">Αποθήκευση</button></div></div>';document.body.appendChild(em);
+      const em=document.createElement('div');em.id='pzlPointEditModal';em.className='pzl-route-modal';em.hidden=true;em.innerHTML='<div class="pzl-route-card"><div class="pzl-route-title"><b>Επεξεργασία σημείου</b><button id="pzlPointEditClose" type="button" class="secondary">✕</button></div><label>Όνομα<input id="pzlPointEditName" type="text" maxlength="80"></label><div class="pzl-route-add-box"><b>Συντεταγμένες DDM</b><div class="pzl-route-inline"><input id="pzlPointEditLat" type="text" inputmode="text" placeholder="N39°03.15&#39;" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"><input id="pzlPointEditLon" type="text" inputmode="text" placeholder="E026°36.26&#39;" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"></div></div><div class="pzl-route-actions"><button id="pzlPointEditCancel" type="button" class="secondary">Ακύρωση</button><button id="pzlPointEditSave" type="button">Αποθήκευση</button></div></div>';document.body.appendChild(em);
       em.querySelector('#pzlPointEditClose').onclick=closePointEdit;em.querySelector('#pzlPointEditCancel').onclick=closePointEdit;em.querySelector('#pzlPointEditSave').onclick=savePointEdit;em.onclick=ev=>{if(ev.target===em)closePointEdit();};
     }
 
@@ -12899,6 +12909,22 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 })();
 
 </script>
+
+<style id="pzl-d419-ddm-point-edit-css">
+#pzlPointEditModal #pzlPointEditLat,
+#pzlPointEditModal #pzlPointEditLon{
+  font-family:monospace;
+  font-weight:800;
+  font-size:14px;
+  min-width:0!important;
+}
+@media(max-width:420px){
+  #pzlPointEditModal .pzl-route-inline{gap:4px;}
+  #pzlPointEditModal #pzlPointEditLat,
+  #pzlPointEditModal #pzlPointEditLon{font-size:12px;padding:8px 5px!important;}
+}
+</style>
+
 <!-- PZL_CHECK_DISTANCE_LIBRARY_ROUTES_END -->
 
 </body>
