@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_VFR_VECTOR_ROUTES_HEIGHTS_20260702D429";
+const PZL_BUILD = "PZL_D431_FREEZE_FIX_20260702D432";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";
@@ -228,19 +228,18 @@ async function handleNavigation(request) {
 
 async function handleAppAsset(request) {
   const appCache = await caches.open(APP_CACHE);
-  const cached =
-    await appCache.match(request, {ignoreSearch:true}) ||
-    await caches.match(request, {ignoreSearch:true});
-
-  if (cached) return cached;
-
   try {
-    const response = await fetch(request);
-    if (response) await appCache.put(request, response.clone());
-    return response;
-  } catch(e) {
-    return Response.error();
-  }
+    const response = await fetch(request, {cache:"no-store"});
+    if (response && response.ok) {
+      await appCache.put(request, response.clone());
+      return response;
+    }
+  } catch(e) {}
+  return (
+    await appCache.match(request, {ignoreSearch:true}) ||
+    await caches.match(request, {ignoreSearch:true}) ||
+    Response.error()
+  );
 }
 
 async function handleOsmTile(request, url) {
