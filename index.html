@@ -10968,33 +10968,29 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     const candidates = [];
     const seen = new Set();
 
+    function pushCandidate(name, source){
+      if (!name || seen.has(name)) return;
+      const point = navAirportPointByName(name);
+      if (!point || !isFinite(point.lat) || !isFinite(point.lon)) return;
+      seen.add(name);
+      candidates.push({
+        lat:Number(point.lat),
+        lon:Number(point.lon),
+        name,
+        source:source || 'nav'
+      });
+    }
+
     Object.keys(bases || {}).forEach(name => {
       const b = bases[name];
       if (!b) return;
-
-      if (!seen.has(name)) {
-        seen.add(name);
-        candidates.push({
-          lat:Number(b.lat),
-          lon:Number(b.lon),
-          name,
-          source:'base'
-        });
-      }
-
-      const altName = b.alt || b.ref;
-      const altPoint = airports[altName] || bases[altName];
-
-      if (altName && altPoint && !seen.has(altName)) {
-        seen.add(altName);
-        candidates.push({
-          lat:Number(altPoint.lat),
-          lon:Number(altPoint.lon),
-          name:altName,
-          source:'alt'
-        });
-      }
+      pushCandidate(name, 'base');
+      if (b.alt) pushCandidate(b.alt, 'base-alt');
+      if (b.ref) pushCandidate(b.ref, 'base-ref');
     });
+
+    Object.keys(airports || {}).forEach(name => pushCandidate(name, 'airport'));
+    Object.keys(navExtraAirports || {}).forEach(name => pushCandidate(name, 'nav-extra'));
 
     let best = null;
 
