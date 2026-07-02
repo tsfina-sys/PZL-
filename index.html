@@ -1584,6 +1584,23 @@ body.pzl-screen-locked #lockMapBtn {
 }
 </style>
 
+
+<style id="pzl-d427-official-vfr-css">
+#pzlVfrAirportButtons .pzl-vfr-fire-row{display:grid;grid-template-columns:minmax(0,1fr) 105px;gap:7px;margin:7px 0;align-items:stretch}
+#pzlVfrAirportButtons .pzl-vfr-fire-row button{margin:0!important}
+#pzlVfrAirportButtons .pzl-vfr-general-btn{text-align:left!important}
+#pzlVfrAirportButtons .pzl-vfr-aip-btn{background:#7c3aed!important;padding:7px 5px!important;font-size:11px!important;line-height:1.1!important}
+#pzlVfrAirportButtons .pzl-vfr-aip-btn:disabled{background:#9ca3af!important;opacity:.72!important}
+#pzlVfrGreekAirportList .pzl-vfr-airport-row{grid-template-columns:24px minmax(0,1fr) 42px 42px!important}
+#pzlVfrGreekAirportList .pzl-vfr-airport-aip{min-width:0!important;width:40px!important;padding:5px 2px!important;font-size:10px!important;background:#7c3aed!important}
+#pzlVfrGreekAirportList .pzl-vfr-airport-aip:disabled{background:#9ca3af!important;opacity:.45!important}
+#pzlVfrFitAll{background:#64748b!important}
+@media(max-width:700px){
+ #pzlVfrAirportButtons .pzl-vfr-fire-row{grid-template-columns:minmax(0,1fr) 88px}
+ #pzlVfrAirportButtons .pzl-vfr-aip-btn{font-size:10px!important}
+}
+</style>
+
 </head>
 
 <style id="fix37d46-metar-final-css">
@@ -13256,7 +13273,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 
 
 
-<!-- PZL_NAV_VFR_AIRPORT_SELECTOR_ALTITUDES_D426_BEGIN -->
+<!-- PZL_VFR_OFFICIAL_CHARTS_D427_BEGIN -->
 <style id="pzl-d426-map-menu-vfr-css">
 #pzlMapChooserPanel,#pzlVfrRoutesPanel{
   position:fixed;inset:0;z-index:12120;background:rgba(15,23,42,.62);
@@ -13325,16 +13342,46 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 <script id="pzl-d426-map-menu-vfr-js">
 (function(){
   'use strict';
-  const BUILD='PZL_NAV_VFR_AIRPORT_SELECTOR_ALTITUDES_D426';
+  const BUILD='PZL_VFR_OFFICIAL_CHARTS_D427';
   const VFR_KEY='pzlD426VfrRoutesOn';
   const NAV_SELECTION_KEY='pzlD426NavVfrAirportSelection';
   const TILE_ROOT='https://nwy-tiles-api.prod.newaydata.com/tiles/{z}/{x}/{y}.png?path=';
   const VFR_RADIUS_KM=55;
-  const VFR_MIN_ZOOM=9;
+  const VFR_MIN_ZOOM=10;
   let masterBtn=null,chooser=null,vfrPanel=null,vfrStatus=null,vfrBadge=null,vfrToggle=null,airportButtons=null;
   let navTools=null,navList=null,navSearch=null,navSelectedBox=null,contextBadge=null;
   let vfrLayer=null,vfrActive=false,vfrSeq=0,vfrCycle='';
   let navSelectedNames=new Set(),lastContext='',lastCentersKey='';
+  // Airports for which AIP Greece publishes a dedicated VFR-routes chart.
+  const OFFICIAL_VFR_ICAO=new Set(['LGAD','LGAV','LGKL','LGKO','LGKP','LGKR','LGMK','LGMT','LGPA','LGSA','LGSK','LGSM','LGSR','LGSY','LGTS','LGLR','LGTG']);
+  function aipReleasePath(){
+    const d=new Date(),t=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+    const releases=[
+      [Date.UTC(2026,7,6),'aipgr_incl_amdt_0726_wef_06aug2026'],
+      [Date.UTC(2026,6,9),'aipgr_incl_amdt_0626_wef_09jul2026'],
+      [Date.UTC(2026,5,11),'aipgr_incl_amdt_0526_wef_11jun2026'],
+      [Date.UTC(2026,4,14),'aipgr_incl_amdt_0426_wef_14may2026'],
+      [Date.UTC(2026,3,16),'aipgr_incl_amdt_0326_wef_16apr2026'],
+      [Date.UTC(2026,2,19),'aipgr_incl_amdt_0226_wef_19mar2026'],
+      [Date.UTC(2026,0,22),'aipgr_incl_amdt_0126_wef_22jan2026']
+    ];
+    for(const [from,path] of releases)if(t>=from)return path;
+    return releases[releases.length-1][1];
+  }
+  function hasOfficialVfr(icao){return OFFICIAL_VFR_ICAO.has(String(icao||'').toUpperCase());}
+  function officialVfrUrl(icao){
+    icao=String(icao||'').toUpperCase();
+    return `https://aisgr.hasp.gov.gr/${aipReleasePath()}/cd/ais/eaip/pdf/AD%202/AD2-${icao}/LG_AD_2_${icao}_VFR_en.pdf`;
+  }
+  function openOfficialVfr(c){
+    const icao=String(c&&c.icao||'').toUpperCase();
+    if(!icao){alert('Δεν βρέθηκε ICAO για το αεροδρόμιο.');return;}
+    if(!hasOfficialVfr(icao)){
+      alert(`${icao}: στο AIP δεν έχει καταχωριστεί ξεχωριστό VFR ROUTES chart. Θα παραμείνει διαθέσιμος μόνο ο γενικός αεροναυτικός χάρτης.`);return;
+    }
+    const w=window.open(officialVfrUrl(icao),'_blank','noopener');
+    if(!w)alert('Δεν άνοιξε το AIP chart. Επίτρεψε τα αναδυόμενα παράθυρα για αυτή την εφαρμογή.');
+  }
 
   function mapReady(){return typeof map!=='undefined'&&window.L&&map&&typeof map.createPane==='function';}
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -13507,11 +13554,20 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     setStatus('VFR Routes + ύψη OFF — standard χάρτης.',false);syncMaster();
   }
   function toggleVfr(){if(vfrActive)deactivateVfr();else activateVfr(true);}
-  function zoomAirport(c){if(!vfrActive)activateVfr(false);map.setView([c.lat,c.lon],10);setStatus(`VFR · ${(c.icao?c.icao+' ':'')+c.name} · διαδρομές και altitude labels`,false);setHidden(vfrPanel,true);}
+  function zoomAirport(c){if(!vfrActive)activateVfr(false);map.setView([c.lat,c.lon],11);setStatus(`Γενικός αεροναυτικός χάρτης · ${(c.icao?c.icao+' ':'')+c.name}. Για τις επίσημες VFR διαδρομές/ύψη πάτησε AIP VFR.`,false);setHidden(vfrPanel,true);}
   function renderFireButtons(){
     if(!airportButtons)return;const centers=fireSelectedAirports();airportButtons.innerHTML='';
     if(!centers.length){airportButtons.innerHTML='<div class="pzl-vfr-note">Δεν έχουν επιλεγεί αεροδρόμια Α/Γ, REFILL ή FULL STOP.</div>';return;}
-    centers.forEach(c=>{const b=document.createElement('button');b.type='button';b.innerHTML=`<b>${esc(c.role)} — ${esc(c.icao?c.icao+' · ':'')}${esc(c.name)}</b><span>Προβολή VFR διαδρομών και υψών στην τοπική περιοχή</span>`;b.onclick=()=>zoomAirport(c);airportButtons.appendChild(b);});
+    centers.forEach(c=>{
+      const row=document.createElement('div');row.className='pzl-vfr-fire-row';
+      const b=document.createElement('button');b.type='button';b.className='pzl-vfr-general-btn';
+      b.innerHTML=`<b>${esc(c.role)} — ${esc(c.icao?c.icao+' · ':'')}${esc(c.name)}</b><span>Γενικός αεροναυτικός χάρτης: σημεία, airspace και λοιπές ενδείξεις</span>`;
+      b.onclick=()=>zoomAirport(c);row.appendChild(b);
+      const a=document.createElement('button');a.type='button';a.className='pzl-vfr-aip-btn';
+      a.textContent=hasOfficialVfr(c.icao)?'AIP VFR':'ΧΩΡΙΣ VFR CHART';a.disabled=!hasOfficialVfr(c.icao);
+      a.title=hasOfficialVfr(c.icao)?'Άνοιγμα επίσημου AIP VFR chart με διαδρομές και ύψη':'Δεν δημοσιεύεται ξεχωριστό VFR-routes chart στο AIP';
+      a.onclick=()=>openOfficialVfr(c);row.appendChild(a);airportButtons.appendChild(row);
+    });
   }
   function updateNavSelectedBox(){
     if(!navSelectedBox)return;const c=navSelectedAirports();navSelectedBox.textContent=c.length?`Επιλεγμένα (${c.length}): ${c.map(x=>(x.icao?x.icao+' ':'')+x.name).join(' · ')}`:'Δεν έχει επιλεγεί αεροδρόμιο NAV.';
@@ -13531,8 +13587,10 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
         if(chk.checked)navSelectedNames.add(c.name);else navSelectedNames.delete(c.name);
         saveNavSelection();updateNavSelectedBox();lastCentersKey='';if(vfrActive)reloadVfr(false);
       };
-      const z=document.createElement('button');z.type='button';z.className='pzl-vfr-airport-zoom';z.textContent='🔍';z.title='Προβολή '+c.name;z.onclick=()=>zoomAirport(c);
-      row.append(chk,label,z);navList.appendChild(row);
+      const z=document.createElement('button');z.type='button';z.className='pzl-vfr-airport-zoom';z.textContent='🔍';z.title='Γενικός αεροναυτικός χάρτης '+c.name;z.onclick=()=>zoomAirport(c);
+      const a=document.createElement('button');a.type='button';a.className='pzl-vfr-airport-aip';a.textContent='AIP';
+      a.disabled=!hasOfficialVfr(c.icao);a.title=hasOfficialVfr(c.icao)?'Επίσημο VFR chart':'Δεν υπάρχει ξεχωριστό VFR-routes chart';a.onclick=()=>openOfficialVfr(c);
+      row.append(chk,label,z,a);navList.appendChild(row);
     });
     filterNavList();updateNavSelectedBox();
   }
@@ -13547,8 +13605,9 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
   function fitAll(){
     const c=activeCenters();if(!c.length){setStatus(navContext()?'Δεν έχουν επιλεγεί αεροδρόμια NAV.':'Δεν έχουν επιλεγεί αεροδρόμια.',true);return;}
     if(!vfrActive)activateVfr(false);
-    if(c.length===1)map.setView([c[0].lat,c[0].lon],10);else{const b=L.latLngBounds(c.map(x=>[x.lat,x.lon]));map.fitBounds(b.pad(.18),{maxZoom:9});}
-    setStatus(`VFR Routes + ύψη για:\n${currentCenterDescription(c)}`,false);setHidden(vfrPanel,true);
+    if(c.length===1)map.setView([c[0].lat,c[0].lon],11);else{const b=L.latLngBounds(c.map(x=>[x.lat,x.lon]));map.fitBounds(b.pad(.18),{maxZoom:9});}
+    setStatus(`Χωρέθηκαν στην οθόνη τα επιλεγμένα α/δ. Αυτό ΔΕΝ ενεργοποιεί όλες τις VFR διαδρομές· όταν τα α/δ είναι μακριά, το zoom είναι πολύ μικρό για λεπτομέρειες.
+${currentCenterDescription(c)}`,true);setHidden(vfrPanel,true);
   }
   function openChooser(){setHidden(chooser,false);syncMaster();}
   function openPzl(){setHidden(chooser,true);const p=document.getElementById('pzlTerrainPanel');if(p)p.hidden=false;}
@@ -13562,13 +13621,13 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
   function buildUi(){
     masterBtn=document.getElementById('pzlMapModeBtn');if(!masterBtn||document.getElementById('pzlMapChooserPanel'))return false;
     seedNavSelectionIfNeeded();
-    masterBtn.textContent='MAP';masterBtn.title='PZL MAP ή VFR Routes + ύψη';masterBtn.onclick=openChooser;
+    masterBtn.textContent='MAP';masterBtn.title='PZL MAP ή VFR / επίσημα AIP charts';masterBtn.onclick=openChooser;
     const wrap=document.getElementById('mapWrap');vfrBadge=document.createElement('div');vfrBadge.id='pzlVfrBadge';wrap.appendChild(vfrBadge);
     chooser=document.createElement('div');chooser.id='pzlMapChooserPanel';chooser.hidden=true;
-    chooser.innerHTML=`<div class="pzl-map-menu-card"><div class="pzl-map-menu-head"><b>MAP</b><button id="pzlMapChooserClose" type="button">✕</button></div><div class="pzl-map-choice-grid"><button id="pzlChoosePzlMap" class="pzl-map-choice" type="button"><strong>PZL MAP</strong><small>Κορυφές, ύψη ft MSL, γραμμές ΜΤ/ΥΤ και κεραίες κατόπιν επιλογής.</small></button><button id="pzlChooseVfrRoutes" class="pzl-map-choice" type="button"><strong>VFR ROUTES + ΥΨΗ</strong><small>FIRE: μόνο τα 3 επιχειρησιακά α/δ. NAV: επιλογή από όλα τα ελληνικά α/δ.</small></button></div></div>`;
+    chooser.innerHTML=`<div class="pzl-map-menu-card"><div class="pzl-map-menu-head"><b>MAP</b><button id="pzlMapChooserClose" type="button">✕</button></div><div class="pzl-map-choice-grid"><button id="pzlChoosePzlMap" class="pzl-map-choice" type="button"><strong>PZL MAP</strong><small>Κορυφές, ύψη ft MSL, γραμμές ΜΤ/ΥΤ και κεραίες κατόπιν επιλογής.</small></button><button id="pzlChooseVfrRoutes" class="pzl-map-choice" type="button"><strong>VFR / AIP CHARTS</strong><small>Γενικός αεροναυτικός χάρτης και επίσημα VFR charts ανά αεροδρόμιο.</small></button></div></div>`;
     document.body.appendChild(chooser);
     vfrPanel=document.createElement('div');vfrPanel.id='pzlVfrRoutesPanel';vfrPanel.hidden=true;
-    vfrPanel.innerHTML=`<div class="pzl-map-menu-card"><div class="pzl-map-menu-head"><b>VFR ROUTES + ΥΨΗ</b><button id="pzlVfrClose" type="button">✕</button></div><div id="pzlVfrContextBadge"></div><div class="pzl-vfr-note">Ο STANDARD χάρτης παραμένει από κάτω. Το overlay εμφανίζει τις VFR διαδρομές και τα altitude labels του αεροναυτικού χάρτη μόνο περίπου ${VFR_RADIUS_KM} km γύρω από τα α/δ που επιλέγεις, από zoom ${VFR_MIN_ZOOM}+.</div><button id="pzlVfrToggle" type="button"></button><div id="pzlVfrAirportButtons"></div><div id="pzlVfrNavTools" hidden><div class="pzl-vfr-nav-title">ΕΛΛΗΝΙΚΑ ΑΕΡΟΔΡΟΜΙΑ — πολλαπλή επιλογή</div><input id="pzlVfrAirportSearch" type="search" placeholder="Αναζήτηση ονόματος ή ICAO π.χ. LGMT"><div class="pzl-vfr-nav-actions"><button id="pzlVfrSelectNavAirports" type="button">Α/Δ NAV</button><button id="pzlVfrShowSelected" type="button">ΕΠΙΛΕΓΜΕΝΑ</button><button id="pzlVfrClearSelection" type="button" class="secondary">ΚΑΘΑΡΙΣΜΟΣ</button></div><div id="pzlVfrGreekAirportList"></div><div id="pzlVfrNavSelected"></div></div><div class="pzl-vfr-actions"><button id="pzlVfrFitAll" type="button">ΠΡΟΒΟΛΗ ΟΛΩΝ</button><button id="pzlVfrBack" type="button" class="secondary">← MAP</button></div><div id="pzlVfrStatus"></div><div class="pzl-vfr-warning">Βοηθητική απεικόνιση. Δεν αντικαθιστά το ισχύον AIP ή εγκεκριμένο αεροναυτικό chart.</div></div>`;
+    vfrPanel.innerHTML=`<div class="pzl-map-menu-card"><div class="pzl-map-menu-head"><b>VFR / AIP CHARTS</b><button id="pzlVfrClose" type="button">✕</button></div><div id="pzlVfrContextBadge"></div><div class="pzl-vfr-note">Ο STANDARD χάρτης παραμένει από κάτω. Το γενικό overlay δείχνει κυρίως VFR σημεία, airspace και αεροναυτικές ενδείξεις. Οι επίσημες διαδρομές και τα υποχρεωτικά ύψη εμφανίζονται από το κουμπί AIP VFR, μόνο στα α/δ που διαθέτουν ξεχωριστό chart.</div><button id="pzlVfrToggle" type="button"></button><div id="pzlVfrAirportButtons"></div><div id="pzlVfrNavTools" hidden><div class="pzl-vfr-nav-title">ΕΛΛΗΝΙΚΑ ΑΕΡΟΔΡΟΜΙΑ — πολλαπλή επιλογή</div><input id="pzlVfrAirportSearch" type="search" placeholder="Αναζήτηση ονόματος ή ICAO π.χ. LGMT"><div class="pzl-vfr-nav-actions"><button id="pzlVfrSelectNavAirports" type="button">Α/Δ NAV</button><button id="pzlVfrShowSelected" type="button">ΕΠΙΛΕΓΜΕΝΑ</button><button id="pzlVfrClearSelection" type="button" class="secondary">ΚΑΘΑΡΙΣΜΟΣ</button></div><div id="pzlVfrGreekAirportList"></div><div id="pzlVfrNavSelected"></div></div><div class="pzl-vfr-actions"><button id="pzlVfrFitAll" type="button">ΧΩΡΕΣΕ ΤΑ Α/Δ</button><button id="pzlVfrBack" type="button" class="secondary">← MAP</button></div><div id="pzlVfrStatus"></div><div class="pzl-vfr-warning">Βοηθητική απεικόνιση. Δεν αντικαθιστά το ισχύον AIP ή εγκεκριμένο αεροναυτικό chart.</div></div>`;
     document.body.appendChild(vfrPanel);
     vfrStatus=document.getElementById('pzlVfrStatus');vfrToggle=document.getElementById('pzlVfrToggle');airportButtons=document.getElementById('pzlVfrAirportButtons');
     navTools=document.getElementById('pzlVfrNavTools');navList=document.getElementById('pzlVfrGreekAirportList');navSearch=document.getElementById('pzlVfrAirportSearch');navSelectedBox=document.getElementById('pzlVfrNavSelected');contextBadge=document.getElementById('pzlVfrContextBadge');
@@ -13591,7 +13650,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
   setTimeout(install,1200);
 })();
 </script>
-<!-- PZL_NAV_VFR_AIRPORT_SELECTOR_ALTITUDES_D426_END -->
+<!-- PZL_VFR_OFFICIAL_CHARTS_D427_END -->
 
 </body>
 </html>
