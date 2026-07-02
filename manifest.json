@@ -1,6 +1,6 @@
 {
-  "name": "PZL Mission Tool D421 Offline",
-  "short_name": "PZL Mission",
+  "name": "PZL Mission Tool D422",
+  "short_name": "PZL D422",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#eef2f6",

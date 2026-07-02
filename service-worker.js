@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_TOPO_OBSTACLES_100KM_20260702D421";
+const PZL_BUILD = "PZL_STANDARD_OPTIONAL_OVERLAYS_20260702D422";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";
