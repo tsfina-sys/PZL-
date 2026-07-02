@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_NAV_DEST_GREECE_BALKANS_20260702AV";
+const PZL_BUILD = "PZL_MAP_ICAO_LABELS_VISIBLE_20260702AW";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";

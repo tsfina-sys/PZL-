@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool v8.2 D67 Cockpit FIX37D413</title>
+  <title>PZL Mission Tool v8.2 D67 Cockpit FIX37D414 MAP ICAO LABELS</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -1544,6 +1544,44 @@ body.pzl-screen-locked #lockMapBtn {
     .nav-route-sub{font-size:11px}
     #hudNavCdi{top:58%;width:72px}
   }
+</style>
+
+
+<style id="pzl-map-airport-icao-labels-css">
+/* Permanent ICAO labels for all known airports on the map. */
+.pzl-icao-label-wrap{
+  background:transparent!important;
+  border:0!important;
+  pointer-events:none!important;
+  overflow:visible!important;
+}
+.pzl-icao-map-label{
+  display:block;
+  min-width:38px;
+  padding:2px 4px;
+  border:1px solid rgba(255,255,255,.9);
+  border-radius:5px;
+  background:rgba(4,12,22,.80);
+  color:#ffffff;
+  font-family:Arial,sans-serif;
+  font-size:10px;
+  font-weight:1000;
+  line-height:1.05;
+  letter-spacing:.45px;
+  text-align:center;
+  white-space:nowrap;
+  box-shadow:0 2px 5px rgba(0,0,0,.65);
+  text-shadow:0 1px 2px #000;
+  transform:translateY(-2px);
+}
+@media(max-width:700px){
+  .pzl-icao-map-label{
+    min-width:34px;
+    padding:2px 3px;
+    font-size:9px;
+    letter-spacing:.25px;
+  }
+}
 </style>
 
 </head>
@@ -11306,12 +11344,12 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
       pzlNavMarkers.push(marker);
     });
     pzlNavDestinationMarker = L.circleMarker([info.dest.lat, info.dest.lon], {pane:'pzlNavMarkerPane', radius:9, color:'#14532d', weight:2, fillColor:'#22c55e', fillOpacity:0.95}).addTo(map);
-    const destIcao = (typeof ICAO !== 'undefined' && ICAO && ICAO[info.dest.name]) ? ICAO[info.dest.name] : '';
+    const destIcao = (window.PZL_ICAO && window.PZL_ICAO[info.dest.name]) ? window.PZL_ICAO[info.dest.name] : '';
     const destLabel = destIcao ? (destIcao + ' ' + info.dest.name) : ('LDG ' + info.dest.name);
     pzlNavDestinationMarker.bindTooltip(destLabel, {permanent:true, direction:'top', offset:[0,-10], className:'tinyLabel'});
     if (info.alt) {
       pzlNavAltMarker = L.circleMarker([info.alt.lat, info.alt.lon], {pane:'pzlNavMarkerPane', radius:8, color:'#1d4ed8', weight:2, fillColor:'#60a5fa', fillOpacity:0.9}).addTo(map);
-      const altIcao = (typeof ICAO !== 'undefined' && ICAO && ICAO[info.alt.name]) ? ICAO[info.alt.name] : '';
+      const altIcao = (window.PZL_ICAO && window.PZL_ICAO[info.alt.name]) ? window.PZL_ICAO[info.alt.name] : '';
       const altLabel = altIcao ? (altIcao + ' ' + info.alt.name) : ('ALT ' + info.alt.name);
       pzlNavAltMarker.bindTooltip(altLabel, {permanent:false, direction:'top', offset:[0,-10], className:'tinyLabel'});
       pzlNavAltLine = L.polyline([[info.dest.lat, info.dest.lon],[info.alt.lat, info.alt.lon]], {pane:'pzlNavRoutePane', color:'#2563eb', weight:2, opacity:0.55, dashArray:'4,6'}).addTo(map);
@@ -11668,6 +11706,125 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     navRenderAll(true);
     setInterval(function(){ try { navUpdateProgress(); navRenderAll(false); } catch(e){} }, 3000);
   });
+})();
+</script>
+
+
+<script id="pzl-map-airport-icao-labels-js">
+(function(){
+  const OPERATIONAL_ICAO = {
+    "ΚΕΡΚΥΡΑ":"LGKR", "ΑΚΤΙΟ":"LGPZ", "ΚΑΒΑΛΑ":"LGKV",
+    "ΑΛΕΞΑΝΔΡΟΥΠΟΛΗ":"LGAL", "ΚΕΦΑΛΛΟΝΙΑ":"LGKF", "ΑΝΔΡΑΒΙΔΑ":"LGAD",
+    "ΤΡΙΠΟΛΗ":"LGTP", "ΚΑΛΑΜΑΤΑ":"LGKL", "ΛΑΜΙΑ":"LGLM",
+    "ΒΟΛΟΣ":"LGBL", "ΜΥΤΙΛΗΝΗ":"LGMT", "ΧΙΟΣ":"LGHI",
+    "ΤΑΤΟΪ":"LGTT", "ΕΛΕΥΣΙΝΑ":"LGEL"
+  };
+
+  const labelMarkers = [];
+  let labelLayer = null;
+
+  function escapeHtml(value){
+    return String(value).replace(/[&<>"']/g, function(ch){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch];
+    });
+  }
+
+  function buildIcaoMap(){
+    const merged = Object.assign({}, OPERATIONAL_ICAO);
+    try {
+      if (typeof navExtraAirports !== 'undefined' && navExtraAirports) {
+        Object.entries(navExtraAirports).forEach(function(entry){
+          const name = entry[0], data = entry[1];
+          if (data && data.icao) merged[name] = String(data.icao).toUpperCase();
+        });
+      }
+    } catch(e) {}
+    window.PZL_ICAO = merged;
+    return merged;
+  }
+
+  // Make the shared ICAO table available before DOMContentLoaded,
+  // so the NAV destination/alternate labels use it on their first draw.
+  buildIcaoMap();
+
+  function collectAirports(){
+    const icaoMap = buildIcaoMap();
+    const byAirport = new Map();
+
+    function add(name, data, priority){
+      if (!name || !data) return;
+      const icao = icaoMap[name] || data.icao;
+      const lat = Number(data.lat), lon = Number(data.lon);
+      if (!icao || !Number.isFinite(lat) || !Number.isFinite(lon)) return;
+      const code = String(icao).toUpperCase();
+      const key = String(name).toUpperCase();
+      const previous = byAirport.get(key);
+      if (!previous || priority < previous.priority) {
+        byAirport.set(key, {name:name, icao:code, lat:lat, lon:lon, priority:priority});
+      }
+    }
+
+    try { Object.entries(bases || {}).forEach(function(e){ add(e[0], e[1], 0); }); } catch(e) {}
+    try { Object.entries(airports || {}).forEach(function(e){ add(e[0], e[1], 1); }); } catch(e) {}
+    try { Object.entries(navExtraAirports || {}).forEach(function(e){ add(e[0], e[1], 2); }); } catch(e) {}
+
+    return Array.from(byAirport.values()).sort(function(a,b){
+      return a.priority - b.priority || a.icao.localeCompare(b.icao);
+    });
+  }
+
+  function updateVisibility(){
+    if (!labelLayer || typeof map === 'undefined' || !map) return;
+    const zoom = Number(map.getZoom ? map.getZoom() : 6);
+    labelMarkers.forEach(function(item){
+      const el = item.marker.getElement && item.marker.getElement();
+      if (!el) return;
+      // Labels are visible at the application's normal overview zoom and above.
+      el.style.display = zoom >= 6 ? '' : 'none';
+    });
+  }
+
+  function install(){
+    if (typeof map === 'undefined' || !map || typeof L === 'undefined') return;
+    if (map.__pzlIcaoLabelsInstalled) {
+      updateVisibility();
+      return;
+    }
+    map.__pzlIcaoLabelsInstalled = true;
+
+    if (!map.getPane('pzlIcaoLabelPane')) {
+      const pane = map.createPane('pzlIcaoLabelPane');
+      pane.style.zIndex = '645';
+      pane.style.pointerEvents = 'none';
+    }
+
+    labelLayer = L.layerGroup().addTo(map);
+    collectAirports().forEach(function(ap){
+      const icon = L.divIcon({
+        className:'pzl-icao-label-wrap',
+        html:'<div class="pzl-icao-map-label" title="' + escapeHtml(ap.name) + '">' + escapeHtml(ap.icao) + '</div>',
+        iconSize:[48,18],
+        iconAnchor:[24,24]
+      });
+      const marker = L.marker([ap.lat, ap.lon], {
+        icon:icon,
+        pane:'pzlIcaoLabelPane',
+        interactive:false,
+        keyboard:false,
+        bubblingMouseEvents:false,
+        zIndexOffset:900
+      }).addTo(labelLayer);
+      labelMarkers.push({marker:marker, airport:ap});
+    });
+
+    map.on('zoomend moveend resize', updateVisibility);
+    updateVisibility();
+    setTimeout(updateVisibility, 350);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install);
+  else install();
+  setTimeout(install, 700);
 })();
 </script>
 
