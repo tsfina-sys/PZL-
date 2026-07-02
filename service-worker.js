@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_3D_CUBE_PANEL_TRY_20260702AT";
+const PZL_BUILD = "PZL_EMPTY_BASE_SELECTS_FIXED_20260701AS";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";

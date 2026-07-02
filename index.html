@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_3D_CUBE_PANEL_TRY_20260702AT">
+<meta name="pzl-build" content="PZL_EMPTY_BASE_SELECTS_FIXED_20260701AS">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1319,65 +1319,6 @@ body.pzl-screen-locked #lockMapBtn {
 }
 </style>
 
-
-
-<style id="pzl-cube-panel-css">
-.bottom-sheet.cube-panel-sheet{position:relative}
-.bottom-sheet.cube-panel-sheet > details.cube-source-hidden{display:none !important}
-.cube-panel-shell{margin:0 0 12px;border:1px solid #d6e0ec;border-radius:20px;background:linear-gradient(180deg,#f8fbff 0%,#eef5ff 100%);padding:10px;box-shadow:0 8px 24px rgba(15,23,42,.08), inset 0 1px 0 rgba(255,255,255,.88)}
-.cube-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-.cube-panel-title{font-size:18px;font-weight:900;color:#0f172a}
-.cube-panel-tag{font-size:12px;font-weight:900;color:#1e3a8a;background:#fff;border:1px solid #cbd5e1;border-radius:999px;padding:4px 8px;white-space:nowrap}
-.cube-panel-help{margin-top:8px;color:#475569;font-size:12px;line-height:1.35}
-.cube-viewport{position:relative;height:1080px;overflow:hidden;border-radius:18px;touch-action:none;perspective:1400px;background:radial-gradient(circle at 50% 45%, rgba(96,165,250,.12) 0%, rgba(191,219,254,.22) 25%, rgba(241,245,249,.9) 62%, rgba(248,250,252,.98) 100%)}
-.cube-viewport::before{content:"";position:absolute;left:50%;top:50%;width:260px;height:260px;border-radius:18px;transform:translate(-50%,-50%);box-shadow:0 0 0 28px rgba(255,255,255,.22),0 0 0 56px rgba(59,130,246,.07);pointer-events:none}
-.cube-scene{position:absolute;left:50%;top:50%;width:560px;height:560px;transform-style:preserve-3d;transform:translate(-50%,-50%) rotateX(-18deg) rotateY(24deg) scale(1)}
-.cube-face{position:absolute;left:50%;top:50%;width:300px;height:300px;margin-left:-150px;margin-top:-150px;border-radius:18px;background:rgba(255,255,255,.97);border:1px solid rgba(148,163,184,.45);box-shadow:0 18px 40px rgba(15,23,42,.15);backface-visibility:hidden;overflow:hidden;display:flex;flex-direction:column}
-.cube-face-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-bottom:1px solid #e5edf5;background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%)}
-.cube-face-title{font-size:16px;font-weight:900;color:#1e3a8a;line-height:1.1}
-.cube-face-badge{font-size:10px;font-weight:900;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:999px;padding:3px 6px;white-space:nowrap}
-.cube-face-body{flex:1;overflow:auto;padding:10px 12px 14px}
-.cube-face-body::-webkit-scrollbar{width:7px;height:7px}
-.cube-face-body::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px}
-.cube-face--front{transform:translateZ(150px)}
-.cube-face--back{transform:rotateY(180deg) translateZ(150px)}
-.cube-face--right{transform:rotateY(90deg) translateZ(150px)}
-.cube-face--left{transform:rotateY(-90deg) translateZ(150px)}
-.cube-face--top{transform:rotateX(90deg) translateZ(150px)}
-.cube-face--bottom{transform:rotateX(-90deg) translateZ(150px)}
-.cube-face .collapsible-panel,.cube-face #fixPanel,.cube-face .nav-panel,.cube-face .pzl-test-panel,.cube-face .mission-log-panel{margin:0 !important;border:0 !important;box-shadow:none !important;background:transparent !important;padding:0 !important}
-.cube-face details{display:block !important}
-.cube-face details>summary,.cube-face #fixPanel>summary{display:none !important}
-.cube-face .collapsible-body{padding:0 !important}
-.cube-face .dashboard{gap:6px !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important}
-.cube-face .dash-card{min-height:auto !important;padding:8px !important}
-.cube-face .dash-card .value{font-size:18px !important}
-.cube-face .row{display:flex;flex-direction:column;align-items:stretch;gap:6px;margin:7px 0 !important}
-.cube-face .grid2,.cube-face .test-row-2col,.cube-face .pzl-test-grid,.cube-face .mission-log-actions{grid-template-columns:1fr !important}
-.cube-face input,.cube-face select,.cube-face button,.cube-face textarea{width:100%}
-.cube-face .fix-row{grid-template-columns:50px minmax(0,1fr) 42px 30px !important}
-.cube-face table{font-size:12px !important}
-.cube-face .drop-table{font-size:12px !important}
-.cube-face .section-title{margin:8px 0 6px !important}
-.cube-face .result,.cube-face .small{font-size:12px !important}
-.cube-face .nav-leg{margin:8px 0 0 !important}
-.cube-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.cube-controls button{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:12px;padding:8px 10px;font-weight:800;color:#0f3d5e}
-.cube-controls button:active{transform:translateY(1px)}
-@media (max-width:700px){
-  .cube-viewport{height:980px}
-  .cube-scene{width:500px;height:500px}
-  .cube-face{width:270px;height:270px;margin-left:-135px;margin-top:-135px}
-  .cube-face--front{transform:translateZ(135px)}
-  .cube-face--back{transform:rotateY(180deg) translateZ(135px)}
-  .cube-face--right{transform:rotateY(90deg) translateZ(135px)}
-  .cube-face--left{transform:rotateY(-90deg) translateZ(135px)}
-  .cube-face--top{transform:rotateX(90deg) translateZ(135px)}
-  .cube-face--bottom{transform:rotateX(-90deg) translateZ(135px)}
-  .cube-face-title{font-size:15px}
-  .cube-face-body{padding:8px 10px 12px}
-}
-</style>
 
 <style id="pzl-ipad-resizable-panel-css">
 #pzlSplitHandle{
@@ -1810,25 +1751,7 @@ body.pzl-screen-locked #lockMapBtn {
     <span class="pzlSplitGrip" aria-hidden="true"></span>
   </div>
   <div class="bottom-sheet">
-  <div id="cubePanelShell" class="cube-panel-shell">
-    <div class="cube-panel-head">
-      <div class="cube-panel-title">🧊 3D Cube panel</div>
-      <div id="cubePanelScaleTag" class="cube-panel-tag">Zoom x1.00</div>
-    </div>
-    <div id="cubeViewport" class="cube-viewport" aria-label="3D κύβος panel">
-      <div id="cubeScene" class="cube-scene"></div>
-    </div>
-    <div class="cube-controls">
-      <button type="button" data-cube-view="front">Front</button>
-      <button type="button" data-cube-view="right">Right</button>
-      <button type="button" data-cube-view="left">Left</button>
-      <button type="button" data-cube-view="top">Top</button>
-      <button type="button" data-cube-view="bottom">Bottom</button>
-      <button type="button" data-cube-view="back">Back</button>
-    </div>
-    <div class="cube-panel-help">Σύρε πάνω στον κύβο για περιστροφή προς όλες τις κατευθύνσεις. Κάνε pinch ή wheel για zoom. Τα πεδία του panel είναι στις 6 πλευρές του κύβου και δεν εμφανίζονται ξανά πιο κάτω.</div>
-  </div>
-    <details id="summaryPanel" class="collapsible-panel">
+    <details class="collapsible-panel">
       <summary>Σύνοψη / χρόνοι</summary>
       <div class="collapsible-body">
     <div class="dashboard">
@@ -1857,7 +1780,7 @@ body.pzl-screen-locked #lockMapBtn {
       <summary class="fix-title"><span>FIX σημεία</span><button id="clearFixBtn" type="button">CLR FIX</button></summary>
       <div id="fixPanelList">FIX 1 -<br>FIX 2 -<br>FIX 3 -<br>FIX 4 -<br>FIX 5 -</div>
     </details>
-    <details id="reportsPanel" class="collapsible-panel">
+    <details class="collapsible-panel">
       <summary>Αναφορές / ενδιάμεσα</summary>
       <div class="collapsible-body">
     <div class="row"></div>
@@ -2034,7 +1957,7 @@ body.pzl-screen-locked #lockMapBtn {
       </div>
     </details>
 
-<details id="dropsPanel"><summary>Αποστολή / Ρίψεις</summary>
+<details><summary>Αποστολή / Ρίψεις</summary>
 <div class="timing-fields">
   <b>Χρόνοι απογείωσης</b>
   <div class="grid2">
@@ -2071,7 +1994,7 @@ body.pzl-screen-locked #lockMapBtn {
       <div class="small">+14 L μη ενδεικνυόμενα. Συνολικό πλήρες καύσιμο: 726 L.</div>
     </details>
 
-    <details id="windPanel"><summary>Άνεμος / Διάδρομος</summary>
+    <details><summary>Άνεμος / Διάδρομος</summary>
       <div class="grid2">
         <div><label>Διάδρομος heading °</label><input id="runwayHeading" type="number" value="010" min="0" max="360" /></div>
         <div><label>Άνεμος από °</label><input id="windDir" type="number" value="000" min="0" max="360" /></div>
@@ -2116,12 +2039,12 @@ transform:translateX(-50%);z-index:9999;display:flex;gap:12px;align-items:flex-e
   function placeAirportBarForViewport(){
     const bar = document.getElementById('bottom-climakia-bar');
     const sheet = document.querySelector('.bottom-sheet');
+    const details = document.querySelector('.bottom-sheet details');
     if (!bar || !sheet) return;
-    const firstHost = document.getElementById('cubePanelShell') || Array.from(sheet.children).find(el => el.tagName === 'DETAILS');
     const isMobile = window.matchMedia('(max-width: 900px)').matches;
     if (isMobile) {
       bar.classList.add('mobile-in-panel');
-      if (bar.parentElement !== sheet) sheet.insertBefore(bar, firstHost || sheet.firstChild);
+      if (details && bar.parentElement !== sheet) sheet.insertBefore(bar, details);
     } else {
       bar.classList.remove('mobile-in-panel');
       if (bar.parentElement !== document.body) document.body.appendChild(bar);
@@ -9964,7 +9887,7 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
 
 
 <style id="coord-four-row-style">
-/* PZL_3D_CUBE_PANEL_TRY_20260702AT */
+/* PZL_EMPTY_BASE_SELECTS_FIXED_20260701AS */
 #coordToggleBtn{
   width:100%!important;
   min-height:34px!important;
