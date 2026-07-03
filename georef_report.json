@@ -1,0 +1,771 @@
+{
+  "LGKL": {
+    "points": 10,
+    "inliers": 10,
+    "names": [
+      "AREO",
+      "BERAP",
+      "KALAME",
+      "KIPARI",
+      "KORONI",
+      "MONEVA",
+      "PETALO",
+      "TENARO",
+      "MALEAS",
+      "VELOP"
+    ],
+    "residual_km": [
+      0.074,
+      0.285,
+      0.034,
+      0.381,
+      0.277,
+      0.173,
+      0.1,
+      0.116,
+      0.329,
+      0.181
+    ],
+    "bounds": [
+      [
+        36.31267366878693,
+        21.40424395492157
+      ],
+      [
+        37.485280865210584,
+        23.537232755317653
+      ]
+    ],
+    "affine_edges": true
+  },
+  "LGMT": {
+    "points": 8,
+    "inliers": 8,
+    "names": [
+      "AMANI",
+      "ERESO",
+      "KALONI",
+      "MIRSINIA",
+      "MOLIVOS",
+      "PALIOS",
+      "PANNOS",
+      "POLIKNI"
+    ],
+    "residual_km": [
+      0.048,
+      0.047,
+      0.052,
+      0.03,
+      0.074,
+      0.01,
+      0.031,
+      0.033
+    ],
+    "bounds": [
+      [
+        38.81591788958711,
+        25.412949936415846
+      ],
+      [
+        39.56552639178294,
+        26.80486804304646
+      ]
+    ],
+    "affine_edges": true
+  },
+  "LGKR": {
+    "points": 10,
+    "inliers": 4,
+    "names": [
+      "OTHONI",
+      "KASIOPI",
+      "IGOU",
+      "PAXI"
+    ],
+    "residual_km": [
+      0.092,
+      0.232,
+      0.233,
+      0.094
+    ],
+    "bounds": [
+      [
+        38.81991623518286,
+        18.616797636868355
+      ],
+      [
+        39.98123752302083,
+        21.02803693152186
+      ]
+    ],
+    "affine_edges": true
+  },
+  "LGKP": {
+    "points": 14,
+    "inliers": 12,
+    "names": [
+      "ABEAM PRIONIA",
+      "MARATHOS",
+      "DELTAS",
+      "FINIKI",
+      "PIGADIA",
+      "KASSONISIA",
+      "AKTI",
+      "ABEAM RWY",
+      "SKALOMA",
+      "TRAPEZA",
+      "EIRINI",
+      "INATOS"
+    ],
+    "residual_km": [
+      0.413,
+      0.148,
+      0.119,
+      0.14,
+      0.155,
+      0.117,
+      0.063,
+      0.186,
+      0.241,
+      0.011,
+      0.168,
+      0.242
+    ],
+    "bounds": [
+      [
+        34.97426319878528,
+        26.308180341936897
+      ],
+      [
+        35.92166944311794,
+        27.851432983321462
+      ]
+    ],
+    "affine_edges": true
+  },
+  "LGKO": {
+    "points": 6,
+    "inliers": 6,
+    "names": [
+      "TELENDOS",
+      "NERA",
+      "KEFALOS",
+      "PERGUSA",
+      "NISYROS",
+      "KANDELUSA"
+    ],
+    "residual_km": [
+      0.042,
+      0.085,
+      0.179,
+      0.087,
+      0.051,
+      0.065
+    ],
+    "bounds": [
+      [
+        36.467099721972836,
+        26.404515732645176
+      ],
+      [
+        37.06600122345714,
+        27.44104716504762
+      ]
+    ],
+    "affine_edges": true
+  },
+  "LGMK": {
+    "points": 7,
+    "inliers": 5,
+    "names": [
+      "DIDIS",
+      "DRAGON",
+      "KIMA",
+      "LETSO",
+      "PIDAX"
+    ],
+    "residual_km": [
+      0.048,
+      0.034,
+      0.066,
+      0.009,
+      0.01
+    ],
+    "bounds": [
+      [
+        37.11243991331613,
+        24.816472488281015
+      ],
+      [
+        37.64360823850391,
+        25.846316437580775
+      ]
+    ],
+    "affine_edges": true
+  },
+  "LGPA": {
+    "points": 6,
+    "inliers": 6,
+    "names": [
+      "ANTIPAROS",
+      "BIBEX",
+      "DIDIS",
+      "EROTU",
+      "KOTOMERI",
+      "MAISTROS"
+    ],
+    "residual_km": [
+      0.108,
+      0.018,
+      0.148,
+      0.033,
+      0.019,
+      0.206
+    ],
+    "bounds": [
+      [
+        36.77301273230885,
+        24.526196917283816
+      ],
+      [
+        37.33538757210779,
+        25.553988647984557
+      ]
+    ],
+    "affine_edges": true
+  },
+  "LGRP": {
+    "points": 7,
+    "inliers": 7,
+    "names": [
+      "AFANTOU",
+      "ALFA",
+      "ALIMIA",
+      "MARITSA",
+      "MPRAVO",
+      "TILLOS",
+      "WHISKY"
+    ],
+    "residual_km": [
+      0.12,
+      0.3,
+      0.055,
+      0.151,
+      0.153,
+      0.272,
+      0.254
+    ],
+    "bounds": [
+      [
+        35.5021895071894,
+        26.92779046707078
+      ],
+      [
+        36.67526836406385,
+        28.99114382183162
+      ]
+    ],
+    "affine_edges": true
+  },
+  "LGKV": {
+    "points": 24,
+    "inliers": 12,
+    "names": [
+      "EVIVI",
+      "ATFIR",
+      "RODIP",
+      "ALISTRATI",
+      "IASMOS",
+      "KOMOTINI",
+      "KERAMOTI",
+      "FANARI",
+      "LOUTRA",
+      "SOSUS",
+      "SKALA MARION",
+      "AMALA"
+    ],
+    "residual_km": [
+      0.224,
+      0.207,
+      0.304,
+      0.115,
+      0.144,
+      0.401,
+      0.718,
+      0.761,
+      0.307,
+      0.179,
+      0.643,
+      0.517
+    ],
+    "bounds": [
+      [
+        40.318845982476596,
+        23.37012775223393
+      ],
+      [
+        41.52818070858328,
+        25.797186658925305
+      ]
+    ],
+    "affine_edges": true
+  },
+  "LGAD": {
+    "points": 12,
+    "inliers": 7,
+    "names": [
+      "OXIA",
+      "RION",
+      "PAPPAS",
+      "ELLINIKO",
+      "VARDA",
+      "KILLINI",
+      "YERAKI"
+    ],
+    "residual_km": [
+      0.304,
+      0.11,
+      0.62,
+      0.231,
+      0.559,
+      0.356,
+      0.052
+    ],
+    "bounds": [
+      [
+        37.29547021590335,
+        19.536592419863112
+      ],
+      [
+        38.75693611323228,
+        22.311886986033205
+      ]
+    ],
+    "affine_edges": true
+  },
+  "LGIR": {
+    "points": 24,
+    "inliers": 8,
+    "names": [
+      "AVGO",
+      "DIA",
+      "ABEAM AGIOS",
+      "IERAPETRA",
+      "PIGADIA",
+      "KASSONISIA",
+      "ABEAM RWY",
+      "INATOS"
+    ],
+    "residual_km": [
+      0.258,
+      0.422,
+      0.129,
+      0.262,
+      0.466,
+      0.579,
+      1.181,
+      0.085
+    ],
+    "bounds": [
+      [
+        34.65257792828811,
+        24.685158744923996
+      ],
+      [
+        36.08147779004249,
+        27.588398286505655
+      ]
+    ],
+    "affine_edges": true
+  },
+  "LGSA": {
+    "points": 12,
+    "inliers": 12,
+    "names": [
+      "PLAKIAS",
+      "SFAKIA",
+      "PALEOCHORA",
+      "PRASES",
+      "BAVES",
+      "MALAXA",
+      "THODOROU",
+      "RAVDOUCHA",
+      "PAPA",
+      "SPATHA",
+      "OSCARA",
+      "KILO"
+    ],
+    "residual_km": [
+      0.253,
+      0.277,
+      0.157,
+      0.075,
+      0.266,
+      0.225,
+      0.317,
+      0.129,
+      0.202,
+      0.089,
+      0.397,
+      0.207
+    ],
+    "bounds": [
+      [
+        35.0068517134645,
+        23.277948596550505
+      ],
+      [
+        35.978360166028544,
+        24.98919352580678
+      ]
+    ],
+    "affine_edges": true
+  },
+  "LGAV": {
+    "points": 16,
+    "inliers": 16,
+    "names": [
+      "VARIX",
+      "SOREV",
+      "SERIFOS",
+      "SOUTH KITHNOS",
+      "NORTH SYROS",
+      "BADEL",
+      "YIAROS",
+      "KEA",
+      "MAKROS",
+      "YDRA",
+      "AVLAKI",
+      "EAST AIGINA",
+      "SPETSAI",
+      "LOFISKOS",
+      "GERMI",
+      "PIKAD"
+    ],
+    "residual_km": [
+      0.656,
+      0.251,
+      0.279,
+      0.434,
+      0.424,
+      0.183,
+      0.539,
+      0.213,
+      0.319,
+      0.269,
+      0.464,
+      0.13,
+      0.486,
+      0.451,
+      0.351,
+      0.457
+    ],
+    "bounds": [
+      [
+        36.92548656117868,
+        22.38802974386557
+      ],
+      [
+        38.33381801412705,
+        25.11695911946661
+      ]
+    ],
+    "affine_edges": true
+  },
+  "LGBL": {
+    "points": 5,
+    "inliers": 5,
+    "names": [
+      "LGSV",
+      "LGBL",
+      "LGSK",
+      "LAMIAS",
+      "OREI"
+    ],
+    "global_affine_residual_km": [
+      0.198,
+      0.293,
+      0.174,
+      0.114,
+      0.31
+    ],
+    "anchor_warp": "all anchors enforced exactly",
+    "bounds": [
+      [
+        38.71263595588657,
+        21.742390168225434
+      ],
+      [
+        39.66139412011466,
+        23.63332330816829
+      ]
+    ],
+    "coordinate_basis": "AIP WGS-84 reporting points / AIP ARP-navaid; LGTS distributed named landmark anchors plus AIP ARP"
+  },
+  "LGLR": {
+    "points": 4,
+    "inliers": 4,
+    "names": [
+      "LGKZ",
+      "LGLR",
+      "LGSV",
+      "LGBL"
+    ],
+    "global_affine_residual_km": [
+      0.643,
+      1.777,
+      0.378,
+      0.756
+    ],
+    "anchor_warp": "all anchors enforced exactly",
+    "bounds": [
+      [
+        39.17796110107389,
+        21.41489106221466
+      ],
+      [
+        40.41737283375816,
+        23.45760346537286
+      ]
+    ],
+    "coordinate_basis": "AIP WGS-84 reporting points / AIP ARP-navaid; LGTS distributed named landmark anchors plus AIP ARP"
+  },
+  "LGSK": {
+    "points": 5,
+    "inliers": 5,
+    "names": [
+      "IBIDI",
+      "EVIKO",
+      "SKP",
+      "ETEKA",
+      "LGSK ARP"
+    ],
+    "global_affine_residual_km": [
+      0.007,
+      0.231,
+      0.131,
+      0.047,
+      0.262
+    ],
+    "anchor_warp": "all anchors enforced exactly",
+    "bounds": [
+      [
+        38.9102962639081,
+        23.098717173671997
+      ],
+      [
+        39.46765692336042,
+        24.175031444054213
+      ]
+    ],
+    "coordinate_basis": "AIP WGS-84 reporting points / AIP ARP-navaid; LGTS distributed named landmark anchors plus AIP ARP"
+  },
+  "LGSM": {
+    "points": 4,
+    "inliers": 4,
+    "names": [
+      "ORMOS",
+      "URNIL",
+      "SAM VOR/DME",
+      "LARKI"
+    ],
+    "global_affine_residual_km": [
+      0.137,
+      0.133,
+      0.079,
+      0.074
+    ],
+    "anchor_warp": "all anchors enforced exactly",
+    "bounds": [
+      [
+        37.3679128701203,
+        26.106296998813438
+      ],
+      [
+        37.92804278516941,
+        27.137353035984432
+      ]
+    ],
+    "coordinate_basis": "AIP WGS-84 reporting points / AIP ARP-navaid; LGTS distributed named landmark anchors plus AIP ARP"
+  },
+  "LGSR": {
+    "points": 4,
+    "inliers": 4,
+    "names": [
+      "IRBEG",
+      "UVRIT",
+      "KUPIS",
+      "GIVIS"
+    ],
+    "global_affine_residual_km": [
+      0.224,
+      0.396,
+      0.324,
+      0.152
+    ],
+    "anchor_warp": "all anchors enforced exactly",
+    "bounds": [
+      [
+        35.98265188444513,
+        24.62203825854256
+      ],
+      [
+        36.82232401774923,
+        25.96790449848505
+      ]
+    ],
+    "coordinate_basis": "AIP WGS-84 reporting points / AIP ARP-navaid; LGTS distributed named landmark anchors plus AIP ARP"
+  },
+  "LGSY": {
+    "points": 11,
+    "inliers": 11,
+    "names": [
+      "KYRA PANAGIA",
+      "SKANTZOURA",
+      "SARAKINI",
+      "SKYROPOULA",
+      "KIMI",
+      "OCHTHONIA",
+      "SARAKINA",
+      "BALTADOROS",
+      "KOROS",
+      "SIALMAS",
+      "SKOPELOS"
+    ],
+    "global_affine_residual_km": [
+      0.108,
+      0.398,
+      0.448,
+      3.624,
+      0.387,
+      0.834,
+      3.809,
+      0.848,
+      0.276,
+      0.151,
+      0.751
+    ],
+    "anchor_warp": "all anchors enforced exactly",
+    "bounds": [
+      [
+        38.44600127677201,
+        23.408908218805443
+      ],
+      [
+        39.60807501855027,
+        25.601116378191215
+      ]
+    ],
+    "coordinate_basis": "AIP WGS-84 reporting points / AIP ARP-navaid; LGTS distributed named landmark anchors plus AIP ARP"
+  },
+  "LGTG": {
+    "points": 22,
+    "inliers": 22,
+    "names": [
+      "LAMIAS",
+      "OREI",
+      "MANDOUDI",
+      "SARAKINI",
+      "KIMI",
+      "AMFIKLIA",
+      "MALESINA",
+      "PSACHNA",
+      "DIRFIS",
+      "CHALKIS",
+      "ERETRIA",
+      "ALIVERI",
+      "ORCHOMENOS",
+      "VAGIAS",
+      "OROPOS",
+      "KALAMO",
+      "POUNDA",
+      "NTOVRI",
+      "GERMI",
+      "XORKI",
+      "ABLONAS",
+      "LIMNIS"
+    ],
+    "global_affine_residual_km": [
+      3.851,
+      1.868,
+      0.684,
+      0.45,
+      0.274,
+      1.456,
+      0.82,
+      0.207,
+      1.218,
+      0.749,
+      0.242,
+      2.134,
+      1.781,
+      1.026,
+      0.455,
+      0.636,
+      0.832,
+      0.525,
+      0.106,
+      0.489,
+      0.794,
+      0.573
+    ],
+    "anchor_warp": "all anchors enforced exactly",
+    "bounds": [
+      [
+        38.08825309161581,
+        22.433804045526287
+      ],
+      [
+        39.027195044189014,
+        24.310480014855013
+      ]
+    ],
+    "coordinate_basis": "AIP WGS-84 reporting points / AIP ARP-navaid; LGTS distributed named landmark anchors plus AIP ARP"
+  },
+  "LGTS": {
+    "points": 13,
+    "inliers": 13,
+    "names": [
+      "KILKIS",
+      "PIKROS",
+      "LAGADA",
+      "KORONA",
+      "APOLON",
+      "LGTS ARP",
+      "EPANOM",
+      "KRATIA",
+      "PLAYIA",
+      "POSIDI",
+      "KATERO",
+      "PLATAMON",
+      "STRIMON"
+    ],
+    "global_affine_residual_km": [
+      5.254,
+      5.327,
+      3.282,
+      4.945,
+      4.742,
+      1.775,
+      6.039,
+      6.744,
+      1.707,
+      2.373,
+      9.667,
+      8.771,
+      7.769
+    ],
+    "anchor_warp": "all anchors enforced exactly",
+    "bounds": [
+      [
+        39.69921660410021,
+        22.38748500255149
+      ],
+      [
+        40.98306761965056,
+        23.882292106791144
+      ]
+    ],
+    "coordinate_basis": "AIP WGS-84 reporting points / AIP ARP-navaid; LGTS distributed named landmark anchors plus AIP ARP"
+  }
+}

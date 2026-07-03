@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_VFR_ALL_AIRPORTS_ALIGNED_D444">
+<meta name="pzl-build" content="PZL_VFR_EXACT_COORDINATES_ALL_D446">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -8129,7 +8129,7 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
 
       window.addEventListener("load", () => {
         navigator.serviceWorker
-          .register("service-worker.js?v=444", {scope:"./"})
+          .register("service-worker.js?v=4461", {scope:"./"})
           .then(() => navigator.serviceWorker.ready)
           .then(registration => {
             offlineReady = true;
@@ -13638,30 +13638,30 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 <script id="pzl-d440-js">
 (function(){
 'use strict';
-const BUILD='PZL_VFR_ALL_AIRPORTS_ALIGNED_D444';
+const BUILD='PZL_VFR_EXACT_COORDINATES_ALL_D446';
 let layer=null,statusEl=null,lastKey='';
 const C={
- LGMT:{name:'ΜΥΤΙΛΗΝΗ',b:[[38.84135,25.42120],[39.54660,26.80656]]},
- LGAD:{name:'ΑΝΔΡΑΒΙΔΑ',b:[[37.36,19.55],[38.75,22.16]]},
- LGAV:{name:'ΑΘΗΝΑ',b:[[36.95,22.20],[38.18,25.10]]},
- LGBL:{name:'ΝΕΑ ΑΓΧΙΑΛΟΣ',b:[[38.45,21.65],[40.02,24.58]]},
- LGIR:{name:'ΗΡΑΚΛΕΙΟ',b:[[34.75,24.75],[36.00,27.55]]},
- LGKL:{name:'ΚΑΛΑΜΑΤΑ',b:[[36.19,21.37],[37.50,23.44]]},
- LGKO:{name:'ΚΩΣ',b:[[36.45,26.25],[37.05,27.38]]},
- LGKP:{name:'ΚΑΡΠΑΘΟΣ',b:[[35.04,26.48],[35.96,27.58]]},
- LGKR:{name:'ΚΕΡΚΥΡΑ',b:[[38.45,18.85],[40.35,22.10]]},
- LGKV:{name:'ΚΑΒΑΛΑ',b:[[40.18,23.33],[41.55,25.72]]},
- LGLR:{name:'ΛΑΡΙΣΑ',b:[[39.15,20.95],[40.42,24.35]]},
- LGMK:{name:'ΜΥΚΟΝΟΣ',b:[[37.08,24.82],[37.60,25.58]]},
- LGPA:{name:'ΠΑΡΟΣ',b:[[36.65,24.53],[37.35,25.55]]},
- LGRP:{name:'ΡΟΔΟΣ',b:[[35.45,26.90],[36.62,29.05]]},
- LGSA:{name:'ΧΑΝΙΑ',b:[[35.00,23.25],[35.68,24.95]]},
- LGSK:{name:'ΣΚΙΑΘΟΣ',b:[[38.91,23.10],[39.46,24.17]]},
- LGSM:{name:'ΣΑΜΟΣ',b:[[37.378,26.128],[37.887,27.122]]},
- LGSR:{name:'ΣΑΝΤΟΡΙΝΗ',b:[[35.99,24.62],[36.81,25.98]]},
- LGSY:{name:'ΣΚΥΡΟΣ',b:[[38.45,23.41],[39.65,25.54]]},
- LGTG:{name:'ΤΑΝΑΓΡΑ',b:[[38.05,22.39],[39.015,24.24]]},
- LGTS:{name:'ΘΕΣΣΑΛΟΝΙΚΗ',b:[[39.70,22.10],[41.00,24.00]]}
+ LGMT:{name:'ΜΥΤΙΛΗΝΗ',b:[[38.81591789,25.41294994],[39.56552639,26.80486804]]},
+ LGAD:{name:'ΑΝΔΡΑΒΙΔΑ',b:[[37.29547022,19.53659242],[38.75693611,22.31188699]]},
+ LGAV:{name:'ΑΘΗΝΑ',b:[[36.92548656,22.38802974],[38.33381801,25.11695912]]},
+ LGBL:{name:'ΝΕΑ ΑΓΧΙΑΛΟΣ',b:[[38.71263596,21.74239017],[39.66139412,23.63332331]]},
+ LGIR:{name:'ΗΡΑΚΛΕΙΟ',b:[[34.65257793,24.68515874],[36.08147779,27.58839829]]},
+ LGKL:{name:'ΚΑΛΑΜΑΤΑ',b:[[36.31267367,21.40424395],[37.48528087,23.53723276]]},
+ LGKO:{name:'ΚΩΣ',b:[[36.46709972,26.40451573],[37.06600122,27.44104717]]},
+ LGKP:{name:'ΚΑΡΠΑΘΟΣ',b:[[34.97426320,26.30818034],[35.92166944,27.85143298]]},
+ LGKR:{name:'ΚΕΡΚΥΡΑ',b:[[38.81991624,18.61679764],[39.98123752,21.02803693]]},
+ LGKV:{name:'ΚΑΒΑΛΑ',b:[[40.31884598,23.37012775],[41.52818071,25.79718666]]},
+ LGLR:{name:'ΛΑΡΙΣΑ',b:[[39.17796110,21.41489106],[40.41737283,23.45760347]]},
+ LGMK:{name:'ΜΥΚΟΝΟΣ',b:[[37.11243991,24.81647249],[37.64360824,25.84631644]]},
+ LGPA:{name:'ΠΑΡΟΣ',b:[[36.77301273,24.52619692],[37.33538757,25.55398865]]},
+ LGRP:{name:'ΡΟΔΟΣ',b:[[35.50218951,26.92779047],[36.67526836,28.99114382]]},
+ LGSA:{name:'ΧΑΝΙΑ',b:[[35.00685171,23.27794860],[35.97836017,24.98919353]]},
+ LGSK:{name:'ΣΚΙΑΘΟΣ',b:[[38.91029626,23.09871717],[39.46765692,24.17503144]]},
+ LGSM:{name:'ΣΑΜΟΣ',b:[[37.36791287,26.10629700],[37.92804279,27.13735304]]},
+ LGSR:{name:'ΣΑΝΤΟΡΙΝΗ',b:[[35.98265188,24.62203826],[36.82232402,25.96790450]]},
+ LGSY:{name:'ΣΚΥΡΟΣ',b:[[38.44600128,23.40890822],[39.60807502,25.60111638]]},
+ LGTG:{name:'ΤΑΝΑΓΡΑ',b:[[38.08825309,22.43380405],[39.02719504,24.31048001]]},
+ LGTS:{name:'ΘΕΣΣΑΛΟΝΙΚΗ',b:[[39.69921660,22.38748500],[40.98306762,23.88229211]]}
 };
 const P={AGIA:[39.24916667,26.28194444],AMANI:[39.33222222,26.49944444],ERESO:[39.29194444,25.94361111],FOKKAS:[39.01555556,26.01666667],GERA:[39.12833333,26.40805556],KALONI:[39.16555556,26.29861111],MIMMIS:[38.95694444,26.28388889],MIRSINIA:[38.90694444,26.50833333],MOLIVOS:[39.37861111,26.16166667],PALIOS:[39.325,26.44083333],PANNOS:[38.87472222,26.24111111],PLOMARI:[38.94083333,26.35666667],POLIKNI:[39.08777778,26.15138889],SIKAMIA:[39.39472222,26.35138889],LSV:[39.2313,26.42532222]};
 const LGMT=[['MOLIVOS','SIKAMIA',9,3500],['SIKAMIA','PALIOS',6,3500],['PALIOS','AMANI',3,2500],['PALIOS','LSV',6,2500],['AMANI','LSV',7,2500],['PALIOS','AGIA',9,2500],['AGIA','KALONI',5,3500],['KALONI','LSV',7,2500],['KALONI','GERA',6,3500],['GERA','LSV',6,2500],['ERESO','MOLIVOS',11,4500],['ERESO','KALONI',18,4500],['ERESO','POLIKNI',16,4500],['ERESO','FOKKAS',17,4500],['FOKKAS','POLIKNI',8,4500],['POLIKNI','KALONI',8,4500],['POLIKNI','MIMMIS',10,4500],['FOKKAS','MIMMIS',13,4500],['MIMMIS','PANNOS',5,4500],['MIMMIS','PLOMARI',4,2500],['PANNOS','PLOMARI',7,2500],['PLOMARI','MIRSINIA',7,1500]].map(r=>({from:r[0],to:r[1],nm:r[2],alt:r[3],limit:r[3]>=3500?'min':'max'}));
@@ -13671,7 +13671,7 @@ function status(s,w){ensureUi();if(statusEl){statusEl.textContent=s;statusEl.cla
 function ib(a,b){const r=Math.PI/180,p1=a[0]*r,p2=b[0]*r,dl=(b[1]-a[1])*r;return(Math.atan2(Math.sin(dl)*Math.cos(p2),Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl))*180/Math.PI+360)%360}function ang(a,b){let q=Math.atan2(b[0]-a[0],b[1]-a[1])*180/Math.PI;if(q>90)q-=180;if(q<-90)q+=180;return q}function at(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]}function fc(v){return String(Math.round(v)%360).padStart(3,'0')+'°'}
 function icon(r,a,b){const c1=fc(ib(a,b)),c2=fc(ib(b,a)),q=ang(a,b),lm=r.limit==='max'?'MAX':'MIN';return L.divIcon({className:'',html:`<div class="pzl-d440-route-label" style="transform:rotate(${q.toFixed(1)}deg)"><span class="crs">${c1} · ${r.nm} NM · ${c2}</span><span class="alt ${r.limit}">${lm} ${r.alt} ft</span></div>`,iconSize:[1,1],iconAnchor:[0,0]})}
 function drawLGMT(){LGMT.forEach(r=>{const a=P[r.from],b=P[r.to];L.polyline([a,b],{pane:'pzlD440Pane',color:'#fff',weight:7,opacity:.84,lineCap:'round'}).addTo(layer);L.polyline([a,b],{pane:'pzlD440Pane',color:'#111',weight:3,opacity:.98,lineCap:'round'}).addTo(layer);L.marker(at(a,b,.53),{pane:'pzlD440Pane',icon:icon(r,a,b),interactive:false}).addTo(layer)})}
-function render(){clear();removeOld();if(!mapReady()||!active()){status('VFR OFF — δεν εμφανίζονται διαδρομές.',false);return}const a=ids();if(!a.length){status('Δεν επιλέχθηκε α/δ με διαθέσιμο VFR chart.',true);return}pane();layer=L.layerGroup();a.forEach(i=>{const c=C[i];L.imageOverlay(`./VFR_${i}.png?v=444`,c.b,{pane:'pzlD440Pane',opacity:.96,interactive:false,crossOrigin:false}).addTo(layer)});layer.addTo(map);status(a.join(' · ')+'\nΕπίσημες συνεχείς διαδρομές, πορείες, NM και ενδείξεις ύψους. Χωρίς πλήρη εικόνα chart και χωρίς τεχνητές διακεκομμένες.',false)}
+function render(){clear();removeOld();if(!mapReady()||!active()){status('VFR OFF — δεν εμφανίζονται διαδρομές.',false);return}const a=ids();if(!a.length){status('Δεν επιλέχθηκε α/δ με διαθέσιμο VFR chart.',true);return}pane();layer=L.layerGroup();a.forEach(i=>{const c=C[i];L.imageOverlay(`./VFR_${i}.png?v=4461`,c.b,{pane:'pzlD440Pane',opacity:.96,interactive:false,crossOrigin:false}).addTo(layer)});layer.addTo(map);status(a.join(' · ')+'\nΕπίσημες συνεχείς διαδρομές, πορείες, NM και ενδείξεις ύψους. Χωρίς πλήρη εικόνα chart και χωρίς τεχνητές διακεκομμένες.',false)}
 function tick(){ensureUi();if(!mapReady())return;const k=key();if(k!==lastKey){lastKey=k;render()}}function install(){ensureUi();tick();setInterval(tick,850);window.PZL_D440={build:BUILD,reload:render,airports:Object.keys(C)}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
 </script>
@@ -13764,6 +13764,6 @@ body.pzl-d442-topo-active #pzlMapModeBtn{background:#157347!important}
 </script>
 <!-- PZL_MAP_MENU_TOPO_BASE_D442_END -->
 
-<!-- PZL_VFR_ALIGNMENT_FIX_D444: removed self-triggering MutationObservers -->
+<!-- PZL_VFR_ALIGNMENT_FIX_D446: removed self-triggering MutationObservers -->
 </body>
 </html>

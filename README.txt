@@ -1,6 +1,1 @@
-PZL Mission Tool — D444
-
-- Νέα γεωγραφική βαθμονόμηση των VFR chart overlays για όλα τα διαθέσιμα αεροδρόμια.
-- Διορθωμένη ευθυγράμμιση Καλαμάτας και Μυτιλήνης.
-- Απενεργοποιήθηκαν τα παλιά OpenFlightMaps/vector layers που εμφάνιζαν διπλά VFR σημεία.
-- Τα LGSR/LGTS έχουν περικοπεί στο πραγματικό χαρτογραφικό τμήμα ώστε να μη στρεβλώνεται η κλίμακα από πίνακες/legend.
+D446: all 21 VFR chart overlays use coordinate control. Existing D445 AIP-georeferenced charts are retained; the remaining eight charts were re-warped with distributed WGS-84 reporting-point, airport and navaid anchors. A new cache key and image version prevent Android from reusing D444/D445 overlays.
