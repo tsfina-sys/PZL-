@@ -1,1 +1,1 @@
-D438: βάση D435/D437. Τα 21 επίσημα VFR chart αρχεία βρίσκονται στη ρίζα του ZIP, ώστε να μπορούν να ανέβουν από κινητό στο GitHub χωρίς φάκελο. Επιλογή α/δ με πράσινο, χωρίς PDF, χωρίς αυτόματο κεντράρισμα ή αλλαγή zoom.
+PZL D435 - exact solid LGMT VFR routes and published altitudes from uploaded AIP chart; no schematic dashed links.

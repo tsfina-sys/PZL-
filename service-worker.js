@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_VFR_D435_UI_ALL_CHARTS_20260703D438";
+const PZL_BUILD = "PZL_VFR_AIP_SOLID_ROUTES_20260702D435";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";
@@ -11,28 +11,7 @@ const LOCAL_APP_SHELL = [
   "./manifest.json",
   "./icon.svg",
   "./pzl_marker_topview.png",
-  "./version.txt",
-  "./LGAD.webp",
-  "./LGAV.webp",
-  "./LGBL.webp",
-  "./LGIR.webp",
-  "./LGKL.webp",
-  "./LGKO.webp",
-  "./LGKP.webp",
-  "./LGKR.webp",
-  "./LGKV.webp",
-  "./LGLR.webp",
-  "./LGMK.webp",
-  "./LGMT.webp",
-  "./LGPA.webp",
-  "./LGRP.webp",
-  "./LGSA.webp",
-  "./LGSK.webp",
-  "./LGSM.webp",
-  "./LGSR.webp",
-  "./LGSY.webp",
-  "./LGTG.webp",
-  "./LGTS.webp"
+  "./version.txt"
 ];
 
 const EXTERNAL_CORE = [
