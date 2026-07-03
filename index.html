@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_VFR_ALL_AIRPORTS_LINEWORK_D442">
+<meta name="pzl-build" content="PZL_VFR_ALL_AIRPORTS_LINEWORK_D443">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -13595,7 +13595,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     const cs=selectedCenters(),key=(isActive()?'1':'0')+'|'+centersKey(cs);
     if(key!==lastKey){lastKey=key;if(isActive())updateRoutes();else{++seq;clearRoutes();setStatus('VFR OFF — standard χάρτης.',false)}}
   }
-  function install(){ensureUi();tick();setInterval(tick,900);const mo=new MutationObserver(ensureUi);mo.observe(document.body,{childList:true,subtree:true});window.PZL_D430={build:BUILD,reload:updateRoutes}}
+  function install(){ensureUi();tick();setInterval(tick,900);window.PZL_D430={build:BUILD,reload:updateRoutes}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
 </script>
@@ -13615,7 +13615,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
       b.title='Εστίαση στον κύριο χάρτη — VFR διαδρομές και ύψη';
     });
     const note=document.querySelector('#pzlVfrRoutesPanel .pzl-vfr-note');
-    if(note) note.textContent='Ο STANDARD χάρτης μένει από κάτω. Τα VFR σημεία, οι διαθέσιμες συνδετικές διαδρομές και τα ύψη εμφανίζονται μόνο στον κύριο χάρτη. Με 🔍 γίνεται εστίαση στο α/δ σε zoom 11.';
+    if(note&&note.textContent!=='Ο STANDARD χάρτης μένει από κάτω. Τα VFR σημεία, οι διαθέσιμες συνδετικές διαδρομές και τα ύψη εμφανίζονται μόνο στον κύριο χάρτη. Με 🔍 γίνεται εστίαση στο α/δ σε zoom 11.') note.textContent='Ο STANDARD χάρτης μένει από κάτω. Τα VFR σημεία, οι διαθέσιμες συνδετικές διαδρομές και τα ύψη εμφανίζονται μόνο στον κύριο χάρτη. Με 🔍 γίνεται εστίαση στο α/δ σε zoom 11.';
   }
   function install(){clean();setTimeout(clean,500);setTimeout(clean,1500);window.PZL_D433={build:BUILD};}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
@@ -13638,7 +13638,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 <script id="pzl-d440-js">
 (function(){
 'use strict';
-const BUILD='PZL_VFR_ALL_AIRPORTS_LINEWORK_D442';
+const BUILD='PZL_VFR_ALL_AIRPORTS_LINEWORK_D443';
 let layer=null,statusEl=null,lastKey='';
 const C={
  LGMT:{name:'ΜΥΤΙΛΗΝΗ',b:[[38.8167,25.4389],[39.5733,26.8233]]},LGAD:{name:'ΑΝΔΡΑΒΙΔΑ',b:[[37.50,20.50],[39.00,22.20]]},LGAV:{name:'ΑΘΗΝΑ',b:[[37.20,22.65],[39.10,25.35]]},
@@ -13655,7 +13655,7 @@ const C={
 const P={AGIA:[39.24916667,26.28194444],AMANI:[39.33222222,26.49944444],ERESO:[39.29194444,25.94361111],FOKKAS:[39.01555556,26.01666667],GERA:[39.12833333,26.40805556],KALONI:[39.16555556,26.29861111],MIMMIS:[38.95694444,26.28388889],MIRSINIA:[38.90694444,26.50833333],MOLIVOS:[39.37861111,26.16166667],PALIOS:[39.325,26.44083333],PANNOS:[38.87472222,26.24111111],PLOMARI:[38.94083333,26.35666667],POLIKNI:[39.08777778,26.15138889],SIKAMIA:[39.39472222,26.35138889],LSV:[39.2313,26.42532222]};
 const LGMT=[['MOLIVOS','SIKAMIA',9,3500],['SIKAMIA','PALIOS',6,3500],['PALIOS','AMANI',3,2500],['PALIOS','LSV',6,2500],['AMANI','LSV',7,2500],['PALIOS','AGIA',9,2500],['AGIA','KALONI',5,3500],['KALONI','LSV',7,2500],['KALONI','GERA',6,3500],['GERA','LSV',6,2500],['ERESO','MOLIVOS',11,4500],['ERESO','KALONI',18,4500],['ERESO','POLIKNI',16,4500],['ERESO','FOKKAS',17,4500],['FOKKAS','POLIKNI',8,4500],['POLIKNI','KALONI',8,4500],['POLIKNI','MIMMIS',10,4500],['FOKKAS','MIMMIS',13,4500],['MIMMIS','PANNOS',5,4500],['MIMMIS','PLOMARI',4,2500],['PANNOS','PLOMARI',7,2500],['PLOMARI','MIRSINIA',7,1500]].map(r=>({from:r[0],to:r[1],nm:r[2],alt:r[3],limit:r[3]>=3500?'min':'max'}));
 function mapReady(){return typeof map!=='undefined'&&window.L&&map&&typeof map.createPane==='function'}function active(){return document.body.classList.contains('pzl-vfr-active')}function centers(){try{return window.PZL_VFR_ROUTES&&typeof window.PZL_VFR_ROUTES.selected==='function'?(window.PZL_VFR_ROUTES.selected()||[]):[]}catch(e){return[]}}function ids(){return Array.from(new Set(centers().map(c=>String(c.icao||'').toUpperCase()).filter(i=>C[i])))}function key(){return(active()?'1':'0')+'|'+ids().sort().join(',')}
-function ensureUi(){const base=document.getElementById('pzlVfrStatus'),panel=document.querySelector('#pzlVfrRoutesPanel .pzl-map-menu-card');if(!document.getElementById('pzlD440Status')&&panel){const d=document.createElement('div');d.id='pzlD440Status';if(base&&base.parentNode)base.parentNode.insertBefore(d,base.nextSibling);else panel.appendChild(d)}statusEl=document.getElementById('pzlD440Status');const note=document.querySelector('#pzlVfrRoutesPanel .pzl-vfr-note');if(note)note.textContent='Εμφανίζονται μόνο οι επίσημες συνεχείς VFR διαδρομές και οι δημοσιευμένες ενδείξεις πορείας, NM και ύψους. Χωρίς ολόκληρη εικόνα PDF και χωρίς τεχνητές διακεκομμένες συνδέσεις.'}
+function ensureUi(){const base=document.getElementById('pzlVfrStatus'),panel=document.querySelector('#pzlVfrRoutesPanel .pzl-map-menu-card');if(!document.getElementById('pzlD440Status')&&panel){const d=document.createElement('div');d.id='pzlD440Status';if(base&&base.parentNode)base.parentNode.insertBefore(d,base.nextSibling);else panel.appendChild(d)}statusEl=document.getElementById('pzlD440Status');const note=document.querySelector('#pzlVfrRoutesPanel .pzl-vfr-note');if(note&&note.textContent!=='Εμφανίζονται μόνο οι επίσημες συνεχείς VFR διαδρομές και οι δημοσιευμένες ενδείξεις πορείας, NM και ύψους. Χωρίς ολόκληρη εικόνα PDF και χωρίς τεχνητές διακεκομμένες συνδέσεις.')note.textContent='Εμφανίζονται μόνο οι επίσημες συνεχείς VFR διαδρομές και οι δημοσιευμένες ενδείξεις πορείας, NM και ύψους. Χωρίς ολόκληρη εικόνα PDF και χωρίς τεχνητές διακεκομμένες συνδέσεις.'}
 function status(s,w){ensureUi();if(statusEl){statusEl.textContent=s;statusEl.classList.toggle('warn',!!w)}}function pane(){let p=map.getPane('pzlD440Pane');if(!p)p=map.createPane('pzlD440Pane');p.style.zIndex='535';p.style.pointerEvents='none'}function clear(){if(layer){try{map.removeLayer(layer)}catch(e){}layer=null}}function removeOld(){try{const kill=[];map.eachLayer(l=>{const p=l&&l.options&&l.options.pane;if(['pzlD430RoutesPane','pzlD434RoutesPane','pzlD435RoutesPane','pzlD439RoutesPane','pzlD436ChartPane'].includes(p))kill.push(l)});kill.forEach(l=>map.removeLayer(l))}catch(e){}}
 function ib(a,b){const r=Math.PI/180,p1=a[0]*r,p2=b[0]*r,dl=(b[1]-a[1])*r;return(Math.atan2(Math.sin(dl)*Math.cos(p2),Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl))*180/Math.PI+360)%360}function ang(a,b){let q=Math.atan2(b[0]-a[0],b[1]-a[1])*180/Math.PI;if(q>90)q-=180;if(q<-90)q+=180;return q}function at(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]}function fc(v){return String(Math.round(v)%360).padStart(3,'0')+'°'}
 function icon(r,a,b){const c1=fc(ib(a,b)),c2=fc(ib(b,a)),q=ang(a,b),lm=r.limit==='max'?'MAX':'MIN';return L.divIcon({className:'',html:`<div class="pzl-d440-route-label" style="transform:rotate(${q.toFixed(1)}deg)"><span class="crs">${c1} · ${r.nm} NM · ${c2}</span><span class="alt ${r.limit}">${lm} ${r.alt} ft</span></div>`,iconSize:[1,1],iconAnchor:[0,0]})}
@@ -13704,10 +13704,10 @@ body.pzl-d442-topo-active #pzlMapModeBtn{background:#157347!important}
     });
     return topoLayer;
   }
-  function label(){const b=document.getElementById('pzlMapModeBtn');if(b)b.textContent='MAP'}
+  function label(){const b=document.getElementById('pzlMapModeBtn');if(b&&b.textContent!=='MAP')b.textContent='MAP'}
   function note(){
     const n=document.querySelector('#pzlTerrainPanel .pzl-standard-note');
-    if(n)n.textContent='Στο PZL MAP χρησιμοποιείται ο τοπογραφικός χάρτης. Οι κορυφές, οι γραμμές ΜΤ/ΥΤ και οι κεραίες εμφανίζονται μόνο όταν τα επιλέξεις.';
+    if(n&&n.textContent!=='Στο PZL MAP χρησιμοποιείται ο τοπογραφικός χάρτης. Οι κορυφές, οι γραμμές ΜΤ/ΥΤ και οι κεραίες εμφανίζονται μόνο όταν τα επιλέξεις.')n.textContent='Στο PZL MAP χρησιμοποιείται ο τοπογραφικός χάρτης. Οι κορυφές, οι γραμμές ΜΤ/ΥΤ και οι κεραίες εμφανίζονται μόνο όταν τα επιλέξεις.';
   }
   function applyTopo(){
     if(!ready())return;
@@ -13745,7 +13745,6 @@ body.pzl-d442-topo-active #pzlMapModeBtn{background:#157347!important}
   }
   function install(){
     wire();
-    const mo=new MutationObserver(wire);mo.observe(document.body,{childList:true,subtree:true});
     setInterval(wire,900);
     window.PZL_D442_BASE={build:BUILD,topo:applyTopo,standard:applyStandard};
   }
@@ -13754,5 +13753,6 @@ body.pzl-d442-topo-active #pzlMapModeBtn{background:#157347!important}
 </script>
 <!-- PZL_MAP_MENU_TOPO_BASE_D442_END -->
 
+<!-- PZL_MOBILE_FREEZE_FIX_D443: removed self-triggering MutationObservers -->
 </body>
 </html>
