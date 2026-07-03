@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_VFR_AIP_SOLID_ROUTES_20260703D435";
+const PZL_BUILD = "PZL_MAP_MENU_TOPO_BASE_20260703D441";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";

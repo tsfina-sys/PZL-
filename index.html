@@ -13668,5 +13668,93 @@ function tick(){ensureUi();if(!mapReady())return;const k=key();if(k!==lastKey){l
 
 
 
+
+
+<!-- PZL_MAP_MENU_TOPO_BASE_D441_BEGIN -->
+<style id="pzl-d441-map-topo-css">
+#pzlMapModeBtn{min-width:96px!important}
+body.pzl-d441-topo-active #pzlMapModeBtn{background:#157347!important}
+</style>
+<script id="pzl-d441-map-topo-js">
+(function(){
+  'use strict';
+  const BUILD='PZL_MAP_MENU_TOPO_BASE_D441';
+  let standardLayer=null,topoLayer=null,wired=false;
+
+  function ready(){return typeof map!=='undefined'&&window.L&&map&&typeof map.eachLayer==='function'}
+  function findStandard(){
+    if(standardLayer)return standardLayer;
+    try{map.eachLayer(l=>{if(standardLayer)return;const u=String(l&&l._url||'');if(/tile\.openstreetmap\.org/i.test(u))standardLayer=l;});}catch(e){}
+    return standardLayer;
+  }
+  function ensureTopo(){
+    if(topoLayer)return topoLayer;
+    topoLayer=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{
+      maxZoom:17,
+      attribution:'Map: © OpenStreetMap contributors, SRTM | Style: © OpenTopoMap (CC-BY-SA)'
+    });
+    return topoLayer;
+  }
+  function forceMapLabel(){
+    const b=document.getElementById('pzlMapModeBtn');
+    if(b&&b.textContent!=='MAP')b.textContent='MAP';
+  }
+  function setTopo(){
+    if(!ready())return;
+    try{if(window.PZL_VFR_ROUTES&&typeof window.PZL_VFR_ROUTES.off==='function')window.PZL_VFR_ROUTES.off();}catch(e){}
+    const s=findStandard(),t=ensureTopo();
+    try{if(s&&map.hasLayer(s))map.removeLayer(s);}catch(e){}
+    try{if(t&&!map.hasLayer(t))t.addTo(map);}catch(e){}
+    document.body.classList.add('pzl-d441-topo-active');
+    forceMapLabel();
+    const note=document.querySelector('#pzlTerrainPanel .pzl-standard-note');
+    if(note)note.textContent='Στο PZL MAP χρησιμοποιείται ο παλιός τοπογραφικός χάρτης. Οι κορυφές, οι γραμμές ΜΤ/ΥΤ και οι κεραίες εμφανίζονται μόνο όταν τα επιλέξεις.';
+    const status=document.getElementById('pzlMapStatus');
+    if(status&&!document.querySelector('#pzlTerrainPanel input:checked'))status.textContent='Παλιός τοπογραφικός χάρτης ενεργός — κανένα πρόσθετο layer επιλεγμένο.';
+    setTimeout(()=>{try{map.invalidateSize()}catch(e){}},80);
+  }
+  function setStandard(){
+    if(!ready())return;
+    const s=findStandard();
+    try{if(topoLayer&&map.hasLayer(topoLayer))map.removeLayer(topoLayer);}catch(e){}
+    try{if(s&&!map.hasLayer(s))s.addTo(map);}catch(e){}
+    document.body.classList.remove('pzl-d441-topo-active');
+    forceMapLabel();
+    setTimeout(()=>{try{map.invalidateSize()}catch(e){}},80);
+  }
+  function openPzlPanel(){
+    const chooser=document.getElementById('pzlMapChooserPanel');if(chooser)chooser.hidden=true;
+    setTopo();
+    const p=document.getElementById('pzlTerrainPanel');if(p)p.hidden=false;
+  }
+  function wire(){
+    if(!ready())return false;
+    const pzl=document.getElementById('pzlChoosePzlMap');
+    const vfr=document.getElementById('pzlChooseVfrRoutes');
+    const clear=document.getElementById('pzlMapClear');
+    const note=document.querySelector('#pzlTerrainPanel .pzl-standard-note');
+    if(!pzl||!vfr||!clear)return false;
+    if(!wired){
+      const oldVfr=vfr.onclick;
+      pzl.onclick=openPzlPanel;
+      vfr.onclick=function(e){setStandard();if(typeof oldVfr==='function')return oldVfr.call(this,e)};
+      const oldClear=clear.onclick;
+      clear.onclick=function(e){if(typeof oldClear==='function')oldClear.call(this,e);setStandard();};
+      wired=true;
+    }
+    if(note)note.textContent='Στο PZL MAP χρησιμοποιείται ο παλιός τοπογραφικός χάρτης. Οι κορυφές, οι γραμμές ΜΤ/ΥΤ και οι κεραίες εμφανίζονται μόνο όταν τα επιλέξεις.';
+    forceMapLabel();
+    return true;
+  }
+  function install(){
+    if(!wire()){setTimeout(install,350);return;}
+    setInterval(()=>{wire();forceMapLabel();},900);
+    window.PZL_D441={build:BUILD,pzlMap:setTopo,standardMap:setStandard};
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
+})();
+</script>
+<!-- PZL_MAP_MENU_TOPO_BASE_D441_END -->
+
 </body>
 </html>
