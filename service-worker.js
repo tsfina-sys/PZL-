@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_MAP_MENU_TOPO_BASE_20260703D441";
+const PZL_BUILD = "PZL_MAP_TOPO_LGMT_LINEWORK_20260703D442";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";
@@ -11,7 +11,8 @@ const LOCAL_APP_SHELL = [
   "./manifest.json",
   "./icon.svg",
   "./pzl_marker_topview.png",
-  "./version.txt"
+  "./version.txt",
+  "./VFR_LGMT.png"
 ];
 
 const EXTERNAL_CORE = [
