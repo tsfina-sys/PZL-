@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_NAV_VFR_AIRPORT_SELECTOR_ALTITUDES_20260702D426";
+const PZL_BUILD = "PZL_VFR_D435_UI_ALL_CHARTS_20260703D437";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";
@@ -11,7 +11,28 @@ const LOCAL_APP_SHELL = [
   "./manifest.json",
   "./icon.svg",
   "./pzl_marker_topview.png",
-  "./version.txt"
+  "./version.txt",
+  "./vfr_charts/LGAD.webp",
+  "./vfr_charts/LGAV.webp",
+  "./vfr_charts/LGBL.webp",
+  "./vfr_charts/LGIR.webp",
+  "./vfr_charts/LGKL.webp",
+  "./vfr_charts/LGKO.webp",
+  "./vfr_charts/LGKP.webp",
+  "./vfr_charts/LGKR.webp",
+  "./vfr_charts/LGKV.webp",
+  "./vfr_charts/LGLR.webp",
+  "./vfr_charts/LGMK.webp",
+  "./vfr_charts/LGMT.webp",
+  "./vfr_charts/LGPA.webp",
+  "./vfr_charts/LGRP.webp",
+  "./vfr_charts/LGSA.webp",
+  "./vfr_charts/LGSK.webp",
+  "./vfr_charts/LGSM.webp",
+  "./vfr_charts/LGSR.webp",
+  "./vfr_charts/LGSY.webp",
+  "./vfr_charts/LGTG.webp",
+  "./vfr_charts/LGTS.webp"
 ];
 
 const EXTERNAL_CORE = [
@@ -228,19 +249,18 @@ async function handleNavigation(request) {
 
 async function handleAppAsset(request) {
   const appCache = await caches.open(APP_CACHE);
-  const cached =
-    await appCache.match(request, {ignoreSearch:true}) ||
-    await caches.match(request, {ignoreSearch:true});
-
-  if (cached) return cached;
-
   try {
-    const response = await fetch(request);
-    if (response) await appCache.put(request, response.clone());
-    return response;
-  } catch(e) {
-    return Response.error();
-  }
+    const response = await fetch(request, {cache:"no-store"});
+    if (response && response.ok) {
+      await appCache.put(request, response.clone());
+      return response;
+    }
+  } catch(e) {}
+  return (
+    await appCache.match(request, {ignoreSearch:true}) ||
+    await caches.match(request, {ignoreSearch:true}) ||
+    Response.error()
+  );
 }
 
 async function handleOsmTile(request, url) {
