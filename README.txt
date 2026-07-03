@@ -1,1 +1,6 @@
-PZL D435 - exact solid LGMT VFR routes and published altitudes from uploaded AIP chart; no schematic dashed links.
+PZL VFR OFFICIAL CHARTS D427
+
+- Ο γενικός OpenFlightMaps χάρτης εμφανίζει κυρίως VFR σημεία και airspace.
+- Νέο κουμπί AIP VFR ανοίγει το επίσημο chart με διαδρομές και ύψη, όπου δημοσιεύεται.
+- Το «ΠΡΟΒΟΛΗ ΟΛΩΝ» μετονομάστηκε σε «ΧΩΡΕΣΕ ΤΑ Α/Δ» και απλώς προσαρμόζει το zoom.
+- Τοπική προβολή αεροδρομίου σε zoom 11.
