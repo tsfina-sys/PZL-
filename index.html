@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PZL Mission Tool D439 VFR BEARINGS + MINMAX</title>
+  <title>PZL Mission Tool D440 ALL VFR LINEWORK</title>
   <meta name="theme-color" content="#0f3d5e" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="PZL Mission Tool" />
@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_VFR_BEARINGS_MINMAX_D439">
+<meta name="pzl-build" content="PZL_VFR_ALL_AIRPORTS_LINEWORK_D440">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -13624,100 +13624,48 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 <!-- PZL_VFR_DIRECT_MAP_ONLY_D433_END -->
 
 
-<!-- PZL_VFR_AIP_SOLID_ROUTES_D439_BEGIN -->
-<style id="pzl-d439-aip-routes-css">
-#pzlD430RouteStatus,#pzlD434RouteStatus{display:none!important}
-#pzlD439RouteStatus{margin-top:7px;padding:7px 8px;border-radius:9px;background:#e0f2fe;border:1px solid #7dd3fc;color:#0c4a6e;font-size:11px;line-height:1.3;font-weight:800;white-space:pre-line}
-#pzlD439RouteStatus.warn{background:#fff7ed;border-color:#fdba74;color:#9a3412}
-.pzl-d439-route-label{position:relative;left:-50%;top:-50%;display:inline-block;color:#111827;background:rgba(255,255,255,.94);border:1px solid rgba(15,23,42,.55);border-radius:5px;padding:2px 5px;font-size:8px;font-weight:1000;line-height:1.04;white-space:nowrap;text-align:center;text-shadow:0 0 2px #fff,0 0 2px #fff;box-shadow:0 1px 3px rgba(0,0,0,.28)}
-.pzl-d439-route-label .crs{display:block;color:#0f172a;font-size:8px}
-.pzl-d439-route-label .alt{display:block;position:relative;margin-top:1px;font-size:8.2px;color:#991b1b;font-weight:1000;padding:1px 0}
-.pzl-d439-route-label .alt.min::after{content:'';position:absolute;left:0;right:0;bottom:-1px;border-bottom:2px solid #991b1b}
-.pzl-d439-route-label .alt.max::before{content:'';position:absolute;left:0;right:0;top:-1px;border-top:2px solid #991b1b}
-@media(max-width:700px){
-  .pzl-d439-route-label{font-size:7px;padding:1px 4px}
-  .pzl-d439-route-label .crs{font-size:7px}
-  .pzl-d439-route-label .alt{font-size:7.2px}
-}
+
+<!-- PZL_VFR_ALL_AIRPORTS_LINEWORK_D440_BEGIN -->
+<style id="pzl-d440-css">
+#pzlD430RouteStatus,#pzlD434RouteStatus,#pzlD435RouteStatus,#pzlD439RouteStatus{display:none!important}
+#pzlD440Status{margin-top:7px;padding:7px 8px;border-radius:9px;background:#e0f2fe;border:1px solid #7dd3fc;color:#0c4a6e;font-size:11px;line-height:1.3;font-weight:800;white-space:pre-line}
+#pzlD440Status.warn{background:#fff7ed;border-color:#fdba74;color:#9a3412}
+.pzl-d440-route-label{position:relative;left:-50%;top:-50%;display:inline-block;color:#111827;background:rgba(255,255,255,.94);border:1px solid rgba(15,23,42,.55);border-radius:5px;padding:2px 5px;font-size:8px;font-weight:1000;line-height:1.04;white-space:nowrap;text-align:center;text-shadow:0 0 2px #fff,0 0 2px #fff;box-shadow:0 1px 3px rgba(0,0,0,.28)}
+.pzl-d440-route-label .crs{display:block;color:#0f172a;font-size:8px}.pzl-d440-route-label .alt{display:block;position:relative;margin-top:1px;font-size:8.2px;color:#991b1b;font-weight:1000;padding:1px 0}
+.pzl-d440-route-label .alt.min::after{content:'';position:absolute;left:0;right:0;bottom:-1px;border-bottom:2px solid #991b1b}.pzl-d440-route-label .alt.max::before{content:'';position:absolute;left:0;right:0;top:-1px;border-top:2px solid #991b1b}
+@media(max-width:700px){.pzl-d440-route-label{font-size:7px;padding:1px 4px}.pzl-d440-route-label .crs{font-size:7px}.pzl-d440-route-label .alt{font-size:7.2px}}
 </style>
-<script id="pzl-d439-aip-routes-js">
+<script id="pzl-d440-js">
 (function(){
-  'use strict';
-  const BUILD='PZL_VFR_BEARINGS_MINMAX_D439';
-  let layer=null,statusEl=null,lastKey='',timer=0;
-
-  const P={
-    AGIA:[39.24916667,26.28194444],AMANI:[39.33222222,26.49944444],ERESO:[39.29194444,25.94361111],
-    FOKKAS:[39.01555556,26.01666667],GERA:[39.12833333,26.40805556],KALONI:[39.16555556,26.29861111],
-    MIMMIS:[38.95694444,26.28388889],MIRSINIA:[38.90694444,26.50833333],MOLIVOS:[39.37861111,26.16166667],
-    PALIOS:[39.32500000,26.44083333],PANNOS:[38.87472222,26.24111111],PLOMARI:[38.94083333,26.35666667],
-    POLIKNI:[39.08777778,26.15138889],SIKAMIA:[39.39472222,26.35138889],LSV:[39.23130000,26.42532222]
-  };
-  const LGMT=[
-    ['MOLIVOS','SIKAMIA',9,3500],['SIKAMIA','PALIOS',6,3500],['PALIOS','AMANI',3,2500],
-    ['PALIOS','LSV',6,2500],['AMANI','LSV',7,2500],['PALIOS','AGIA',9,2500],
-    ['AGIA','KALONI',5,3500],['KALONI','LSV',7,2500],['KALONI','GERA',6,3500],['GERA','LSV',6,2500],
-    ['ERESO','MOLIVOS',11,4500],['ERESO','KALONI',18,4500],['ERESO','POLIKNI',16,4500],['ERESO','FOKKAS',17,4500],
-    ['FOKKAS','POLIKNI',8,4500],['POLIKNI','KALONI',8,4500],['POLIKNI','MIMMIS',10,4500],['FOKKAS','MIMMIS',13,4500],
-    ['MIMMIS','PANNOS',5,4500],['MIMMIS','PLOMARI',4,2500],['PANNOS','PLOMARI',7,2500],['PLOMARI','MIRSINIA',7,1500]
-  ].map(r=>({from:r[0],to:r[1],nm:r[2],alt:r[3],limit:r[3]>=3500?'min':'max'}));
-
-  function mapReady(){return typeof map!=='undefined'&&window.L&&map&&typeof map.createPane==='function'}
-  function active(){return document.body.classList.contains('pzl-vfr-active')}
-  function centers(){try{return window.PZL_VFR_ROUTES&&typeof window.PZL_VFR_ROUTES.selected==='function'?(window.PZL_VFR_ROUTES.selected()||[]):[]}catch(e){return[]}}
-  function selectedIcaos(){return new Set(centers().map(c=>String(c.icao||'').toUpperCase()).filter(Boolean))}
-  function key(){return (active()?'1':'0')+'|'+Array.from(selectedIcaos()).sort().join(',')}
-  function ensureUi(){
-    const base=document.getElementById('pzlVfrStatus'),panel=document.querySelector('#pzlVfrRoutesPanel .pzl-map-menu-card');
-    if(!document.getElementById('pzlD439RouteStatus')&&panel){const d=document.createElement('div');d.id='pzlD439RouteStatus';if(base&&base.parentNode)base.parentNode.insertBefore(d,base.nextSibling);else panel.appendChild(d)}
-    statusEl=document.getElementById('pzlD439RouteStatus');
-    const note=document.querySelector('#pzlVfrRoutesPanel .pzl-vfr-note');
-    if(note)note.textContent='Όπως στο D435: εμφανίζονται μόνο οι συνεχείς VFR διαδρομές που υπάρχουν στο chart, χωρίς διακεκομμένες τεχνητές συνδέσεις. Σε κάθε σκέλος φαίνονται και οι 2 πορείες, καθώς και ένδειξη MIN/MAX για το ύψος.';
-  }
-  function status(s,w){ensureUi();if(statusEl){statusEl.textContent=s;statusEl.classList.toggle('warn',!!w)}}
-  function pane(){let p=map.getPane('pzlD439RoutesPane');if(!p)p=map.createPane('pzlD439RoutesPane');p.style.zIndex='535';p.style.pointerEvents='none'}
-  function clear(){if(layer){try{map.removeLayer(layer)}catch(e){}layer=null}}
-  function removeOld(){try{const kill=[];map.eachLayer(l=>{const p=l&&l.options&&l.options.pane;if(p==='pzlD430RoutesPane'||p==='pzlD434RoutesPane'||p==='pzlD435RoutesPane')kill.push(l)});kill.forEach(l=>map.removeLayer(l))}catch(e){}}
-  function initialBearing(a,b){
-    const r=Math.PI/180,p1=a[0]*r,p2=b[0]*r,dl=(b[1]-a[1])*r;
-    let d=Math.atan2(Math.sin(dl)*Math.cos(p2),Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl))*180/Math.PI;
-    return (d+360)%360;
-  }
-  function labelAngle(a,b){
-    const dx=b[1]-a[1],dy=b[0]-a[0];
-    let ang=Math.atan2(dy,dx)*180/Math.PI;
-    if(ang>90)ang-=180; if(ang<-90)ang+=180;
-    return ang;
-  }
-  function at(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]}
-  function fmtCrs(v){return String(Math.round(v)%360).padStart(3,'0')+'°'}
-  function labelIcon(route,a,b){
-    const c1=fmtCrs(initialBearing(a,b)),c2=fmtCrs(initialBearing(b,a)),ang=labelAngle(a,b),limit=route.limit==='max'?'MAX':'MIN';
-    return L.divIcon({className:'',html:`<div class="pzl-d439-route-label" style="transform:rotate(${ang.toFixed(1)}deg)"><span class="crs">${c1} · ${route.nm} NM · ${c2}</span><span class="alt ${route.limit}">${limit} ${route.alt} ft</span></div>`,iconSize:[1,1],iconAnchor:[0,0]});
-  }
-  function drawLine(route){
-    const a=P[route.from],b=P[route.to];
-    L.polyline([a,b],{pane:'pzlD439RoutesPane',color:'#fff',weight:7,opacity:.84,lineCap:'round',lineJoin:'round'}).addTo(layer);
-    L.polyline([a,b],{pane:'pzlD439RoutesPane',color:'#111',weight:3,opacity:.98,lineCap:'round',lineJoin:'round'}).addTo(layer);
-    const m=at(a,b,.53);
-    L.marker(m,{pane:'pzlD439RoutesPane',icon:labelIcon(route,a,b),interactive:false}).addTo(layer);
-  }
-  function render(){
-    clear();removeOld();
-    if(!mapReady()||!active()){status('VFR OFF — δεν εμφανίζονται διαδρομές.',false);return}
-    const icaos=selectedIcaos();
-    if(!icaos.has('LGMT')){status('Στο παρόν πακέτο D439 σχεδιάζονται οι συνεχείς VFR διαδρομές του LGMT Μυτιλήνη, με 2 πορείες ανά σκέλος και ένδειξη MIN/MAX για το ύψος.',true);return;}
-    pane();layer=L.layerGroup();
-    LGMT.forEach(drawLine);
-    layer.addTo(map);
-    status('LGMT ΜΥΤΙΛΗΝΗ: 22 συνεχείς VFR διαδρομές από το D435, με 2 πορείες ανά σκέλος και ένδειξη MIN/MAX στο ύψος. Χωρίς διακεκομμένες ή τεχνητές συνδέσεις.',false);
-  }
-  function tick(){ensureUi();if(!mapReady())return;const k=key();if(k!==lastKey){lastKey=k;render()}}
-  function install(){ensureUi();tick();timer=setInterval(tick,900);window.PZL_D439={build:BUILD,reload:render}}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
+'use strict';
+const BUILD='PZL_VFR_ALL_AIRPORTS_LINEWORK_D440';
+let layer=null,statusEl=null,lastKey='';
+const C={
+ LGAD:{name:'ΑΝΔΡΑΒΙΔΑ',b:[[37.50,20.50],[39.00,22.20]]},LGAV:{name:'ΑΘΗΝΑ',b:[[37.20,22.65],[39.10,25.35]]},
+ LGBL:{name:'ΝΕΑ ΑΓΧΙΑΛΟΣ',b:[[38.25,21.30],[40.40,24.40]]},LGIR:{name:'ΗΡΑΚΛΕΙΟ',b:[[34.55,23.10],[36.40,27.40]]},
+ LGKL:{name:'ΚΑΛΑΜΑΤΑ',b:[[35.75,20.40],[38.40,23.60]]},LGKO:{name:'ΚΩΣ',b:[[36.20,26.50],[37.35,27.40]]},
+ LGKP:{name:'ΚΑΡΠΑΘΟΣ',b:[[34.70,26.45],[36.20,28.15]]},LGKR:{name:'ΚΕΡΚΥΡΑ',b:[[39.00,19.45],[40.15,21.05]]},
+ LGKV:{name:'ΚΑΒΑΛΑ',b:[[40.50,23.50],[41.50,25.67]]},LGMK:{name:'ΜΥΚΟΝΟΣ',b:[[36.35,24.00],[38.45,26.60]]},
+ LGPA:{name:'ΠΑΡΟΣ',b:[[36.80,24.60],[37.40,25.55]]},LGRP:{name:'ΡΟΔΟΣ',b:[[35.30,27.00],[37.55,29.30]]},
+ LGSA:{name:'ΧΑΝΙΑ',b:[[34.50,22.40],[36.60,25.80]]},LGSK:{name:'ΣΚΙΑΘΟΣ',b:[[38.15,22.15],[40.15,24.85]]},
+ LGSM:{name:'ΣΑΜΟΣ',b:[[37.30,26.05],[38.25,27.20]]},LGSR:{name:'ΣΑΝΤΟΡΙΝΗ',b:[[35.45,24.15],[37.35,26.80]]},
+ LGSY:{name:'ΣΚΥΡΟΣ',b:[[37.90,23.10],[40.15,25.95]]},LGTS:{name:'ΘΕΣΣΑΛΟΝΙΚΗ',b:[[39.45,21.45],[41.75,24.55]]},
+ LGLR:{name:'ΛΑΡΙΣΑ',b:[[38.35,20.90],[40.85,24.20]]},LGTG:{name:'ΤΑΝΑΓΡΑ',b:[[37.15,22.05],[39.60,25.15]]}
+};
+const P={AGIA:[39.24916667,26.28194444],AMANI:[39.33222222,26.49944444],ERESO:[39.29194444,25.94361111],FOKKAS:[39.01555556,26.01666667],GERA:[39.12833333,26.40805556],KALONI:[39.16555556,26.29861111],MIMMIS:[38.95694444,26.28388889],MIRSINIA:[38.90694444,26.50833333],MOLIVOS:[39.37861111,26.16166667],PALIOS:[39.325,26.44083333],PANNOS:[38.87472222,26.24111111],PLOMARI:[38.94083333,26.35666667],POLIKNI:[39.08777778,26.15138889],SIKAMIA:[39.39472222,26.35138889],LSV:[39.2313,26.42532222]};
+const LGMT=[['MOLIVOS','SIKAMIA',9,3500],['SIKAMIA','PALIOS',6,3500],['PALIOS','AMANI',3,2500],['PALIOS','LSV',6,2500],['AMANI','LSV',7,2500],['PALIOS','AGIA',9,2500],['AGIA','KALONI',5,3500],['KALONI','LSV',7,2500],['KALONI','GERA',6,3500],['GERA','LSV',6,2500],['ERESO','MOLIVOS',11,4500],['ERESO','KALONI',18,4500],['ERESO','POLIKNI',16,4500],['ERESO','FOKKAS',17,4500],['FOKKAS','POLIKNI',8,4500],['POLIKNI','KALONI',8,4500],['POLIKNI','MIMMIS',10,4500],['FOKKAS','MIMMIS',13,4500],['MIMMIS','PANNOS',5,4500],['MIMMIS','PLOMARI',4,2500],['PANNOS','PLOMARI',7,2500],['PLOMARI','MIRSINIA',7,1500]].map(r=>({from:r[0],to:r[1],nm:r[2],alt:r[3],limit:r[3]>=3500?'min':'max'}));
+function mapReady(){return typeof map!=='undefined'&&window.L&&map&&typeof map.createPane==='function'}function active(){return document.body.classList.contains('pzl-vfr-active')}function centers(){try{return window.PZL_VFR_ROUTES&&typeof window.PZL_VFR_ROUTES.selected==='function'?(window.PZL_VFR_ROUTES.selected()||[]):[]}catch(e){return[]}}function ids(){return Array.from(new Set(centers().map(c=>String(c.icao||'').toUpperCase()).filter(i=>i==='LGMT'||C[i])))}function key(){return(active()?'1':'0')+'|'+ids().sort().join(',')}
+function ensureUi(){const base=document.getElementById('pzlVfrStatus'),panel=document.querySelector('#pzlVfrRoutesPanel .pzl-map-menu-card');if(!document.getElementById('pzlD440Status')&&panel){const d=document.createElement('div');d.id='pzlD440Status';if(base&&base.parentNode)base.parentNode.insertBefore(d,base.nextSibling);else panel.appendChild(d)}statusEl=document.getElementById('pzlD440Status');const note=document.querySelector('#pzlVfrRoutesPanel .pzl-vfr-note');if(note)note.textContent='Εμφανίζονται μόνο οι επίσημες συνεχείς VFR διαδρομές και οι δημοσιευμένες ενδείξεις πορείας, NM και ύψους. Χωρίς ολόκληρη εικόνα PDF και χωρίς τεχνητές διακεκομμένες συνδέσεις.'}
+function status(s,w){ensureUi();if(statusEl){statusEl.textContent=s;statusEl.classList.toggle('warn',!!w)}}function pane(){let p=map.getPane('pzlD440Pane');if(!p)p=map.createPane('pzlD440Pane');p.style.zIndex='535';p.style.pointerEvents='none'}function clear(){if(layer){try{map.removeLayer(layer)}catch(e){}layer=null}}function removeOld(){try{const kill=[];map.eachLayer(l=>{const p=l&&l.options&&l.options.pane;if(['pzlD430RoutesPane','pzlD434RoutesPane','pzlD435RoutesPane','pzlD439RoutesPane','pzlD436ChartPane'].includes(p))kill.push(l)});kill.forEach(l=>map.removeLayer(l))}catch(e){}}
+function ib(a,b){const r=Math.PI/180,p1=a[0]*r,p2=b[0]*r,dl=(b[1]-a[1])*r;return(Math.atan2(Math.sin(dl)*Math.cos(p2),Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl))*180/Math.PI+360)%360}function ang(a,b){let q=Math.atan2(b[0]-a[0],b[1]-a[1])*180/Math.PI;if(q>90)q-=180;if(q<-90)q+=180;return q}function at(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]}function fc(v){return String(Math.round(v)%360).padStart(3,'0')+'°'}
+function icon(r,a,b){const c1=fc(ib(a,b)),c2=fc(ib(b,a)),q=ang(a,b),lm=r.limit==='max'?'MAX':'MIN';return L.divIcon({className:'',html:`<div class="pzl-d440-route-label" style="transform:rotate(${q.toFixed(1)}deg)"><span class="crs">${c1} · ${r.nm} NM · ${c2}</span><span class="alt ${r.limit}">${lm} ${r.alt} ft</span></div>`,iconSize:[1,1],iconAnchor:[0,0]})}
+function drawLGMT(){LGMT.forEach(r=>{const a=P[r.from],b=P[r.to];L.polyline([a,b],{pane:'pzlD440Pane',color:'#fff',weight:7,opacity:.84,lineCap:'round'}).addTo(layer);L.polyline([a,b],{pane:'pzlD440Pane',color:'#111',weight:3,opacity:.98,lineCap:'round'}).addTo(layer);L.marker(at(a,b,.53),{pane:'pzlD440Pane',icon:icon(r,a,b),interactive:false}).addTo(layer)})}
+function render(){clear();removeOld();if(!mapReady()||!active()){status('VFR OFF — δεν εμφανίζονται διαδρομές.',false);return}const a=ids();if(!a.length){status('Δεν επιλέχθηκε α/δ με διαθέσιμο VFR chart.',true);return}pane();layer=L.layerGroup();a.forEach(i=>{if(i==='LGMT')drawLGMT();else{const c=C[i];L.imageOverlay(`./VFR_${i}.png?v=440`,c.b,{pane:'pzlD440Pane',opacity:.96,interactive:false,crossOrigin:false}).addTo(layer)}});layer.addTo(map);status(a.join(' · ')+'\nΕπίσημες συνεχείς διαδρομές, πορείες, NM και ενδείξεις ύψους. Χωρίς πλήρη εικόνα chart και χωρίς τεχνητές διακεκομμένες.',false)}
+function tick(){ensureUi();if(!mapReady())return;const k=key();if(k!==lastKey){lastKey=k;render()}}function install(){ensureUi();tick();setInterval(tick,850);window.PZL_D440={build:BUILD,reload:render,airports:['LGMT'].concat(Object.keys(C))}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
 </script>
-<!-- PZL_VFR_AIP_SOLID_ROUTES_D439_END -->
+<!-- PZL_VFR_ALL_AIRPORTS_LINEWORK_D440_END -->
+
 
 
 </body>
