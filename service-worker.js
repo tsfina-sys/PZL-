@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_MAP_BACK_VFR_NEUTRAL_20260703D447";
+const PZL_BUILD = "PZL_BASEMAP_PERSISTENCE_20260703D448";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";

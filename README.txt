@@ -1,1 +1,8 @@
-D447: The PZL MAP button “← MAP” now clears optional terrain overlays, removes the topographic base, restores the standard OpenStreetMap base and closes the panel. Closing with X still keeps the topographic map. On the first VFR Routes + Heights entry, VFR is OFF and airport-selection buttons start grey with no preselected airports. All 21 D446 georeferenced VFR charts are unchanged.
+PZL Mission Tool D448
+
+Διορθώσεις:
+- Ο απλός OpenStreetMap χάρτης παραμένει μόνιμα ως βασικό υπόβαθρο.
+- Το PZL MAP προσθέτει τον τοπογραφικό πάνω από τον απλό χάρτη αντί να τον καταργεί.
+- Το ← MAP αφαιρεί τον τοπογραφικό και επιστρέφει στον απλό χάρτη χωρίς γκρι κενό υπόβαθρο.
+- Κατά τη μετάβαση από PZL MAP σε VFR ROUTES + ΥΨΗ, ο απλός χάρτης αποκαθίσταται πριν εμφανιστούν τα VFR charts.
+- Αφαιρέθηκε το crossOrigin από το επαναδημιουργούμενο OSM layer ώστε να συνεργάζεται σωστά με την offline cache.

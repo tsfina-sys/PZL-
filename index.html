@@ -3662,7 +3662,8 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
     }
 
     const map = L.map("map").setView([38.7, 23.7], 6);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:18, attribution:"© OpenStreetMap"}).addTo(map);
+    const pzlStandardBaseLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:18, attribution:"© OpenStreetMap"}).addTo(map);
+    try { window.pzlStandardBaseLayer = pzlStandardBaseLayer; } catch(e) {}
 
     const baseIcon = L.divIcon({className:"", html:"🔵", iconSize:[24,24], iconAnchor:[12,12]});
     const fireIcon = L.divIcon({className:"", html:"🔥", iconSize:[28,28], iconAnchor:[14,14]});
@@ -13676,7 +13677,7 @@ function status(s,w){ensureUi();if(statusEl){statusEl.textContent=s;statusEl.cla
 function ib(a,b){const r=Math.PI/180,p1=a[0]*r,p2=b[0]*r,dl=(b[1]-a[1])*r;return(Math.atan2(Math.sin(dl)*Math.cos(p2),Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl))*180/Math.PI+360)%360}function ang(a,b){let q=Math.atan2(b[0]-a[0],b[1]-a[1])*180/Math.PI;if(q>90)q-=180;if(q<-90)q+=180;return q}function at(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]}function fc(v){return String(Math.round(v)%360).padStart(3,'0')+'°'}
 function icon(r,a,b){const c1=fc(ib(a,b)),c2=fc(ib(b,a)),q=ang(a,b),lm=r.limit==='max'?'MAX':'MIN';return L.divIcon({className:'',html:`<div class="pzl-d440-route-label" style="transform:rotate(${q.toFixed(1)}deg)"><span class="crs">${c1} · ${r.nm} NM · ${c2}</span><span class="alt ${r.limit}">${lm} ${r.alt} ft</span></div>`,iconSize:[1,1],iconAnchor:[0,0]})}
 function drawLGMT(){LGMT.forEach(r=>{const a=P[r.from],b=P[r.to];L.polyline([a,b],{pane:'pzlD440Pane',color:'#fff',weight:7,opacity:.84,lineCap:'round'}).addTo(layer);L.polyline([a,b],{pane:'pzlD440Pane',color:'#111',weight:3,opacity:.98,lineCap:'round'}).addTo(layer);L.marker(at(a,b,.53),{pane:'pzlD440Pane',icon:icon(r,a,b),interactive:false}).addTo(layer)})}
-function render(){clear();removeOld();if(!mapReady()||!active()){status('VFR OFF — δεν εμφανίζονται διαδρομές.',false);return}const a=ids();if(!a.length){status('Δεν επιλέχθηκε α/δ με διαθέσιμο VFR chart.',true);return}pane();layer=L.layerGroup();a.forEach(i=>{const c=C[i];L.imageOverlay(`./VFR_${i}.png?v=4471`,c.b,{pane:'pzlD440Pane',opacity:.96,interactive:false,crossOrigin:false}).addTo(layer)});layer.addTo(map);status(a.join(' · ')+'\nΕπίσημες συνεχείς διαδρομές, πορείες, NM και ενδείξεις ύψους. Χωρίς πλήρη εικόνα chart και χωρίς τεχνητές διακεκομμένες.',false)}
+function render(){clear();removeOld();if(!mapReady()||!active()){status('VFR OFF — δεν εμφανίζονται διαδρομές.',false);return}const a=ids();if(!a.length){status('Δεν επιλέχθηκε α/δ με διαθέσιμο VFR chart.',true);return}pane();layer=L.layerGroup();a.forEach(i=>{const c=C[i];L.imageOverlay(`./VFR_${i}.png?v=4481`,c.b,{pane:'pzlD440Pane',opacity:.96,interactive:false,crossOrigin:false}).addTo(layer)});layer.addTo(map);status(a.join(' · ')+'\nΕπίσημες συνεχείς διαδρομές, πορείες, NM και ενδείξεις ύψους. Χωρίς πλήρη εικόνα chart και χωρίς τεχνητές διακεκομμένες.',false)}
 function tick(){ensureUi();if(!mapReady())return;const k=key();if(k!==lastKey){lastKey=k;render()}}function install(){ensureUi();tick();setInterval(tick,850);window.PZL_D440={build:BUILD,reload:render,airports:Object.keys(C)}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
 </script>
@@ -13686,27 +13687,61 @@ function tick(){ensureUi();if(!mapReady())return;const k=key();if(k!==lastKey){l
 
 
 
-<!-- PZL_MAP_MENU_TOPO_BASE_D442_BEGIN -->
-<style id="pzl-d442-map-topo-css">
+<!-- PZL_MAP_MENU_TOPO_BASE_D448_BEGIN -->
+<style id="pzl-d448-map-topo-css">
 #pzlMapModeBtn{min-width:96px!important}
-body.pzl-d442-topo-active #pzlMapModeBtn{background:#157347!important}
+body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
 </style>
-<script id="pzl-d442-map-topo-js">
+<script id="pzl-d448-map-topo-js">
 (function(){
   'use strict';
-  const BUILD='PZL_MAP_MENU_TOPO_BASE_D442';
+  const BUILD='PZL_MAP_MENU_TOPO_BASE_D448';
   let topoLayer=null;
+  let standardLayer=null;
 
   function ready(){return typeof map!=='undefined'&&window.L&&map&&typeof map.eachLayer==='function'}
-  function standardLayers(){
+  function attachedStandardLayers(){
     const out=[];
     if(!ready())return out;
-    try{map.eachLayer(l=>{const u=String(l&&l._url||'');if(/(^|\.)tile\.openstreetmap\.org/i.test(u)||/tile\.openstreetmap\.org/i.test(u))out.push(l);});}catch(e){}
+    try{map.eachLayer(l=>{const u=String(l&&l._url||'');if(/tile\.openstreetmap\.org/i.test(u))out.push(l);});}catch(e){}
     return out;
+  }
+  function ensureStandard(){
+    if(!ready())return null;
+    try{if(standardLayer&&typeof standardLayer.addTo==='function')return standardLayer;}catch(e){}
+    try{if(window.pzlStandardBaseLayer&&typeof window.pzlStandardBaseLayer.addTo==='function')standardLayer=window.pzlStandardBaseLayer;}catch(e){}
+    if(!standardLayer){const found=attachedStandardLayers();if(found.length)standardLayer=found[0];}
+    if(!standardLayer){
+      try{
+        standardLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+          maxZoom:18,
+          subdomains:'abc',
+          attribution:'© OpenStreetMap'
+        });
+      }catch(e){standardLayer=null;}
+    }
+    try{if(standardLayer)window.pzlStandardBaseLayer=standardLayer;}catch(e){}
+    return standardLayer;
+  }
+  function showStandard(){
+    if(!ready())return null;
+    const s=ensureStandard();
+    try{if(s&&!map.hasLayer(s))s.addTo(map);}catch(e){}
+    try{if(s&&typeof s.bringToBack==='function')s.bringToBack();}catch(e){}
+    try{if(s&&typeof s.redraw==='function')s.redraw();}catch(e){}
+    return s;
+  }
+  function ensureTopoPane(){
+    if(!ready())return 'tilePane';
+    let p=null;
+    try{p=map.getPane('pzlTopoBasePane');if(!p)p=map.createPane('pzlTopoBasePane');}catch(e){}
+    if(p){p.style.zIndex='201';p.style.pointerEvents='none';}
+    return p?'pzlTopoBasePane':'tilePane';
   }
   function ensureTopo(){
     if(topoLayer)return topoLayer;
     topoLayer=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{
+      pane:ensureTopoPane(),
       maxZoom:17,
       subdomains:'abc',
       crossOrigin:true,
@@ -13716,63 +13751,64 @@ body.pzl-d442-topo-active #pzlMapModeBtn{background:#157347!important}
     });
     topoLayer.on('tileerror',()=>{
       const s=document.getElementById('pzlMapStatus');
-      if(s)s.textContent='Ο τοπογραφικός χάρτης δεν φόρτωσε προσωρινά. Έλεγξε τη σύνδεση και πάτησε ξανά PZL MAP.';
+      if(s)s.textContent='Ο τοπογραφικός χάρτης δεν φόρτωσε προσωρινά. Ο απλός χάρτης παραμένει από κάτω. Έλεγξε τη σύνδεση και πάτησε ξανά PZL MAP.';
     });
     return topoLayer;
   }
   function label(){const b=document.getElementById('pzlMapModeBtn');if(b&&b.textContent!=='MAP')b.textContent='MAP'}
   function note(){
     const n=document.querySelector('#pzlTerrainPanel .pzl-standard-note');
-    if(n&&n.textContent!=='Στο PZL MAP χρησιμοποιείται ο τοπογραφικός χάρτης. Οι κορυφές, οι γραμμές ΜΤ/ΥΤ και οι κεραίες εμφανίζονται μόνο όταν τα επιλέξεις.')n.textContent='Στο PZL MAP χρησιμοποιείται ο τοπογραφικός χάρτης. Οι κορυφές, οι γραμμές ΜΤ/ΥΤ και οι κεραίες εμφανίζονται μόνο όταν τα επιλέξεις.';
+    const text='Στο PZL MAP χρησιμοποιείται ο τοπογραφικός χάρτης. Οι κορυφές, οι γραμμές ΜΤ/ΥΤ και οι κεραίες εμφανίζονται μόνο όταν τα επιλέξεις.';
+    if(n&&n.textContent!==text)n.textContent=text;
   }
   function applyTopo(){
     if(!ready())return;
     try{if(window.PZL_VFR_ROUTES&&typeof window.PZL_VFR_ROUTES.off==='function')window.PZL_VFR_ROUTES.off();}catch(e){}
-    standardLayers().forEach(l=>{try{if(map.hasLayer(l))map.removeLayer(l)}catch(e){}});
+    showStandard();
     const t=ensureTopo();
-    try{if(!map.hasLayer(t))t.addTo(map);t.bringToBack();t.redraw();}catch(e){}
-    document.body.classList.add('pzl-d442-topo-active');
+    try{if(!map.hasLayer(t))t.addTo(map);if(typeof t.bringToFront==='function')t.bringToFront();t.redraw();}catch(e){}
+    document.body.classList.add('pzl-d448-topo-active');
+    document.body.classList.remove('pzl-d442-topo-active');
     label();note();
     const s=document.getElementById('pzlMapStatus');
     if(s&&!document.querySelector('#pzlTerrainPanel input:checked'))s.textContent='Τοπογραφικός χάρτης ενεργός — κανένα πρόσθετο layer επιλεγμένο.';
-    setTimeout(()=>{try{t.bringToBack();t.redraw();map.invalidateSize()}catch(e){}},120);
-    setTimeout(()=>{try{t.bringToBack();t.redraw()}catch(e){}},700);
+    setTimeout(()=>{try{showStandard();if(t&&map.hasLayer(t)){t.bringToFront();t.redraw();}map.invalidateSize();}catch(e){}},120);
+    setTimeout(()=>{try{showStandard();if(t&&map.hasLayer(t)){t.bringToFront();t.redraw();}}catch(e){}},700);
   }
   function applyStandard(){
     if(!ready())return;
-    try{if(topoLayer&&map.hasLayer(topoLayer))map.removeLayer(topoLayer)}catch(e){}
-    let std=standardLayers();
-    if(!std.length){
-      try{const l=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,subdomains:'abc',crossOrigin:true,attribution:'© OpenStreetMap'});l.addTo(map);std=[l]}catch(e){}
-    }else std.forEach(l=>{try{if(!map.hasLayer(l))l.addTo(map)}catch(e){}});
-    try{std[0]&&std[0].bringToBack()}catch(e){}
+    try{if(topoLayer&&map.hasLayer(topoLayer))map.removeLayer(topoLayer);}catch(e){}
+    showStandard();
+    document.body.classList.remove('pzl-d448-topo-active');
     document.body.classList.remove('pzl-d442-topo-active');
     label();
-    setTimeout(()=>{try{map.invalidateSize()}catch(e){}},100);
+    setTimeout(()=>{try{showStandard();map.invalidateSize();}catch(e){}},80);
+    setTimeout(()=>{try{showStandard();}catch(e){}},450);
   }
   function wire(){
-    label();note();
+    label();note();showStandard();
     const p=document.getElementById('pzlChoosePzlMap');
     const v=document.getElementById('pzlChooseVfrRoutes');
     const c=document.getElementById('pzlMapClear');
-    if(p&&!p.dataset.d442){p.dataset.d442='1';p.addEventListener('click',applyTopo,true)}
-    if(v&&!v.dataset.d442){v.dataset.d442='1';v.addEventListener('click',applyStandard,true)}
-    if(c&&!c.dataset.d442){c.dataset.d442='1';c.addEventListener('click',applyStandard,false)}
+    if(p&&!p.dataset.d448){p.dataset.d448='1';p.addEventListener('click',applyTopo,true)}
+    if(v&&!v.dataset.d448){v.dataset.d448='1';v.addEventListener('click',applyStandard,true)}
+    if(c&&!c.dataset.d448){c.dataset.d448='1';c.addEventListener('click',applyStandard,false)}
   }
   function install(){
     wire();
     setInterval(wire,900);
-    window.PZL_D442_BASE={build:BUILD,topo:applyTopo,standard:applyStandard};
+    window.PZL_D442_BASE={build:BUILD,topo:applyTopo,standard:applyStandard,standardLayer:()=>ensureStandard()};
+    window.PZL_D448_BASE=window.PZL_D442_BASE;
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
 </script>
-<!-- PZL_MAP_MENU_TOPO_BASE_D442_END -->
+<!-- PZL_MAP_MENU_TOPO_BASE_D448_END -->
 
 <!-- PZL_VFR_ALIGNMENT_FIX_D446: removed self-triggering MutationObservers -->
 
-<!-- PZL_D447_MAP_BACK_AND_VFR_NEUTRAL_DEFAULTS
-     ← MAP clears optional PZL layers, restores the standard OSM base and closes the panel.
-     First VFR Routes entry starts neutral: VFR OFF and no preselected airports. -->
+<!-- PZL_D448_BASEMAP_PERSISTENCE_FIX
+     The standard OSM base now stays mounted under PZL MAP and is restored before VFR charts.
+     ← MAP removes the topographic layer and returns to the standard map without a grey blank background. -->
 </body>
 </html>
