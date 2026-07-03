@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_VFR_ALL_AIRPORTS_LINEWORK_D443">
+<meta name="pzl-build" content="PZL_VFR_ALL_AIRPORTS_ALIGNED_D444">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -8129,7 +8129,7 @@ ${formatLatLonDDMLines(currentGps.lat, currentGps.lon)}
 
       window.addEventListener("load", () => {
         navigator.serviceWorker
-          .register("service-worker.js", {scope:"./"})
+          .register("service-worker.js?v=444", {scope:"./"})
           .then(() => navigator.serviceWorker.ready)
           .then(registration => {
             offlineReady = true;
@@ -13414,7 +13414,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
   function viewTouchesAny(bounds){try{const v=map.getBounds();return bounds.some(b=>v.intersects(b));}catch(e){return false;}}
   function currentCenterDescription(centers){if(navContext())return 'NAV: '+centers.map(c=>(c.icao?c.icao+' ':'')+c.name).join(' · ');return centers.map(c=>(c.auto?'AUTO ':'')+c.role+' '+(c.icao?c.icao+' ':'')+c.name).join(' · ');}
   function installCandidate(candidates,index,seq){if(!vfrActive||seq!==vfrSeq)return;if(index>=candidates.length){setStatus('VFR Routes + ύψη: αποτυχία φόρτωσης χαρτογραφικών πλακιδίων. Έλεγξε σύνδεση και δοκίμασε ξανά.',true);return;}const centers=activeCenters();if(!centers.length){removeLayer();setStatus(navContext()?'NAV: επίλεξε τουλάχιστον ένα αεροδρόμιο.':'Πράσινισε από ένα έως τρία α/δ.',true);return;}const localBounds=selectedLocalBounds(centers);removeLayer();ensurePane();const code=candidates[index],url=TILE_ROOT+code+'/aero/latest';let loads=0,errors=0,settled=false;vfrCycle=code==='latest'?'LATEST':code;setStatus(`Φόρτωση VFR διαδρομών, σημείων και υψών · AIRAC ${vfrCycle}…`,true);const layer=makeLocalTileLayer(url,localBounds);vfrLayer=layer;function success(){if(settled||seq!==vfrSeq)return;settled=true;setStatus(`VFR ON · διαδρομές που συνδέουν VFR σημεία + altitude labels · AIRAC ${vfrCycle}\n${currentCenterDescription(centers)}`,false);}function fail(){if(settled||seq!==vfrSeq)return;settled=true;try{map.removeLayer(layer);}catch(e){}if(vfrLayer===layer)vfrLayer=null;installCandidate(candidates,index+1,seq);}layer.on('tileload',()=>{loads++;if(loads===1)success();});layer.on('tileerror',()=>{errors++;if(errors>=5&&loads===0&&map.getZoom()>=VFR_MIN_ZOOM&&viewTouchesAny(localBounds))fail();});layer.addTo(map);if(map.getZoom()<VFR_MIN_ZOOM)setStatus(`VFR ON. Κάνε zoom ${VFR_MIN_ZOOM}+ για διαδρομές και ύψη.`,false);setTimeout(()=>{if(seq!==vfrSeq||settled)return;if(loads>0){success();return;}if(map.getZoom()<VFR_MIN_ZOOM||!viewTouchesAny(localBounds)){setStatus(`VFR ON στις επιλεγμένες περιοχές. Πάτησε 🔍 σε α/δ για λεπτομερή προβολή διαδρομών/υψών.`,false);return;}fail();},8500);}
-  function reloadVfr(centerFirst){if(!vfrActive)return;const centers=activeCenters(),seq=++vfrSeq;installCandidate(airacCandidates(),0,seq);if(centerFirst!==false&&centers.length)map.setView([centers[0].lat,centers[0].lon],Math.max(DETAIL_ZOOM,map.getZoom()||DETAIL_ZOOM));}
+  function reloadVfr(centerFirst){if(!vfrActive)return;const centers=activeCenters();++vfrSeq;removeLayer();setStatus('VFR ON · επίσημα ευθυγραμμισμένα τοπικά charts χωρίς διπλό υπόβαθρο.',false);if(centerFirst!==false&&centers.length)map.setView([centers[0].lat,centers[0].lon],Math.max(DETAIL_ZOOM,map.getZoom()||DETAIL_ZOOM));}
   function activateVfr(centerFirst){if(!mapReady())return;vfrActive=true;document.body.classList.add('pzl-vfr-active');try{localStorage.setItem(VFR_KEY,'1');}catch(e){}renderContextUi();syncMaster();reloadVfr(centerFirst);}
   function deactivateVfr(){vfrActive=false;++vfrSeq;removeLayer();document.body.classList.remove('pzl-vfr-active');try{localStorage.setItem(VFR_KEY,'0');}catch(e){}setStatus('VFR Routes + ύψη OFF — standard χάρτης.',false);syncMaster();}
   function toggleVfr(){if(vfrActive)deactivateVfr();else activateVfr(true);}
@@ -13452,7 +13452,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
   function mapReady(){return typeof map!=='undefined'&&window.L&&map&&typeof map.createPane==='function'}
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
   function selectedCenters(){try{return window.PZL_VFR_ROUTES&&typeof window.PZL_VFR_ROUTES.selected==='function'?window.PZL_VFR_ROUTES.selected()||[]:[]}catch(e){return[]}}
-  function isActive(){return document.body.classList.contains('pzl-vfr-active')}
+  function isActive(){return false}
   function centersKey(cs){return cs.map(c=>(c.icao||'')+'|'+c.name+'|'+Number(c.lat).toFixed(4)+'|'+Number(c.lon).toFixed(4)).sort().join('::')}
   function setStatus(msg,warn){
     ensureUi();
@@ -13595,7 +13595,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     const cs=selectedCenters(),key=(isActive()?'1':'0')+'|'+centersKey(cs);
     if(key!==lastKey){lastKey=key;if(isActive())updateRoutes();else{++seq;clearRoutes();setStatus('VFR OFF — standard χάρτης.',false)}}
   }
-  function install(){ensureUi();tick();setInterval(tick,900);window.PZL_D430={build:BUILD,reload:updateRoutes}}
+  function install(){ensureUi();++seq;clearRoutes();setStatus('Χρησιμοποιείται μόνο το επίσημο ευθυγραμμισμένο VFR chart.',false);window.PZL_D430={build:BUILD,reload:clearRoutes}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
 </script>
@@ -13638,29 +13638,40 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 <script id="pzl-d440-js">
 (function(){
 'use strict';
-const BUILD='PZL_VFR_ALL_AIRPORTS_LINEWORK_D443';
+const BUILD='PZL_VFR_ALL_AIRPORTS_ALIGNED_D444';
 let layer=null,statusEl=null,lastKey='';
 const C={
- LGMT:{name:'ΜΥΤΙΛΗΝΗ',b:[[38.8167,25.4389],[39.5733,26.8233]]},LGAD:{name:'ΑΝΔΡΑΒΙΔΑ',b:[[37.50,20.50],[39.00,22.20]]},LGAV:{name:'ΑΘΗΝΑ',b:[[37.20,22.65],[39.10,25.35]]},
- LGBL:{name:'ΝΕΑ ΑΓΧΙΑΛΟΣ',b:[[38.25,21.30],[40.40,24.40]]},LGIR:{name:'ΗΡΑΚΛΕΙΟ',b:[[34.55,23.10],[36.40,27.40]]},
- LGKL:{name:'ΚΑΛΑΜΑΤΑ',b:[[35.75,20.40],[38.40,23.60]]},LGKO:{name:'ΚΩΣ',b:[[36.20,26.50],[37.35,27.40]]},
- LGKP:{name:'ΚΑΡΠΑΘΟΣ',b:[[34.70,26.45],[36.20,28.15]]},LGKR:{name:'ΚΕΡΚΥΡΑ',b:[[39.00,19.45],[40.15,21.05]]},
- LGKV:{name:'ΚΑΒΑΛΑ',b:[[40.50,23.50],[41.50,25.67]]},LGMK:{name:'ΜΥΚΟΝΟΣ',b:[[36.35,24.00],[38.45,26.60]]},
- LGPA:{name:'ΠΑΡΟΣ',b:[[36.80,24.60],[37.40,25.55]]},LGRP:{name:'ΡΟΔΟΣ',b:[[35.30,27.00],[37.55,29.30]]},
- LGSA:{name:'ΧΑΝΙΑ',b:[[34.50,22.40],[36.60,25.80]]},LGSK:{name:'ΣΚΙΑΘΟΣ',b:[[38.15,22.15],[40.15,24.85]]},
- LGSM:{name:'ΣΑΜΟΣ',b:[[37.30,26.05],[38.25,27.20]]},LGSR:{name:'ΣΑΝΤΟΡΙΝΗ',b:[[35.45,24.15],[37.35,26.80]]},
- LGSY:{name:'ΣΚΥΡΟΣ',b:[[37.90,23.10],[40.15,25.95]]},LGTS:{name:'ΘΕΣΣΑΛΟΝΙΚΗ',b:[[39.45,21.45],[41.75,24.55]]},
- LGLR:{name:'ΛΑΡΙΣΑ',b:[[38.35,20.90],[40.85,24.20]]},LGTG:{name:'ΤΑΝΑΓΡΑ',b:[[37.15,22.05],[39.60,25.15]]}
+ LGMT:{name:'ΜΥΤΙΛΗΝΗ',b:[[38.84135,25.42120],[39.54660,26.80656]]},
+ LGAD:{name:'ΑΝΔΡΑΒΙΔΑ',b:[[37.36,19.55],[38.75,22.16]]},
+ LGAV:{name:'ΑΘΗΝΑ',b:[[36.95,22.20],[38.18,25.10]]},
+ LGBL:{name:'ΝΕΑ ΑΓΧΙΑΛΟΣ',b:[[38.45,21.65],[40.02,24.58]]},
+ LGIR:{name:'ΗΡΑΚΛΕΙΟ',b:[[34.75,24.75],[36.00,27.55]]},
+ LGKL:{name:'ΚΑΛΑΜΑΤΑ',b:[[36.19,21.37],[37.50,23.44]]},
+ LGKO:{name:'ΚΩΣ',b:[[36.45,26.25],[37.05,27.38]]},
+ LGKP:{name:'ΚΑΡΠΑΘΟΣ',b:[[35.04,26.48],[35.96,27.58]]},
+ LGKR:{name:'ΚΕΡΚΥΡΑ',b:[[38.45,18.85],[40.35,22.10]]},
+ LGKV:{name:'ΚΑΒΑΛΑ',b:[[40.18,23.33],[41.55,25.72]]},
+ LGLR:{name:'ΛΑΡΙΣΑ',b:[[39.15,20.95],[40.42,24.35]]},
+ LGMK:{name:'ΜΥΚΟΝΟΣ',b:[[37.08,24.82],[37.60,25.58]]},
+ LGPA:{name:'ΠΑΡΟΣ',b:[[36.65,24.53],[37.35,25.55]]},
+ LGRP:{name:'ΡΟΔΟΣ',b:[[35.45,26.90],[36.62,29.05]]},
+ LGSA:{name:'ΧΑΝΙΑ',b:[[35.00,23.25],[35.68,24.95]]},
+ LGSK:{name:'ΣΚΙΑΘΟΣ',b:[[38.91,23.10],[39.46,24.17]]},
+ LGSM:{name:'ΣΑΜΟΣ',b:[[37.378,26.128],[37.887,27.122]]},
+ LGSR:{name:'ΣΑΝΤΟΡΙΝΗ',b:[[35.99,24.62],[36.81,25.98]]},
+ LGSY:{name:'ΣΚΥΡΟΣ',b:[[38.45,23.41],[39.65,25.54]]},
+ LGTG:{name:'ΤΑΝΑΓΡΑ',b:[[38.05,22.39],[39.015,24.24]]},
+ LGTS:{name:'ΘΕΣΣΑΛΟΝΙΚΗ',b:[[39.70,22.10],[41.00,24.00]]}
 };
 const P={AGIA:[39.24916667,26.28194444],AMANI:[39.33222222,26.49944444],ERESO:[39.29194444,25.94361111],FOKKAS:[39.01555556,26.01666667],GERA:[39.12833333,26.40805556],KALONI:[39.16555556,26.29861111],MIMMIS:[38.95694444,26.28388889],MIRSINIA:[38.90694444,26.50833333],MOLIVOS:[39.37861111,26.16166667],PALIOS:[39.325,26.44083333],PANNOS:[38.87472222,26.24111111],PLOMARI:[38.94083333,26.35666667],POLIKNI:[39.08777778,26.15138889],SIKAMIA:[39.39472222,26.35138889],LSV:[39.2313,26.42532222]};
 const LGMT=[['MOLIVOS','SIKAMIA',9,3500],['SIKAMIA','PALIOS',6,3500],['PALIOS','AMANI',3,2500],['PALIOS','LSV',6,2500],['AMANI','LSV',7,2500],['PALIOS','AGIA',9,2500],['AGIA','KALONI',5,3500],['KALONI','LSV',7,2500],['KALONI','GERA',6,3500],['GERA','LSV',6,2500],['ERESO','MOLIVOS',11,4500],['ERESO','KALONI',18,4500],['ERESO','POLIKNI',16,4500],['ERESO','FOKKAS',17,4500],['FOKKAS','POLIKNI',8,4500],['POLIKNI','KALONI',8,4500],['POLIKNI','MIMMIS',10,4500],['FOKKAS','MIMMIS',13,4500],['MIMMIS','PANNOS',5,4500],['MIMMIS','PLOMARI',4,2500],['PANNOS','PLOMARI',7,2500],['PLOMARI','MIRSINIA',7,1500]].map(r=>({from:r[0],to:r[1],nm:r[2],alt:r[3],limit:r[3]>=3500?'min':'max'}));
 function mapReady(){return typeof map!=='undefined'&&window.L&&map&&typeof map.createPane==='function'}function active(){return document.body.classList.contains('pzl-vfr-active')}function centers(){try{return window.PZL_VFR_ROUTES&&typeof window.PZL_VFR_ROUTES.selected==='function'?(window.PZL_VFR_ROUTES.selected()||[]):[]}catch(e){return[]}}function ids(){return Array.from(new Set(centers().map(c=>String(c.icao||'').toUpperCase()).filter(i=>C[i])))}function key(){return(active()?'1':'0')+'|'+ids().sort().join(',')}
 function ensureUi(){const base=document.getElementById('pzlVfrStatus'),panel=document.querySelector('#pzlVfrRoutesPanel .pzl-map-menu-card');if(!document.getElementById('pzlD440Status')&&panel){const d=document.createElement('div');d.id='pzlD440Status';if(base&&base.parentNode)base.parentNode.insertBefore(d,base.nextSibling);else panel.appendChild(d)}statusEl=document.getElementById('pzlD440Status');const note=document.querySelector('#pzlVfrRoutesPanel .pzl-vfr-note');if(note&&note.textContent!=='Εμφανίζονται μόνο οι επίσημες συνεχείς VFR διαδρομές και οι δημοσιευμένες ενδείξεις πορείας, NM και ύψους. Χωρίς ολόκληρη εικόνα PDF και χωρίς τεχνητές διακεκομμένες συνδέσεις.')note.textContent='Εμφανίζονται μόνο οι επίσημες συνεχείς VFR διαδρομές και οι δημοσιευμένες ενδείξεις πορείας, NM και ύψους. Χωρίς ολόκληρη εικόνα PDF και χωρίς τεχνητές διακεκομμένες συνδέσεις.'}
-function status(s,w){ensureUi();if(statusEl){statusEl.textContent=s;statusEl.classList.toggle('warn',!!w)}}function pane(){let p=map.getPane('pzlD440Pane');if(!p)p=map.createPane('pzlD440Pane');p.style.zIndex='535';p.style.pointerEvents='none'}function clear(){if(layer){try{map.removeLayer(layer)}catch(e){}layer=null}}function removeOld(){try{const kill=[];map.eachLayer(l=>{const p=l&&l.options&&l.options.pane;if(['pzlD430RoutesPane','pzlD434RoutesPane','pzlD435RoutesPane','pzlD439RoutesPane','pzlD436ChartPane'].includes(p))kill.push(l)});kill.forEach(l=>map.removeLayer(l))}catch(e){}}
+function status(s,w){ensureUi();if(statusEl){statusEl.textContent=s;statusEl.classList.toggle('warn',!!w)}}function pane(){let p=map.getPane('pzlD440Pane');if(!p)p=map.createPane('pzlD440Pane');p.style.zIndex='535';p.style.pointerEvents='none'}function clear(){if(layer){try{map.removeLayer(layer)}catch(e){}layer=null}}function removeOld(){try{const kill=[];map.eachLayer(l=>{const p=l&&l.options&&l.options.pane;if(['pzlD430RoutesPane','pzlD434RoutesPane','pzlD435RoutesPane','pzlD439RoutesPane','pzlD436ChartPane','pzlVfrRoutesPane'].includes(p))kill.push(l)});kill.forEach(l=>map.removeLayer(l))}catch(e){}}
 function ib(a,b){const r=Math.PI/180,p1=a[0]*r,p2=b[0]*r,dl=(b[1]-a[1])*r;return(Math.atan2(Math.sin(dl)*Math.cos(p2),Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl))*180/Math.PI+360)%360}function ang(a,b){let q=Math.atan2(b[0]-a[0],b[1]-a[1])*180/Math.PI;if(q>90)q-=180;if(q<-90)q+=180;return q}function at(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]}function fc(v){return String(Math.round(v)%360).padStart(3,'0')+'°'}
 function icon(r,a,b){const c1=fc(ib(a,b)),c2=fc(ib(b,a)),q=ang(a,b),lm=r.limit==='max'?'MAX':'MIN';return L.divIcon({className:'',html:`<div class="pzl-d440-route-label" style="transform:rotate(${q.toFixed(1)}deg)"><span class="crs">${c1} · ${r.nm} NM · ${c2}</span><span class="alt ${r.limit}">${lm} ${r.alt} ft</span></div>`,iconSize:[1,1],iconAnchor:[0,0]})}
 function drawLGMT(){LGMT.forEach(r=>{const a=P[r.from],b=P[r.to];L.polyline([a,b],{pane:'pzlD440Pane',color:'#fff',weight:7,opacity:.84,lineCap:'round'}).addTo(layer);L.polyline([a,b],{pane:'pzlD440Pane',color:'#111',weight:3,opacity:.98,lineCap:'round'}).addTo(layer);L.marker(at(a,b,.53),{pane:'pzlD440Pane',icon:icon(r,a,b),interactive:false}).addTo(layer)})}
-function render(){clear();removeOld();if(!mapReady()||!active()){status('VFR OFF — δεν εμφανίζονται διαδρομές.',false);return}const a=ids();if(!a.length){status('Δεν επιλέχθηκε α/δ με διαθέσιμο VFR chart.',true);return}pane();layer=L.layerGroup();a.forEach(i=>{const c=C[i];L.imageOverlay(`./VFR_${i}.png?v=442`,c.b,{pane:'pzlD440Pane',opacity:.96,interactive:false,crossOrigin:false}).addTo(layer)});layer.addTo(map);status(a.join(' · ')+'\nΕπίσημες συνεχείς διαδρομές, πορείες, NM και ενδείξεις ύψους. Χωρίς πλήρη εικόνα chart και χωρίς τεχνητές διακεκομμένες.',false)}
+function render(){clear();removeOld();if(!mapReady()||!active()){status('VFR OFF — δεν εμφανίζονται διαδρομές.',false);return}const a=ids();if(!a.length){status('Δεν επιλέχθηκε α/δ με διαθέσιμο VFR chart.',true);return}pane();layer=L.layerGroup();a.forEach(i=>{const c=C[i];L.imageOverlay(`./VFR_${i}.png?v=444`,c.b,{pane:'pzlD440Pane',opacity:.96,interactive:false,crossOrigin:false}).addTo(layer)});layer.addTo(map);status(a.join(' · ')+'\nΕπίσημες συνεχείς διαδρομές, πορείες, NM και ενδείξεις ύψους. Χωρίς πλήρη εικόνα chart και χωρίς τεχνητές διακεκομμένες.',false)}
 function tick(){ensureUi();if(!mapReady())return;const k=key();if(k!==lastKey){lastKey=k;render()}}function install(){ensureUi();tick();setInterval(tick,850);window.PZL_D440={build:BUILD,reload:render,airports:Object.keys(C)}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
 </script>
@@ -13753,6 +13764,6 @@ body.pzl-d442-topo-active #pzlMapModeBtn{background:#157347!important}
 </script>
 <!-- PZL_MAP_MENU_TOPO_BASE_D442_END -->
 
-<!-- PZL_MOBILE_FREEZE_FIX_D443: removed self-triggering MutationObservers -->
+<!-- PZL_VFR_ALIGNMENT_FIX_D444: removed self-triggering MutationObservers -->
 </body>
 </html>
