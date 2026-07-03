@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_VFR_D435_UI_ALL_CHARTS_20260703D437";
+const PZL_BUILD = "PZL_VFR_D435_UI_ALL_CHARTS_20260703D438";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";
@@ -12,27 +12,27 @@ const LOCAL_APP_SHELL = [
   "./icon.svg",
   "./pzl_marker_topview.png",
   "./version.txt",
-  "./vfr_charts/LGAD.webp",
-  "./vfr_charts/LGAV.webp",
-  "./vfr_charts/LGBL.webp",
-  "./vfr_charts/LGIR.webp",
-  "./vfr_charts/LGKL.webp",
-  "./vfr_charts/LGKO.webp",
-  "./vfr_charts/LGKP.webp",
-  "./vfr_charts/LGKR.webp",
-  "./vfr_charts/LGKV.webp",
-  "./vfr_charts/LGLR.webp",
-  "./vfr_charts/LGMK.webp",
-  "./vfr_charts/LGMT.webp",
-  "./vfr_charts/LGPA.webp",
-  "./vfr_charts/LGRP.webp",
-  "./vfr_charts/LGSA.webp",
-  "./vfr_charts/LGSK.webp",
-  "./vfr_charts/LGSM.webp",
-  "./vfr_charts/LGSR.webp",
-  "./vfr_charts/LGSY.webp",
-  "./vfr_charts/LGTG.webp",
-  "./vfr_charts/LGTS.webp"
+  "./LGAD.webp",
+  "./LGAV.webp",
+  "./LGBL.webp",
+  "./LGIR.webp",
+  "./LGKL.webp",
+  "./LGKO.webp",
+  "./LGKP.webp",
+  "./LGKR.webp",
+  "./LGKV.webp",
+  "./LGLR.webp",
+  "./LGMK.webp",
+  "./LGMT.webp",
+  "./LGPA.webp",
+  "./LGRP.webp",
+  "./LGSA.webp",
+  "./LGSK.webp",
+  "./LGSM.webp",
+  "./LGSR.webp",
+  "./LGSY.webp",
+  "./LGTG.webp",
+  "./LGTS.webp"
 ];
 
 const EXTERNAL_CORE = [

@@ -13625,12 +13625,12 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 
 
 
-<!-- PZL_VFR_D435_UI_ALL_CHARTS_D437_BEGIN -->
-<style id="pzl-d437-css">
-/* D437: D435 user interface, with official chart overlays for all supplied airports. */
+<!-- PZL_VFR_D435_UI_ALL_CHARTS_D438_BEGIN -->
+<style id="pzl-d438-css">
+/* D438: D435 user interface, with official chart overlays stored in the repository root for mobile GitHub upload compatibility. */
 #pzlD430RouteStatus,#pzlD434RouteStatus,#pzlD435RouteStatus,#pzlD436ChartStatus{display:none!important}
-#pzlD437ChartStatus{margin-top:7px;padding:7px 8px;border-radius:9px;background:#e0f2fe;border:1px solid #7dd3fc;color:#0c4a6e;font-size:11px;line-height:1.3;font-weight:800;white-space:pre-line}
-#pzlD437ChartStatus.warn{background:#fff7ed;border-color:#fdba74;color:#9a3412}
+#pzlD438ChartStatus{margin-top:7px;padding:7px 8px;border-radius:9px;background:#e0f2fe;border:1px solid #7dd3fc;color:#0c4a6e;font-size:11px;line-height:1.3;font-weight:800;white-space:pre-line}
+#pzlD438ChartStatus.warn{background:#fff7ed;border-color:#fdba74;color:#9a3412}
 /* Keep the D435 selection behaviour: airport button toggles green; only the separate magnifier focuses. */
 #pzlVfrAirportButtons .pzl-vfr-fire-row{display:grid!important;grid-template-columns:minmax(0,1fr) 52px!important;gap:7px!important}
 #pzlVfrAirportButtons .pzl-vfr-general-btn{text-align:left!important}
@@ -13644,10 +13644,10 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
  #pzlVfrAirportButtons .pzl-vfr-fire-row{grid-template-columns:minmax(0,1fr) 45px!important}
 }
 </style>
-<script id="pzl-d437-js">
+<script id="pzl-d438-js">
 (function(){
 'use strict';
-const BUILD='PZL_VFR_D435_UI_ALL_CHARTS_D437';
+const BUILD='PZL_VFR_D435_UI_ALL_CHARTS_D438';
 let group=null,statusEl=null,lastKey='',timer=0;
 const CHARTS={
  LGAD:{name:'ΑΝΔΡΑΒΙΔΑ',b:[[36.95,20.15],[39.10,22.45]]},
@@ -13679,8 +13679,8 @@ function selected(){const out=[],seen=new Set();centers().forEach(c=>{const i=St
 function key(){return(active()?'1':'0')+'|'+selected().sort().join(',')}
 function ensureUi(){
  const base=document.getElementById('pzlVfrStatus'),panel=document.querySelector('#pzlVfrRoutesPanel .pzl-map-menu-card');
- if(!document.getElementById('pzlD437ChartStatus')&&panel){const d=document.createElement('div');d.id='pzlD437ChartStatus';if(base&&base.parentNode)base.parentNode.insertBefore(d,base.nextSibling);else panel.appendChild(d)}
- statusEl=document.getElementById('pzlD437ChartStatus');
+ if(!document.getElementById('pzlD438ChartStatus')&&panel){const d=document.createElement('div');d.id='pzlD438ChartStatus';if(base&&base.parentNode)base.parentNode.insertBefore(d,base.nextSibling);else panel.appendChild(d)}
+ statusEl=document.getElementById('pzlD438ChartStatus');
  const note=document.querySelector('#pzlVfrRoutesPanel .pzl-vfr-note');
  if(note)note.textContent='Όπως στο D435: πάτησε το α/δ για να πρασινίσει και να εμφανιστεί το επίσημο VFR chart μόνο πάνω στον κύριο χάρτη. Δεν ανοίγει PDF και δεν αλλάζει μόνο του το κέντρο ή το zoom.';
  // Robustly remove any legacy buttons that may be rebuilt by older code.
@@ -13690,25 +13690,25 @@ function ensureUi(){
  });
 }
 function status(s,w){ensureUi();if(statusEl){statusEl.textContent=s;statusEl.classList.toggle('warn',!!w)}}
-function pane(){let p=map.getPane('pzlD437ChartPane');if(!p)p=map.createPane('pzlD437ChartPane');p.style.zIndex='535';p.style.pointerEvents='none'}
+function pane(){let p=map.getPane('pzlD438ChartPane');if(!p)p=map.createPane('pzlD438ChartPane');p.style.zIndex='535';p.style.pointerEvents='none'}
 function clear(){if(group){try{map.removeLayer(group)}catch(e){}group=null}}
-function removeOld(){try{const kill=[];map.eachLayer(l=>{const p=l&&l.options&&l.options.pane;if(['pzlD430RoutesPane','pzlD434RoutesPane','pzlD435RoutesPane','pzlD436ChartPane','pzlD437ChartPane'].includes(p))kill.push(l)});kill.forEach(l=>map.removeLayer(l))}catch(e){}}
+function removeOld(){try{const kill=[];map.eachLayer(l=>{const p=l&&l.options&&l.options.pane;if(['pzlD430RoutesPane','pzlD434RoutesPane','pzlD435RoutesPane','pzlD436ChartPane','pzlD438ChartPane'].includes(p))kill.push(l)});kill.forEach(l=>map.removeLayer(l))}catch(e){}}
 function render(){
  clear();removeOld();
  if(!mapReady()||!active()){status('VFR OFF — standard χάρτης.',false);return}
  const ids=selected();
  if(!ids.length){status('Πάτησε ένα α/δ ώστε να πρασινίσει. Δεν αλλάζει αυτόματα το κέντρο του χάρτη.',true);return}
  pane();group=L.layerGroup();
- ids.forEach(i=>L.imageOverlay(`./vfr_charts/${i}.webp?v=437`,CHARTS[i].b,{pane:'pzlD437ChartPane',opacity:1,interactive:false,crossOrigin:false}).addTo(group));
+ ids.forEach(i=>L.imageOverlay(`./${i}.webp?v=438`,CHARTS[i].b,{pane:'pzlD438ChartPane',opacity:1,interactive:false,crossOrigin:false}).addTo(group));
  group.addTo(map);
  status(ids.map(i=>`${i} ${CHARTS[i].name}`).join(' · ')+'\nΕπίσημες διαδρομές, δύο πορείες, NM και ύψη όπως στα charts. Καμία αυτόματη μετακίνηση ή αλλαγή zoom.',false);
 }
 function tick(){ensureUi();if(!mapReady())return;const k=key();if(k!==lastKey){lastKey=k;render()}}
-function install(){ensureUi();tick();timer=setInterval(tick,800);window.PZL_D437={build:BUILD,reload:render,charts:Object.keys(CHARTS)}}
+function install(){ensureUi();tick();timer=setInterval(tick,800);window.PZL_D438={build:BUILD,reload:render,charts:Object.keys(CHARTS)}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
 </script>
-<!-- PZL_VFR_D435_UI_ALL_CHARTS_D437_END -->
+<!-- PZL_VFR_D435_UI_ALL_CHARTS_D438_END -->
 
 </body>
 </html>
