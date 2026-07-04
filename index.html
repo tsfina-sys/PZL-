@@ -14069,7 +14069,11 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
   #pzlD457RoutesPanel #createRouteBtn{background:#0f6ab4;color:white;border:0;border-radius:10px;padding:10px 12px;font-weight:800;}
   #pzlD457FlightReportBlock .position-report{margin:5px 0;}
   .pzl-d457-info-details{border:1px solid #bae6fd;border-radius:10px;background:#f0f9ff;margin-top:8px;padding:6px 8px;}
-  .pzl-d457-info-details summary{font-size:18px!important;font-weight:800!important;color:#075985;}
+  .pzl-d457-info-details summary{font-size:18px!important;font-weight:800!important;color:#075985;list-style:none;cursor:pointer;}
+  .pzl-d457-info-details summary::-webkit-details-marker{display:none;}
+  .pzl-d457-info-details:not([open]) #pzlD457DropInfoBody{display:none!important;}
+  #pzlD457PointButtons{display:none!important;}
+  #openTempManagerBtn{display:none!important;}
 </style>
 <script id="pzl-d457-panel-js">
 (function(){
@@ -14095,7 +14099,7 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
     // Στοιχεία Επιχείρησης = παλιά Σύνοψη/Χρόνοι + στοιχεία ρίψεων κάτω.
     const op=firstDetailsBySummary('Σύνοψη')||firstDetailsBySummary('Στοιχεία Επιχείρησης');
     if(op){
-      op.classList.add('collapsible-panel'); setSummary(op,'▶ Στοιχεία Επιχείρησης');
+      op.classList.add('collapsible-panel'); setSummary(op,'Στοιχεία Επιχείρησης');
       const b=bodyOf(op);
       const ml=document.getElementById('mapLockStatus'); if(ml)ml.classList.add('pzl-d457-hidden');
       const gr=document.getElementById('gpsResult'); if(gr)gr.classList.add('pzl-d457-hidden');
@@ -14109,13 +14113,15 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
       if(res||dct||drops){
         let wrap=document.getElementById('pzlD457DropsInside');
         if(!wrap){wrap=document.createElement('div');wrap.id='pzlD457DropsInside';wrap.innerHTML='<div class="pzl-d457-subtitle">Στοιχεία Ρίψεων</div>'; b.appendChild(wrap);}
-        safeAppend(wrap,res); safeAppend(wrap,dct); safeAppend(wrap,drops);
+        safeAppend(wrap,dct); safeAppend(wrap,drops);
       }
       if(assign){
         const timing=assign.querySelector('.timing-fields');
         let info=document.getElementById('pzlD457DropInfo');
         if(!info){info=document.createElement('details');info.id='pzlD457DropInfo';info.className='pzl-d457-info-details';info.innerHTML='<summary>Info</summary><div id="pzlD457DropInfoBody"></div>'; b.appendChild(info);}
-        if(timing) safeAppend(document.getElementById('pzlD457DropInfoBody'),timing);
+        const infoBody=document.getElementById('pzlD457DropInfoBody');
+        if(res) safeAppend(infoBody,res);
+        if(timing) safeAppend(infoBody,timing);
         assign.classList.add('pzl-d457-hidden');
       }
     }
@@ -14124,28 +14130,20 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
     const fix=document.getElementById('fixPanel');
     const lib=document.getElementById('pzlPointRoutePanel');
     if(fix){
-      fix.classList.add('collapsible-panel');setSummary(fix,'▶ Σημεία');
+      fix.classList.add('collapsible-panel');setSummary(fix,'Σημεία');
       let fb=bodyOf(fix);
-      if(!document.getElementById('pzlD457PointButtons')){
-        const grid=document.createElement('div');grid.id='pzlD457PointButtons';grid.className='pzl-d457-point-grid';
-        grid.innerHTML='<button type="button" data-point="FIX">FIX</button><button type="button" data-point="MFIX">MFIX</button><button type="button" data-point="CHECK">CHECK</button><button type="button" data-point="TEMP">TEMP</button><button type="button" data-point="FIRE">FIRE</button><button type="button" data-point="STOR">STOR</button>';
-        fb.insertBefore(grid,fb.firstChild);
-        grid.querySelector('[data-point="FIX"]').onclick=function(){press(this);clickId('fixBtn')};
-        grid.querySelector('[data-point="MFIX"]').onclick=function(){press(this,'pressed',800);clickId('manualFixBtn')};
-        grid.querySelector('[data-point="CHECK"]').onclick=function(){press(this);clickId('checkDistanceBtn')};
-        grid.querySelector('[data-point="TEMP"]').onclick=function(){press(this);clickId('openTempManagerBtn')};
-        grid.querySelector('[data-point="FIRE"]').onclick=function(){press(this);clickId('fireModeBtn')};
-        grid.querySelector('[data-point="STOR"]').onclick=function(){press(this);};
-      }
+      const oldPointButtons=document.getElementById('pzlD457PointButtons');
+      if(oldPointButtons) oldPointButtons.remove();
       if(lib){
         const main=document.getElementById('pzlLibraryMain');
         if(main&&!document.getElementById('pzlD457LibraryMoved')){
-          const holder=document.createElement('div');holder.id='pzlD457LibraryMoved';holder.innerHTML='<div class="pzl-d457-subtitle">STOR / TEMP / FIRE</div>';
+          const holder=document.createElement('div');holder.id='pzlD457LibraryMoved';holder.innerHTML='';
           fb.appendChild(holder);
           const saved=document.getElementById('pzlSavedPointList'), temp=document.getElementById('pzlTempPointList'), fire=document.getElementById('pzlFirePointList');
           const tempBtn=document.getElementById('openTempManagerBtn');
           if(saved){holder.appendChild(document.createElement('div')).className='pzl-d457-subtitle';holder.lastChild.textContent='STOR';holder.appendChild(saved)}
-          if(tempBtn){const r=document.createElement('div');r.className='pzl-d457-subtitle';r.textContent='TEMP';holder.appendChild(r);holder.appendChild(tempBtn)}
+          if(tempBtn) tempBtn.classList.add('pzl-d457-hidden');
+          {const r=document.createElement('div');r.className='pzl-d457-subtitle';r.textContent='TEMP';holder.appendChild(r)}
           if(temp)holder.appendChild(temp);
           if(fire){holder.appendChild(document.createElement('div')).className='pzl-d457-subtitle';holder.lastChild.textContent='FIRE';holder.appendChild(fire)}
         }
@@ -14153,7 +14151,7 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
     }
 
     // Routes ξεχωριστά, με Create route και αποθηκευμένα routes.
-    let routes=makePanel('pzlD457RoutesPanel','▶ Routes');
+    let routes=makePanel('pzlD457RoutesPanel','Routes');
     const rb=bodyOf(routes);
     if(!document.getElementById('pzlD457RoutesHead')){const h=document.createElement('div');h.id='pzlD457RoutesHead';h.className='pzl-library-head';h.innerHTML='<b>Create Route</b>';rb.appendChild(h);}
     const cr=document.getElementById('createRouteBtn'); if(cr) safeAppend(document.getElementById('pzlD457RoutesHead'),cr);
@@ -14163,14 +14161,14 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
     if(lib)lib.classList.add('pzl-d457-hidden');
 
     // Ναυτιλία / Καθετότητα Ανέμου.
-    const nav=document.getElementById('navPanel')||firstDetailsBySummary('Ναυτιλία'); if(nav){setSummary(nav,'▶ Ναυτιλία');nav.classList.add('collapsible-panel');}
-    const wind=firstDetailsBySummary('Άνεμος / Διάδρομος')||firstDetailsBySummary('Καθετότητα'); if(wind){setSummary(wind,'▶ Καθετότητα Ανέμου');wind.classList.add('collapsible-panel');}
+    const nav=document.getElementById('navPanel')||firstDetailsBySummary('Ναυτιλία'); if(nav){setSummary(nav,'Ναυτιλία');nav.classList.add('collapsible-panel');}
+    const wind=firstDetailsBySummary('Άνεμος / Διάδρομος')||firstDetailsBySummary('Καθετότητα'); if(wind){setSummary(wind,'Καθετότητα Ανέμου');wind.classList.add('collapsible-panel');}
 
     // Ημερολόγιο Πτήσεων: περιέχει Αναφορά Πτήσης και Αποθηκευμένες Αναφορές.
     const log=document.getElementById('missionLogPanel')||firstDetailsBySummary('Ημερολόγιο');
     const rep=firstDetailsBySummary('Αναφορές / ενδιάμεσα')||firstDetailsBySummary('Αναφορά Πτήσης');
     if(log){
-      setSummary(log,'▶ Ημερολόγιο Πτήσεων');log.classList.add('collapsible-panel');
+      setSummary(log,'Ημερολόγιο Πτήσεων');log.classList.add('collapsible-panel');
       const lb=bodyOf(log);
       if(rep&&!document.getElementById('pzlD457FlightReportBlock')){
         const block=document.createElement('div');block.id='pzlD457FlightReportBlock';block.innerHTML='<div class="pzl-d457-subtitle">Αναφορά Πτήσης</div>';
@@ -14185,7 +14183,7 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
       const clear=document.getElementById('missionLogClearBtn'); if(clear)clear.textContent='🧹 Καθαρισμός τρέχουσας αναφοράς';
     }
 
-    const test=document.getElementById('pzlTestModePanel')||firstDetailsBySummary('Test Mode'); if(test){setSummary(test,'▶ 🧪 Test Mode <span id="pzlTestModeBadge">OFF</span>');}
+    const test=document.getElementById('pzlTestModePanel')||firstDetailsBySummary('Test Mode'); if(test){setSummary(test,'🧪 Test Mode <span id="pzlTestModeBadge">OFF</span>');}
 
     // Τελική σειρά όπως ζητήθηκε.
     const order=[op,fix,routes,nav,wind,log,test].filter(Boolean);
@@ -14202,6 +14200,7 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
 })();
 </script>
 <!-- PZL_D457_PANEL_REORG_REQUESTED_ORDER_END -->
+<!-- PZL_D458_PANEL_CLEANUP: single native arrows, Info toggle, no internal point-mode buttons -->
 
 </body>
 </html>

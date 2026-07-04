@@ -1,4 +1,4 @@
-PZL Mission Tool D455 — FIRE DELETE MAP CLEANUP
+PZL Mission Tool D458 — PANEL POINTS / INFO CLEANUP
 
 - Η διαγραφή F1/F2/... αφαιρεί αμέσως το αντίστοιχο σύμβολο από τον χάρτη.
 - Καθαρίζονται οι καταστάσεις πινέζας, preview και HUD του διαγραμμένου Fire σημείου.
