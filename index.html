@@ -14546,5 +14546,115 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
 })();
 </script>
 <!-- PZL_D461_UI_ALIGNMENT_AND_FIX_LIMITS_END -->
+
+<!-- PZL_D462_FIX_MFIX_CHECK_EYE_EDIT_BEGIN -->
+<style id="pzl-d462-fix-extra-actions-css">
+#fixPanel .fix-row{grid-template-columns:58px minmax(0,1fr) 36px 28px 28px 28px 28px 27px!important;gap:3px!important;}
+#fixPanel .fix-preview,#fixPanel .fix-edit{padding:2px!important;min-width:28px!important;width:28px!important;font-size:12px!important;line-height:1!important;}
+@media(max-width:700px){#fixPanel .fix-row{grid-template-columns:50px minmax(0,1fr) 32px 25px 25px 25px 25px 25px!important;gap:2px!important;}#fixPanel .fix-preview,#fixPanel .fix-edit{min-width:25px!important;width:25px!important;font-size:10px!important;padding:2px!important;}}
+</style>
+<script id="pzl-d462-fix-extra-actions-js">
+(function(){
+  'use strict';
+  function findFixEntryById(id){
+    try{return (typeof pzlAllFixEntries==='function'?pzlAllFixEntries():[]).find(function(e){return String(e.id)===String(id);})||null;}catch(e){return null;}
+  }
+  function previewFixEntry(id){
+    const entry=findFixEntryById(id); if(!entry||!entry.point)return;
+    const title=String(entry.label||entry.listLabel||entry.baseLabel||'POINT');
+    const point={lat:Number(entry.point.lat),lon:Number(entry.point.lon),name:title};
+    try{ if(typeof beginPreview==='function') beginPreview(title,[point],null); else if(typeof map!=='undefined') map.setView([point.lat,point.lon],Math.max(Number(map.getZoom())||0,12)); }catch(e){}
+  }
+  function applySourcePointEdit(type,index,name,lat,lon){
+    index=Number(index);
+    const list=type==='fix'?(typeof savedFixPoints!=='undefined'?savedFixPoints:[]):(type==='mfix'?(typeof manualFixPoints!=='undefined'?manualFixPoints:[]):(typeof checkPoints!=='undefined'?checkPoints:[]));
+    if(!Array.isArray(list)||!list[index]) return;
+    const p=list[index];
+    const base=(typeof pointBaseLabel==='function')?pointBaseLabel(type,index):((type==='mfix'?'MFIX':'CHECK')+(index+1));
+    p.customName=(typeof normalize==='function' && normalize(String(name||''))===normalize(String(base)))?'':String(name||'').trim();
+    p.lat=Number(lat); p.lon=Number(lon);
+    if(type==='check'){ p.name=base; p.label=base; }
+    if(p.libraryPointId && typeof savedById==='function'){
+      const saved=savedById(p.libraryPointId);
+      if(saved){ saved.name=(typeof pointMapName==='function')?pointMapName(p,base):(p.customName||base); saved.lat=Number(lat); saved.lon=Number(lon); }
+    }
+    try{
+      if(typeof routeLibrary!=='undefined' && Array.isArray(routeLibrary)) routeLibrary.forEach(function(r){(r.points||[]).forEach(function(q){if(q&&q.sourcePointType===type&&String(q.sourcePointId)===String(p.id)){ q.name=(typeof pointMapName==='function')?pointMapName(p,base):(p.customName||base); q.lat=Number(lat); q.lon=Number(lon); }});});
+      if(typeof routeDraft!=='undefined' && Array.isArray(routeDraft)) routeDraft.forEach(function(q){if(q&&q.sourcePointType===type&&String(q.sourcePointId)===String(p.id)){ q.name=(typeof pointMapName==='function')?pointMapName(p,base):(p.customName||base); q.lat=Number(lat); q.lon=Number(lon); }});
+    }catch(e){}
+    try{ if(typeof persistSourcePoints==='function') persistSourcePoints(type); }catch(e){}
+    try{ if(typeof saveJson==='function' && typeof LIB_KEY!=='undefined') saveJson(LIB_KEY,(typeof pointLibrary!=='undefined'?pointLibrary:[])); }catch(e){}
+    try{ if(typeof saveJson==='function' && typeof ROUTE_KEY!=='undefined') saveJson(ROUTE_KEY,(typeof routeLibrary!=='undefined'?routeLibrary:[])); }catch(e){}
+    try{ if(typeof renderSavedFixPoints==='function') renderSavedFixPoints(); }catch(e){}
+    try{ if(typeof renderCheckMap==='function') renderCheckMap(); }catch(e){}
+    try{ if(typeof renderLibrary==='function') renderLibrary(); }catch(e){}
+    try{ if(typeof renderTempManager==='function') renderTempManager(); }catch(e){}
+    try{ if(typeof renderRouteDraft==='function') renderRouteDraft(); }catch(e){}
+    try{ if(typeof renderTapDraftMap==='function') renderTapDraftMap(); }catch(e){}
+    try{ if(typeof activeRouteId!=='undefined' && activeRouteId && typeof renderActiveRoute==='function') renderActiveRoute(false); }catch(e){}
+    try{ if(typeof renderIndividualPointPins==='function') renderIndividualPointPins(); }catch(e){}
+    try{ if(typeof updateHsiHud==='function') updateHsiHud(); }catch(e){}
+    try{ if(typeof toast==='function') toast('Το σημείο ενημερώθηκε'); }catch(e){}
+  }
+  function openSourcePointEdit(type,index){
+    index=Number(index);
+    const list=type==='fix'?(typeof savedFixPoints!=='undefined'?savedFixPoints:[]):(type==='mfix'?(typeof manualFixPoints!=='undefined'?manualFixPoints:[]):(typeof checkPoints!=='undefined'?checkPoints:[]));
+    if(!Array.isArray(list)||!list[index]) return;
+    const p=list[index];
+    const base=(typeof pointBaseLabel==='function')?pointBaseLabel(type,index):((type==='mfix'?'MFIX':'CHECK')+(index+1));
+    window.__pzlSourcePointEditState={type:type,index:index};
+    const modal=document.getElementById('pzlPointEditModal'); if(!modal) return;
+    const name=(typeof pointMapName==='function')?pointMapName(p,base):(p.customName||base);
+    document.getElementById('pzlPointEditName').value=name;
+    document.getElementById('pzlPointEditLat').value=(typeof pointEditDdmAxis==='function')?pointEditDdmAxis(p.lat,true):'';
+    document.getElementById('pzlPointEditLon').value=(typeof pointEditDdmAxis==='function')?pointEditDdmAxis(p.lon,false):'';
+    modal.hidden=false;
+  }
+  if(typeof closePointEdit==='function'){
+    const baseClosePointEdit=closePointEdit;
+    closePointEdit=function(){ window.__pzlSourcePointEditState=null; return baseClosePointEdit.apply(this,arguments); };
+  }
+  if(typeof savePointEdit==='function'){
+    const baseSavePointEdit=savePointEdit;
+    savePointEdit=function(){
+      if(window.__pzlSourcePointEditState){
+        const st=window.__pzlSourcePointEditState;
+        const name=String((document.getElementById('pzlPointEditName')||{}).value||'').trim();
+        const latRaw=String((document.getElementById('pzlPointEditLat')||{}).value||'').trim();
+        const lonRaw=String((document.getElementById('pzlPointEditLon')||{}).value||'').trim();
+        const parsed=(typeof parseCoordFields==='function')?parseCoordFields(latRaw,lonRaw,'ddm'):null;
+        const base=(typeof pointBaseLabel==='function')?pointBaseLabel(st.type,st.index):'POINT';
+        if(!name||!parsed) return alert("Έλεγξε όνομα και συντεταγμένες DDM, π.χ. N39°03.15' και E026°36.26'.");
+        applySourcePointEdit(st.type,st.index,name,parsed.lat,parsed.lon);
+        if(typeof closePointEdit==='function') closePointEdit();
+        return;
+      }
+      return baseSavePointEdit.apply(this,arguments);
+    };
+  }
+  function install(){
+    if(typeof pzlFixRowHtml!=='function' || typeof renderSavedFixPanel!=='function') return;
+    pzlFixRowHtml=function(entry){
+      const p=entry.point, nav=(typeof pzlFixNavData==='function')?pzlFixNavData(p):null, selected=entry.id===activeHudFixId;
+      let coord=''; try{coord=fixFormatCoord(p.lat,true)+'<br>'+fixFormatCoord(p.lon,false);}catch(e){coord=(typeof esc==='function'?esc(fmtCoord(p.lat,p.lon)):String(p.lat)+','+String(p.lon));}
+      const navText=(typeof pzlFormatFixNav==='function')?pzlFormatFixNav(nav):'';
+      const src=(entry.type==='fix'||entry.type==='mfix'||entry.type==='check');
+      return '<div class="fix-row'+(selected?' active-hud-fix':'')+'"><b>'+esc(entry.listLabel||entry.label)+'</b><span class="fix-coord">'+coord+(p.time?'<br>'+esc(p.time):'')+'<span class="fix-nav" data-fix-nav-id="'+esc(entry.id)+'">'+esc(navText)+'</span></span><button class="fix-hud-select'+(selected?' selected':'')+'" data-fix-select="'+esc(entry.id)+'" type="button">'+(selected?'ON':'HUD')+'</button><button class="fix-save" data-fix-save="'+esc(entry.id)+'" type="button" title="Μόνιμη αποθήκευση">💾</button>'+pinButton(entry.type,entry.id)+(src?'<button class="fix-preview" data-fix-preview="'+esc(entry.id)+'" type="button" title="Προεπισκόπηση 5 δευτ.">🔍</button><button class="fix-edit" data-fix-edit-type="'+esc(entry.type)+'" data-fix-edit-index="'+entry.index+'" type="button" title="Επεξεργασία ονόματος / συντεταγμένων">✎</button>':'')+'<button class="fix-del" data-fix-type="'+esc(entry.type)+'" data-fix-del="'+entry.index+'" type="button">✕</button></div>';
+    };
+    const baseRender=renderSavedFixPanel;
+    renderSavedFixPanel=function(){
+      baseRender();
+      const list=document.getElementById('fixPanelList'); if(!list) return;
+      list.querySelectorAll('[data-fix-preview]').forEach(function(btn){ btn.onclick=function(){ previewFixEntry(btn.getAttribute('data-fix-preview')); }; });
+      list.querySelectorAll('[data-fix-edit-type]').forEach(function(btn){ btn.onclick=function(){ openSourcePointEdit(btn.getAttribute('data-fix-edit-type'), btn.getAttribute('data-fix-edit-index')); }; });
+    };
+    try{ renderSavedFixPanel(); }catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',install); else install();
+  setTimeout(install,400); setTimeout(install,1500);
+})();
+</script>
+<!-- PZL_D462_FIX_MFIX_CHECK_EYE_EDIT_END -->
+
 </body>
 </html>
