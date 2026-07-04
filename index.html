@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_D454_FIRE_NAMES_PIN_SAVE">
+<meta name="pzl-build" content="PZL_D455_FIRE_DELETE_MAP_CLEANUP">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -4620,6 +4620,8 @@ function setFireMarker() {
       try { drawAll(); } catch(e) {}
       try { calculate(); } catch(e) {}
       try { if (typeof navRenderAll === 'function') navRenderAll(true); } catch(e) {}
+      // D455: purge any stale Fire library marker and rebuild from the current saved list.
+      try { if (typeof window.pzlRefreshAllPointViews === 'function') window.pzlRefreshAllPointViews(); } catch(e) {}
     }
 
     const toggleFireCirclesBtn = document.getElementById("toggleFireCirclesBtn");
@@ -12731,12 +12733,37 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
   function renameLibraryPoint(id){openPointEdit('saved',id);}
   function renameFirePoint(id){openPointEdit('fire',id);}
   function forceDeletePoint(type,id){
-    if(window.PZL_POINT_VISIBILITY)window.PZL_POINT_VISIBILITY.manual.delete(window.pzlPointKey(type,id));
+    const deletedPoint=type==='temp'?tempById(id):(type==='fire'?fireById(id):savedById(id));
+    const deletedWasActiveFire=type==='fire'&&deletedPoint&&currentFireMatches(deletedPoint);
+    const pointKey=window.pzlPointKey(type,id);
+    if(window.PZL_POINT_VISIBILITY){
+      window.PZL_POINT_VISIBILITY.manual.delete(pointKey);
+      window.PZL_POINT_VISIBILITY.preview.delete(pointKey);
+      window.PZL_POINT_VISIBILITY.activeRoute.delete(pointKey);
+    }
     if(String(activeHudFixId||'')===String(id||''))activeHudFixId=null;
-    if(type==='temp'){tempLibrary=tempLibrary.filter(x=>x.id!==id);persistTemp();}
-    else if(type==='fire'){fireLibrary=fireLibrary.filter(x=>x.id!==id);persistFire();}
-    else{pointLibrary=pointLibrary.filter(x=>x.id!==id);saveJson(LIB_KEY,pointLibrary);}
-    renderLibrary();renderTempManager();try{renderSavedFixPanel();updateHsiHud();}catch(e){}toast('Το σημείο διαγράφηκε');
+    if(type==='temp'){
+      tempLibrary=tempLibrary.filter(x=>x.id!==id);persistTemp();
+    }else if(type==='fire'){
+      fireLibrary=fireLibrary.filter(x=>x.id!==id);persistFire();
+      if(deletedWasActiveFire){
+        try{if(typeof fireMarker!=='undefined'&&fireMarker){map.removeLayer(fireMarker);fireMarker=null;}}catch(e){}
+        try{firePoint=null;}catch(e){}
+        try{clearFireCircles();}catch(e){}
+        try{if(typeof updateFireModeButtonState==='function')updateFireModeButtonState();}catch(e){}
+        try{if(typeof drawAll==='function')drawAll();}catch(e){}
+        try{if(typeof calculate==='function')calculate();}catch(e){}
+      }
+    }else{
+      pointLibrary=pointLibrary.filter(x=>x.id!==id);saveJson(LIB_KEY,pointLibrary);
+    }
+    // Remove every old Leaflet marker first, then rebuild only the points that still exist.
+    // This prevents deleted F1/F2 labels from remaining visually on the map.
+    renderIndividualPointPins();
+    renderLibrary();
+    renderTempManager();
+    try{renderSavedFixPanel();updateHsiHud();}catch(e){}
+    toast('Το σημείο διαγράφηκε');
   }
   function cancelUnsavedDraftForPoint(type,id){
     if(!draftUsesPoint(type,id))return true;
@@ -14023,6 +14050,6 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
 </script>
 <!-- PZL_D449_NO_BASEMAP_FLICKER_NO_VFR_MAGNIFIER_END -->
 
-<!-- PZL_D454_FIRE_NAMES_PIN_SAVE -->
+<!-- PZL_D455_FIRE_DELETE_MAP_CLEANUP -->
 </body>
 </html>
