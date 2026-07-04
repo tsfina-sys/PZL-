@@ -11678,6 +11678,15 @@ body.pzl-actions-hidden .map-actions{display:none!important;}
     return navAddPoint(latlng.lat, latlng.lng) === true;
   };
   window.pzlNavHasRoute = function(){ return Array.isArray(pzlNavRoutePoints) && pzlNavRoutePoints.length > 0; };
+  window.pzlGetNavRouteGeometry = function(){
+    const out=[];
+    const start=pzlNavPlanStartPoint || navStartPos();
+    if(start && isFinite(Number(start.lat)) && isFinite(Number(start.lon))) out.push({lat:Number(start.lat),lon:Number(start.lon),name:'NAV START'});
+    navRouteWithDestination().forEach(function(pt){
+      if(pt && isFinite(Number(pt.lat)) && isFinite(Number(pt.lon))) out.push({lat:Number(pt.lat),lon:Number(pt.lon),name:pt.name||'NAV'});
+    });
+    return out;
+  };
   function navClearArm(){
     pzlNavArmActive = false;
     if (pzlNavArmTimer) { clearTimeout(pzlNavArmTimer); pzlNavArmTimer = null; }
@@ -13234,7 +13243,8 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     get savedPoints(){return pointLibrary.map(p=>({...p}));},
     get tempPoints(){return tempLibrary.map(p=>({...p}));},
     get firePoints(){return fireLibrary.map(p=>({...p}));},
-    get routes(){return routeLibrary.map(r=>({...r,points:r.points.map(p=>({...p}))}));}
+    get routes(){return routeLibrary.map(r=>({...r,points:r.points.map(p=>({...p}))}));},
+    get activeRoute(){const r=routeLibrary.find(x=>x.id===activeRouteId);return r?({...r,points:r.points.map(p=>({...p}))}):null;}
   };
 })();
 
@@ -13324,7 +13334,8 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 (function(){
   'use strict';
   const BUILD='PZL_MAP_MENU_VFR_ROUTES_D424';
-  const SEARCH_RADIUS_M=100000;
+  const CORRIDOR_RADIUS_M=25000;
+  const GPS_RELOAD_DISTANCE_KM=10;
   const OPT_KEY='pzlD422OverlayOptions';
   const API_LIST=[
     'https://overpass-api.de/api/interpreter',
@@ -13336,7 +13347,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
   let options={...defaults};
   try{options={...defaults,...JSON.parse(localStorage.getItem(OPT_KEY)||'{}')};}catch(e){}
   let peakLayer=null,powerLayer=null,antennaLayer=null;
-  let refreshTimer=null,requestSeq=0,lastAirportSignature='';
+  let refreshTimer=null,requestSeq=0,lastRouteSignature='',lastGpsLoadPoint=null;
   const cache={peaks:null,power:null,antennas:null};
   let btn,panel,statusBox,badge;
 
@@ -13369,31 +13380,55 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     if(!source)return null;const lat=Number(source.lat),lon=Number(source.lon);
     return Number.isFinite(lat)&&Number.isFinite(lon)?{name,lat,lon}:null;
   }
-  function selectedAirportCenters(){
-    const out=[],seen=new Set();
-    function currentValue(variableName,selectId){
-      let value='';
-      try{
-        if(variableName==='base'&&typeof selectedBaseName!=='undefined')value=selectedBaseName||'';
-        if(variableName==='refill'&&typeof selectedRefillBaseName!=='undefined')value=selectedRefillBaseName||'';
-        if(variableName==='full'&&typeof selectedFullStopBaseName!=='undefined')value=selectedFullStopBaseName||'';
-      }catch(e){}
-      if(!value){const el=document.getElementById(selectId);if(el&&el.value)value=el.value;}
-      return value;
-    }
-    [
-      {role:'Α/Γ',name:currentValue('base','baseSelect')},
-      {role:'REFILL',name:currentValue('refill','refillBaseSelect')},
-      {role:'FULL STOP',name:currentValue('full','fullStopBaseSelect')}
-    ].forEach(item=>{
-      const p=airportPoint(item.name);if(!p)return;
-      const key=`${p.lat.toFixed(5)},${p.lon.toFixed(5)}`;
-      if(seen.has(key))return;seen.add(key);out.push({...p,role:item.role});
-    });
+  function validPoint(p){return !!p&&Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lon));}
+  function clonePoint(p){return {lat:Number(p.lat),lon:Number(p.lon)};}
+  function flattenLatLngs(value,out){
+    out=out||[];
+    if(Array.isArray(value)){value.forEach(v=>flattenLatLngs(v,out));return out;}
+    if(value&&Number.isFinite(Number(value.lat))&&Number.isFinite(Number(value.lng)))out.push({lat:Number(value.lat),lon:Number(value.lng)});
     return out;
   }
-  function airportSignature(centers){return (centers||selectedAirportCenters()).map(c=>`${c.role}:${c.name}:${c.lat.toFixed(5)},${c.lon.toFixed(5)}`).join('|');}
-  function centersText(centers){return centers.map(c=>`${c.role} ${c.name}`).join(' · ');}
+  function routeFromLayer(layer){
+    try{return layer&&typeof layer.getLatLngs==='function'?flattenLatLngs(layer.getLatLngs(),[]):[];}catch(e){return [];}
+  }
+  function cleanRoute(points){
+    const src=(points||[]).filter(validPoint).map(clonePoint),out=[];
+    src.forEach(p=>{const prev=out[out.length-1];if(!prev||Math.abs(prev.lat-p.lat)>1e-7||Math.abs(prev.lon-p.lon)>1e-7)out.push(p);});
+    if(out.length<=32)return out;
+    const sampled=[];for(let i=0;i<32;i++){const idx=Math.round(i*(out.length-1)/31);sampled.push(out[idx]);}return sampled;
+  }
+  function routeKey(line){return cleanRoute(line).map(p=>p.lat.toFixed(4)+','+p.lon.toFixed(4)).join(';');}
+  function selectedRouteLines(){
+    const routes=[],seen=new Set();
+    function add(points){const line=cleanRoute(points);if(line.length<2)return;const key=routeKey(line);if(!key||seen.has(key))return;seen.add(key);routes.push(line);}
+    try{
+      const layer=(typeof routeGhostLine!=='undefined'&&routeGhostLine)?routeGhostLine:((typeof routeLine!=='undefined')?routeLine:null);
+      add(routeFromLayer(layer));
+    }catch(e){}
+    try{if(typeof window.pzlGetNavRouteGeometry==='function')add(window.pzlGetNavRouteGeometry());}catch(e){}
+    try{const r=window.PZL_CHECK_DISTANCE&&window.PZL_CHECK_DISTANCE.activeRoute;if(r&&Array.isArray(r.points))add(r.points);}catch(e){}
+    return routes;
+  }
+  function aircraftPoint(){
+    try{if(typeof currentGps!=='undefined'&&validPoint(currentGps))return clonePoint(currentGps);}catch(e){}
+    return null;
+  }
+  function searchGeometry(){return {routes:selectedRouteLines(),aircraft:aircraftPoint()};}
+  function routeSignature(routes){return (routes||[]).map(routeKey).join('|');}
+  function geometrySignature(g){
+    const a=g&&g.aircraft?g.aircraft.lat.toFixed(4)+','+g.aircraft.lon.toFixed(4):'NO_GPS';
+    return routeSignature(g&&g.routes||[])+'|'+a;
+  }
+  function geometryText(g){
+    const parts=[];
+    if(g.routes.length)parts.push((g.routes.length>1?g.routes.length+' διαδρομές':'διαδρομή')+' ±25 km');
+    if(g.aircraft)parts.push('αεροσκάφος ±25 km');
+    return parts.join(' · ');
+  }
+  function gpsMovedEnough(a,b){
+    if(!a||!b)return a!==b;
+    try{return typeof haversineKm==='function'&&haversineKm(a,b)>=GPS_RELOAD_DISTANCE_KM;}catch(e){return true;}
+  }
   function updatePanel(){Object.keys(defaults).forEach(k=>{const e=document.getElementById('pzlOpt_'+k);if(e)e.checked=!!options[k];});if(btn)btn.classList.toggle('active',anyEnabled() || document.body.classList.contains('pzl-vfr-active'));}
   function openPanel(){if(panel){panel.hidden=false;updatePanel();}}
   function closePanel(){if(panel)panel.hidden=true;}
@@ -13450,11 +13485,24 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     marker.bindTooltip(h!=null?`${feet(h)} ft AGL`:'ΚΕΡΑΙΑ',{direction:'top',className:'pzl-obstacle-tooltip',offset:[0,-9]});
     marker.bindPopup(popupHtml(n,[h!=null?`Ύψος: ${feet(h)} ft AGL (${Math.round(h)} m)`:'Ύψος μη δηλωμένο',t.operator?`Φορέας: ${t.operator}`:'','Δεν αποτελεί επίσημη βάση εμποδίων']));return true;
   }
-  function buildQuery(cat,c){
-    const a=`(around:${SEARCH_RADIUS_M},${c.lat.toFixed(6)},${c.lon.toFixed(6)})`;
-    if(cat==='peaks')return `[out:json][timeout:55];node${a}["natural"="peak"]["ele"];out tags;`;
-    if(cat==='power')return `[out:json][timeout:55];way${a}["power"~"^(line|minor_line)$"];out tags geom;`;
-    return `[out:json][timeout:55];(nwr${a}["man_made"~"^(mast|communications_tower|antenna)$"];nwr${a}["man_made"="tower"]["tower:type"="communication"];nwr${a}["tower:type"="communication"];);out tags center;`;
+  function areaFilters(g){
+    const out=[];
+    (g.routes||[]).forEach(line=>{
+      const coords=cleanRoute(line).map(p=>p.lat.toFixed(6)+','+p.lon.toFixed(6)).join(',');
+      if(coords)out.push('around:'+CORRIDOR_RADIUS_M+','+coords);
+    });
+    if(g.aircraft)out.push('around:'+CORRIDOR_RADIUS_M+','+g.aircraft.lat.toFixed(6)+','+g.aircraft.lon.toFixed(6));
+    return out;
+  }
+  function buildQuery(cat,g){
+    const filters=areaFilters(g),parts=[];
+    filters.forEach(f=>{
+      if(cat==='peaks')parts.push(`node(${f})["natural"="peak"]["ele"];`);
+      else if(cat==='power')parts.push(`way(${f})["power"~"^(line|minor_line)$"];`);
+      else parts.push(`nwr(${f})["man_made"~"^(mast|communications_tower|antenna)$"];nwr(${f})["man_made"="tower"]["tower:type"="communication"];nwr(${f})["tower:type"="communication"];`);
+    });
+    const output=cat==='power'?'out tags geom;':(cat==='antennas'?'out tags center;':'out tags;');
+    return `[out:json][timeout:55];(${parts.join('')});${output}`;
   }
   function endpointOrder(seed){
     const n=API_LIST.length,start=Math.abs(seed||0)%n,out=[];for(let i=0;i<n;i++)out.push(API_LIST[(start+i)%n]);return out;
@@ -13501,48 +13549,47 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     return count;
   }
   function labelFor(cat){return cat==='peaks'?'Κορυφές':cat==='power'?'Γραμμές ΜΤ/ΥΤ':'Κεραίες';}
-  async function loadCategory(cat,centers,seq,force,signature,catIndex){
+  async function loadCategory(cat,geometry,seq,force,signature,catIndex){
     const key=`${cat}|${signature}`;
     if(!force&&cache[cat]&&cache[cat].key===key&&Date.now()-cache[cat].at<600000)return cache[cat].payload;
-    const merged={elements:[]};let successes=0,lastErr=null;
-    for(let i=0;i<centers.length;i++){
-      if(seq!==requestSeq)return null;
-      const c=centers[i];
-      setStatus(`Φόρτωση: ${labelFor(cat)} (${i+1}/${centers.length})\n${c.role} ${c.name} · ακτίνα 100 km`,true,true);
-      try{
-        const payload=await fetchOverpass(buildQuery(cat,c),seq,catIndex+i);
-        if(!payload||seq!==requestSeq)return null;mergePayload(merged,payload);successes++;
-      }catch(e){lastErr=e;console.warn('PZL overlay center',cat,c,e);}
-    }
-    if(!successes)throw lastErr||new Error('Δεν απάντησε ο server');
-    cache[cat]={key,at:Date.now(),payload:merged};return merged;
+    setStatus(`Φόρτωση: ${labelFor(cat)}
+${geometryText(geometry)}`,true,true);
+    const payload=await fetchOverpass(buildQuery(cat,geometry),seq,catIndex);
+    if(!payload||seq!==requestSeq)return null;
+    cache[cat]={key,at:Date.now(),payload};return payload;
   }
   async function refresh(force){
-    if(!mapReady())return;buildLayers();const centers=selectedAirportCenters(),z=Math.round(map.getZoom());
+    if(!mapReady())return;
+    buildLayers();
+    const geometry=searchGeometry(),z=Math.round(map.getZoom());
     if(!anyEnabled()){
       ++requestSeq;clearAll();setStatus('Standard χάρτης — κανένα πρόσθετο layer επιλεγμένο.',false,false);return;
     }
-    if(!centers.length){
-      ++requestSeq;clearAll();setStatus('Επίλεξε Α/Γ, REFILL και FULL STOP για φόρτωση ακτίνας 100 km.',false,true);return;
+    if(!geometry.routes.length&&!geometry.aircraft){
+      ++requestSeq;clearAll();setStatus('Ενεργοποίησε GPS ή βάλε διαδρομή στον χάρτη. Η φόρτωση γίνεται ±25 km.',false,true);return;
     }
-    const signature=airportSignature(centers),seq=++requestSeq,results=[];let errors=0;
-    setStatus(`Σύνδεση με βάση χαρτογραφικών στοιχείων…\n100 km: ${centersText(centers)}`,true,true);
+    const signature=geometrySignature(geometry),seq=++requestSeq,results=[];let errors=0;
+    lastRouteSignature=routeSignature(geometry.routes);
+    lastGpsLoadPoint=geometry.aircraft?clonePoint(geometry.aircraft):null;
+    setStatus(`Σύνδεση με βάση χαρτογραφικών στοιχείων…
+${geometryText(geometry)}`,true,true);
     let catIndex=0;
     for(const cat of Object.keys(defaults)){
       if(seq!==requestSeq)return;
-      if(!options[cat]){clearCategory(cat);catIndex+=3;continue;}
+      if(!options[cat]){clearCategory(cat);catIndex++;continue;}
       try{
-        const payload=await loadCategory(cat,centers,seq,force,signature,catIndex);
+        const payload=await loadCategory(cat,geometry,seq,force,signature,catIndex);
         if(!payload||seq!==requestSeq)return;
         const count=renderCategory(cat,payload,z);results.push(`${labelFor(cat)} ${count}`);
       }catch(e){
         clearCategory(cat);errors++;results.push(`${labelFor(cat)}: σφάλμα σύνδεσης`);console.warn('PZL overlay fetch',cat,e);
       }
-      catIndex+=3;
+      catIndex++;
     }
-    if(seq!==requestSeq)return;lastAirportSignature=signature;
+    if(seq!==requestSeq)return;
     const extra=errors?'\nΠάτησε ΑΝΑΝΕΩΣΗ αν κάποιος δημόσιος server ήταν προσωρινά απασχολημένος.':'';
-    setStatus(`${results.join(' · ')}\nStandard χάρτης · ακτίνα 100 km${extra}`,false,errors>0);
+    setStatus(`${results.join(' · ')}
+${geometryText(geometry)}${extra}`,false,errors>0);
   }
   function scheduleRefresh(force){clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>refresh(!!force),force?120:500);}
   function install(){
@@ -13553,7 +13600,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     document.getElementById('mapWrap').appendChild(btn);btn.onclick=openPanel;
     badge=document.createElement('div');badge.id='pzlTopoStatusBadge';document.getElementById('mapWrap').appendChild(badge);
     panel=document.createElement('div');panel.id='pzlTerrainPanel';panel.hidden=true;
-    panel.innerHTML=`<div id="pzlTerrainCard"><div class="pzl-map-title"><b>PZL MAP — ΠΡΟΣΘΕΤΑ ΣΤΟΙΧΕΙΑ</b><button id="pzlTerrainClose" type="button">✕</button></div><div class="pzl-standard-note">Στο PZL MAP χρησιμοποιείται ο τοπογραφικός χάρτης. Τα παρακάτω εμφανίζονται μόνο όταν τα επιλέξεις.</div><div class="pzl-map-layer-list"><label class="pzl-map-layer-item"><span>▲ Κορυφές + ύψος ft MSL</span><input id="pzlOpt_peaks" type="checkbox"></label><label class="pzl-map-layer-item"><span>⚡ Γραμμές μέσης / υψηλής τάσης</span><input id="pzlOpt_power" type="checkbox"></label><label class="pzl-map-layer-item"><span>📡 Κεραίες / ιστοί</span><input id="pzlOpt_antennas" type="checkbox"></label></div><div class="pzl-map-actions"><button id="pzlMapReload" type="button">ΑΝΑΝΕΩΣΗ 100 km</button><button id="pzlMapClear" type="button" class="secondary">← MAP</button></div><div id="pzlMapStatus" class="pzl-map-status"></div><div class="pzl-map-warning">Τα στοιχεία προέρχονται από δημόσια δεδομένα OpenStreetMap/Overpass, μπορεί να είναι ελλιπή ή παλαιά και δεν αντικαθιστούν επίσημο αεροναυτικό χάρτη ή πιστοποιημένη βάση εμποδίων.</div></div>`;
+    panel.innerHTML=`<div id="pzlTerrainCard"><div class="pzl-map-title"><b>PZL MAP — ΠΡΟΣΘΕΤΑ ΣΤΟΙΧΕΙΑ</b><button id="pzlTerrainClose" type="button">✕</button></div><div class="pzl-standard-note">Στο PZL MAP τα επιλεγμένα στοιχεία φορτώνονται σε διάδρομο ±25 km από τη διαδρομή και σε ακτίνα 25 km από το αεροσκάφος.</div><div class="pzl-map-layer-list"><label class="pzl-map-layer-item"><span>▲ Κορυφές + ύψος ft MSL</span><input id="pzlOpt_peaks" type="checkbox"></label><label class="pzl-map-layer-item"><span>⚡ Γραμμές μέσης / υψηλής τάσης</span><input id="pzlOpt_power" type="checkbox"></label><label class="pzl-map-layer-item"><span>📡 Κεραίες / ιστοί</span><input id="pzlOpt_antennas" type="checkbox"></label></div><div class="pzl-map-actions"><button id="pzlMapReload" type="button">ΑΝΑΝΕΩΣΗ ±25 km</button><button id="pzlMapClear" type="button" class="secondary">← MAP</button></div><div id="pzlMapStatus" class="pzl-map-status"></div><div class="pzl-map-warning">Τα στοιχεία προέρχονται από δημόσια δεδομένα OpenStreetMap/Overpass, μπορεί να είναι ελλιπή ή παλαιά και δεν αντικαθιστούν επίσημο αεροναυτικό χάρτη ή πιστοποιημένη βάση εμποδίων.</div></div>`;
     document.body.appendChild(panel);statusBox=document.getElementById('pzlMapStatus');
     document.getElementById('pzlTerrainClose').onclick=closePanel;panel.onclick=e=>{if(e.target===panel)closePanel();};
     document.getElementById('pzlMapReload').onclick=()=>scheduleRefresh(true);
@@ -13570,15 +13617,18 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
       e.onchange=()=>{options[k]=e.checked;save();if(!e.checked)clearCategory(k);updatePanel();scheduleRefresh(false);};
     });
     map.on('zoomend',()=>{if(options.peaks&&cache.peaks&&cache.peaks.payload)renderCategory('peaks',cache.peaks.payload,Math.round(map.getZoom()));});
-    ['baseSelect','refillBaseSelect','fullStopBaseSelect'].forEach(id=>{
-      const el=document.getElementById(id);if(el)el.addEventListener('change',()=>{lastAirportSignature='';scheduleRefresh(true);});
+    ['gpsBtn','navModeBtn','clearNavBtn','fireModeBtn','viaModeBtn','clearViaBtn','returnWpBtn','clearReturnWpBtn'].forEach(id=>{
+      const el=document.getElementById(id);if(el)el.addEventListener('click',()=>setTimeout(()=>scheduleRefresh(true),250));
     });
     setInterval(()=>{
-      if(!anyEnabled())return;const sig=airportSignature();
-      if(sig!==lastAirportSignature){lastAirportSignature=sig;scheduleRefresh(true);}
-    },1500);
+      if(!anyEnabled())return;
+      const g=searchGeometry(),rs=routeSignature(g.routes);
+      const routeChanged=rs!==lastRouteSignature;
+      const gpsChanged=gpsMovedEnough(g.aircraft,lastGpsLoadPoint);
+      if(routeChanged||gpsChanged)scheduleRefresh(true);
+    },4000);
     window.addEventListener('online',()=>{if(anyEnabled())scheduleRefresh(true);});
-    lastAirportSignature=airportSignature();updatePanel();
+    lastRouteSignature=routeSignature(selectedRouteLines());lastGpsLoadPoint=aircraftPoint();updatePanel();
     setStatus(anyEnabled()?'Έτοιμο για φόρτωση επιλεγμένων layers.':'Standard χάρτης — επίλεξε μόνο ό,τι χρειάζεσαι.',false,false);
     if(anyEnabled())scheduleRefresh(false);
   }
