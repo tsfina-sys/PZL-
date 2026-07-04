@@ -1,4 +1,1 @@
-PZL_MAP_TOPO_VFR_D456_PANEL_REORG_STEP1
-Base: D455 FIRE_DELETE_MAP_CLEANUP
-Changes: first safe panel reorganization per PDF; no core calculation changes.
-Remaining: D457 move drops/info into Στοιχεία Επιχείρησης, D458 full flight reports archive, D459 GPS/FIX/MFIX polish.
+PZL_MAP_TOPO_VFR_D457_PANEL_REQUESTED_ORDER
