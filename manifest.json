@@ -1,7 +1,7 @@
 {
-  "name": "PZL Mission Tool D451",
-  "short_name": "PZL D451",
-  "start_url": "./index.html?v=451",
+  "name": "PZL Mission Tool D453",
+  "short_name": "PZL D453",
+  "start_url": "./index.html?v=452",
   "display": "standalone",
   "background_color": "#eef2f6",
   "theme_color": "#0f3d5e",
