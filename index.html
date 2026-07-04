@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_D453_FIRE_POINT_LIST">
+<meta name="pzl-build" content="PZL_D454_FIRE_NAMES_PIN_SAVE">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -12019,11 +12019,12 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 #fixPanel .fix-row>b{overflow-wrap:anywhere;font-size:10px;}
 .pzl-lib-row{grid-template-columns:minmax(0,1fr) 30px 30px 30px 30px 30px!important;}
 .pzl-temp-row{grid-template-columns:minmax(0,1fr) 28px 28px 28px 28px 28px 28px!important;}
-.pzl-fire-row{display:grid;grid-template-columns:minmax(0,1fr) 28px 28px 28px 28px 28px 28px;gap:4px;align-items:center;padding:5px 0;border-top:1px solid #e5e7eb;}
+.pzl-fire-row{display:grid;grid-template-columns:minmax(0,1fr) 28px 28px 28px 28px 28px 28px 28px;gap:4px;align-items:center;padding:5px 0;border-top:1px solid #e5e7eb;}
 .pzl-fire-row button{padding:4px 2px!important;min-width:0!important;font-size:10px!important;}
 .pzl-fire-activate{background:#b42318!important;color:#fff!important;border:0!important;font-size:13px!important;line-height:1!important;}
 .pzl-fire-activate.active{background:#f97316!important;box-shadow:0 0 0 2px rgba(249,115,22,.25)!important;}
-.pzl-map-fire-library-icon{color:#fff;border:2px solid #fff;border-radius:8px;padding:3px 6px;font-size:10px;font-weight:1000;box-shadow:0 2px 7px rgba(0,0,0,.55);white-space:nowrap;background:#b42318;}
+.pzl-fire-save{background:#0f6ab4!important;color:#fff!important;border:0!important;font-size:12px!important;line-height:1!important;}
+.pzl-map-fire-library-icon{color:#8b1e12;background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;font-size:15px;font-weight:1000;line-height:20px;box-shadow:none!important;white-space:nowrap;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 2px 3px rgba(0,0,0,.55);}
 .pzl-point-hud-select{background:#6b7280!important;color:#fff!important;border:0!important;font-size:9px!important;font-weight:900!important;line-height:1!important;padding:4px 1px!important;min-width:0!important;}
 .pzl-point-hud-select.selected{background:#111827!important;color:#fff!important;box-shadow:0 0 0 2px rgba(17,24,39,.22)!important;}
 .pzl-map-library-icon{color:#fff;border:2px solid #fff;border-radius:8px;padding:3px 6px;font-size:10px;font-weight:1000;box-shadow:0 2px 7px rgba(0,0,0,.55);white-space:nowrap;background:#2563eb;}
@@ -12032,7 +12033,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 .pzl-route-start-box .pzl-route-inline:first-of-type{margin-bottom:5px;}
 .pzl-route-start-note{font-size:10px;color:#334155;margin:3px 0 0;line-height:1.2;}
 .pzl-route-add-disabled{opacity:.48;pointer-events:none;}
-@media(max-width:700px){#fixPanel .fix-row{grid-template-columns:50px minmax(0,1fr) 32px 25px 25px 25px!important;gap:2px!important}.pzl-lib-row,.pzl-temp-row,.pzl-fire-row{gap:3px!important}.pzl-fire-row{grid-template-columns:minmax(0,1fr) 25px 25px 25px 25px 25px 25px!important}}
+@media(max-width:700px){#fixPanel .fix-row{grid-template-columns:50px minmax(0,1fr) 32px 25px 25px 25px!important;gap:2px!important}.pzl-lib-row,.pzl-temp-row,.pzl-fire-row{gap:3px!important}.pzl-fire-row{grid-template-columns:minmax(0,1fr) 25px 25px 25px 25px 25px 25px 25px!important}}
 </style>
 <script id="pzl-check-distance-library-routes-js">
 (function(){
@@ -12173,13 +12174,16 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     if (!p || !finite(p.lat) || !finite(p.lon)) return null;
     let slot=Number(p.slot);
     if(!Number.isInteger(slot) || slot<1 || slot>MAX_FIRE_POINTS){
-      const m=String(p.id||p.name||'').match(/(?:fire|FIRE)[ _-]?(\d+)/i);
+      const m=String(p.id||p.name||'').match(/(?:fire|f)[ _-]?(\d+)/i);
       slot=m?Number(m[1]):index+1;
     }
     slot=Math.max(1,Math.min(MAX_FIRE_POINTS,slot));
+    const base='F'+slot;
+    const raw=String(p.name||'').trim();
+    const generic=!raw || /^(?:FIRE\s*\d*|F\s*\d+|ΦΩΤΙΑ)$/i.test(raw);
     return {
       id:String(p.id || ('fire_'+slot+'_'+Date.now().toString(36))), slot,
-      name:String(p.name || ('FIRE '+slot)),
+      name:generic?base:raw,
       lat:Number(p.lat), lon:Number(p.lon), sourceType:'fire',
       createdAt:Number(p.createdAt || Date.now())
     };
@@ -12256,9 +12260,11 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
   function fireById(id){ return fireLibrary.find(p=>p.id===id)||null; }
   function persistFire(){ saveJson(FIRE_LIST_KEY,fireLibrary); }
   function nextFireSlot(){const used=new Set(fireLibrary.map(p=>Number(p.slot)));for(let i=1;i<=MAX_FIRE_POINTS;i++)if(!used.has(i))return i;return null;}
+  function fireBaseName(slot){return 'F'+Math.max(1,Number(slot)||1);}
+  function isGenericFireName(name){return !String(name||'').trim() || /^(?:FIRE\s*\d*|F\s*\d+|ΦΩΤΙΑ)$/i.test(String(name||'').trim());}
   function sameCoords(a,b){return !!a&&!!b&&Math.abs(Number(a.lat)-Number(b.lat))<0.00002&&Math.abs(Number(a.lon)-Number(b.lon))<0.00002;}
   function currentFireMatches(p){try{return !!firePoint&&sameCoords(firePoint,p);}catch(e){return false;}}
-  function fireNameFromCurrent(slot){let raw='';try{raw=String(firePoint&&firePoint.label||'').trim();}catch(e){}if(!raw||normalize(raw)==='ΦΩΤΙΑ'||normalize(raw)==='FIRE'||normalize(raw).startsWith('ΣΥΝΤΕΤΑΓΜΕΝΕΣ'))return 'FIRE '+slot;if(raw.includes(','))raw=raw.split(',')[0].trim();return raw||('FIRE '+slot);}
+  function fireNameFromCurrent(slot){return fireBaseName(slot);}
 
   function routePointUses(point,type,id){
     return !!point && (type==='temp'?point.tempPointId===id:point.libraryPointId===id);
@@ -12348,8 +12354,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     if(!fp||!finite(fp.lat)||!finite(fp.lon))return;
     let existing=fireLibrary.find(p=>sameCoords(p,fp));
     if(existing){
-      const candidate=fireNameFromCurrent(existing.slot);
-      if(candidate&&!/^FIRE \d+$/i.test(candidate))existing.name=candidate;
+      if(isGenericFireName(existing.name))existing.name=fireBaseName(existing.slot);
       existing.lat=Number(fp.lat);existing.lon=Number(fp.lon);existing.createdAt=Date.now();
     }else{
       const slot=nextFireSlot();if(slot===null)return;
@@ -12505,7 +12510,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     return L.divIcon({className:'pzl-temp-icon-wrap',html:'<div class="pzl-temp-icon">'+esc(text)+'</div>',iconSize:[width,28],iconAnchor:[Math.round(width/2),14]});
   }
   function libraryIcon(name,isTemp){const text=String(name||'POINT'),width=Math.min(190,Math.max(46,text.length*7+14));return L.divIcon({className:'',html:'<div class="pzl-map-library-icon'+(isTemp?' pzl-map-temp-icon':'')+'">'+esc(text)+'</div>',iconSize:[width,28],iconAnchor:[Math.round(width/2),14]});}
-  function fireLibraryIcon(name){const text=String(name||'FIRE'),width=Math.min(190,Math.max(52,text.length*7+24));return L.divIcon({className:'',html:'<div class="pzl-map-fire-library-icon">🔥 '+esc(text)+'</div>',iconSize:[width,28],iconAnchor:[Math.round(width/2),14]});}
+  function fireLibraryIcon(name){const text=String(name||'F1'),width=Math.min(170,Math.max(38,text.length*8+24));return L.divIcon({className:'',html:'<div class="pzl-map-fire-library-icon">🔥'+esc(text)+'</div>',iconSize:[width,24],iconAnchor:[Math.round(width/2),12]});}
   function checkLegs(){
     const legs=[];
     const populated=[];
@@ -12659,6 +12664,17 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     if(wasHud)activeHudFixId=saved.id;
     renderLibrary();renderRouteDraft();renderTapDraftMap();renderTempManager();try{renderSavedFixPanel();updateHsiHud();}catch(e){}toast(saved.name+' μεταφέρθηκε στην αποθηκευμένη λίστα');
   }
+  function saveFirePointToLibrary(id){
+    const p=fireById(id);if(!p)return;
+    let saved=pointLibrary.find(x=>x.sourcePointType==='fire'&&x.sourcePointId===p.id);
+    const wasExisting=!!saved;
+    if(saved){saved.name=p.name;saved.lat=p.lat;saved.lon=p.lon;saved.sourceType='fire';}
+    else{saved={id:uid('libpt'),name:uniqueName(p.name),lat:p.lat,lon:p.lon,sourceType:'fire',sourcePointType:'fire',sourcePointId:p.id,createdAt:Date.now()};pointLibrary.push(saved);}
+    saveJson(LIB_KEY,pointLibrary);renderLibrary();
+    const panel=document.getElementById('pzlPointRoutePanel');if(panel)panel.open=true;
+    toast(saved.name+(wasExisting?' ενημερώθηκε στα αποθηκευμένα':' αποθηκεύτηκε'));
+  }
+
   function applyPointEdit(type,id,name,lat,lon){
     const p=type==='temp'?tempById(id):(type==='fire'?fireById(id):savedById(id));if(!p)return;
     p.name=String(name||p.name).trim()||p.name;p.lat=Number(lat);p.lon=Number(lon);
@@ -12903,7 +12919,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
       bindPinButtons(list);bindHudPointButtons(list);list.querySelectorAll('[data-lib-preview]').forEach(b=>b.onclick=()=>previewLibraryPoint(b.dataset.libPreview));list.querySelectorAll('[data-lib-rename]').forEach(b=>b.onclick=()=>renameLibraryPoint(b.dataset.libRename));list.querySelectorAll('[data-lib-delete]').forEach(b=>b.onclick=()=>deleteLibraryPoint(b.dataset.libDelete));
     }
     if(temps){const arr=tempLibrary.slice().sort((a,b)=>a.slot-b.slot);temps.innerHTML=arr.length?arr.map(p=>'<div class="pzl-temp-row"><div class="pzl-lib-main"><b>'+esc(tempListName(p))+'</b><small>'+esc(fmtCoord(p.lat,p.lon))+'</small></div><button type="button" class="pzl-temp-save" data-temp-save="'+esc(p.id)+'" title="Μεταφορά στην αποθηκευμένη λίστα">💾</button>'+hudPointButton(p.id)+pinButton('temp',p.id)+'<button type="button" data-temp-preview="'+esc(p.id)+'">🔍</button><button type="button" data-temp-rename="'+esc(p.id)+'">✎</button><button type="button" class="pzl-lib-del" data-temp-delete="'+esc(p.id)+'">✕</button></div>').join(''):'<div class="pzl-lib-empty">Δεν υπάρχουν TEMP σημεία.</div>';bindPinButtons(temps);bindHudPointButtons(temps);temps.querySelectorAll('[data-temp-save]').forEach(b=>b.onclick=()=>promoteTempPoint(b.dataset.tempSave));temps.querySelectorAll('[data-temp-preview]').forEach(b=>b.onclick=()=>previewTempPoint(b.dataset.tempPreview));temps.querySelectorAll('[data-temp-rename]').forEach(b=>b.onclick=()=>renameTempPoint(b.dataset.tempRename));temps.querySelectorAll('[data-temp-delete]').forEach(b=>b.onclick=()=>requestDeletePoint('temp',b.dataset.tempDelete));}
-    if(fires){const arr=fireLibrary.slice().sort((a,b)=>a.slot-b.slot);fires.innerHTML=arr.length?arr.map(p=>'<div class="pzl-fire-row"><div class="pzl-lib-main"><b>'+esc(p.name)+'</b><small>'+esc(fmtCoord(p.lat,p.lon))+'</small></div><button type="button" class="pzl-fire-activate'+(currentFireMatches(p)?' active':'')+'" data-fire-activate="'+esc(p.id)+'" title="Ορισμός ως ενεργό Fire">🔥</button>'+hudPointButton(p.id)+pinButton('fire',p.id)+'<button type="button" data-fire-preview="'+esc(p.id)+'" title="Προεπισκόπηση 5 δευτ.">🔍</button><button type="button" data-fire-rename="'+esc(p.id)+'" title="Επεξεργασία ονόματος / συντεταγμένων">✎</button><button type="button" class="pzl-lib-del" data-fire-delete="'+esc(p.id)+'" title="Διαγραφή">✕</button></div>').join(''):'<div class="pzl-lib-empty">Τα σημεία που επιλέγεις ως Fire θα εμφανίζονται εδώ.</div>';bindPinButtons(fires);bindHudPointButtons(fires);fires.querySelectorAll('[data-fire-activate]').forEach(b=>b.onclick=()=>activateFireLibraryPoint(b.dataset.fireActivate));fires.querySelectorAll('[data-fire-preview]').forEach(b=>b.onclick=()=>previewFirePoint(b.dataset.firePreview));fires.querySelectorAll('[data-fire-rename]').forEach(b=>b.onclick=()=>renameFirePoint(b.dataset.fireRename));fires.querySelectorAll('[data-fire-delete]').forEach(b=>b.onclick=()=>requestDeletePoint('fire',b.dataset.fireDelete));}
+    if(fires){const arr=fireLibrary.slice().sort((a,b)=>a.slot-b.slot);fires.innerHTML=arr.length?arr.map(p=>'<div class="pzl-fire-row"><div class="pzl-lib-main"><b>'+esc(p.name)+'</b><small>'+esc(fmtCoord(p.lat,p.lon))+'</small></div><button type="button" class="pzl-fire-activate'+(currentFireMatches(p)?' active':'')+'" data-fire-activate="'+esc(p.id)+'" title="Ορισμός ως ενεργό Fire">🔥</button><button type="button" class="pzl-fire-save" data-fire-save="'+esc(p.id)+'" title="Αποθήκευση στα αποθηκευμένα σημεία">💾</button>'+hudPointButton(p.id)+pinButton('fire',p.id)+'<button type="button" data-fire-preview="'+esc(p.id)+'" title="Προεπισκόπηση 5 δευτ.">🔍</button><button type="button" data-fire-rename="'+esc(p.id)+'" title="Επεξεργασία ονόματος / συντεταγμένων">✎</button><button type="button" class="pzl-lib-del" data-fire-delete="'+esc(p.id)+'" title="Διαγραφή">✕</button></div>').join(''):'<div class="pzl-lib-empty">Τα σημεία που επιλέγεις ως Fire θα εμφανίζονται εδώ.</div>';bindPinButtons(fires);bindHudPointButtons(fires);fires.querySelectorAll('[data-fire-activate]').forEach(b=>b.onclick=()=>activateFireLibraryPoint(b.dataset.fireActivate));fires.querySelectorAll('[data-fire-save]').forEach(b=>b.onclick=()=>saveFirePointToLibrary(b.dataset.fireSave));fires.querySelectorAll('[data-fire-preview]').forEach(b=>b.onclick=()=>previewFirePoint(b.dataset.firePreview));fires.querySelectorAll('[data-fire-rename]').forEach(b=>b.onclick=()=>renameFirePoint(b.dataset.fireRename));fires.querySelectorAll('[data-fire-delete]').forEach(b=>b.onclick=()=>requestDeletePoint('fire',b.dataset.fireDelete));}
     if(routes){routes.innerHTML=routeLibrary.length?routeLibrary.map(r=>{const stats=routeStats(r),active=r.id===activeRouteId,tempCount=routeTempIds(r).filter(id=>tempById(id)).length;return '<div class="pzl-route-row'+(active?' active':'')+'"><div class="pzl-lib-main"><b>'+esc(r.name)+'</b><small>'+r.points.length+' σημεία · '+fmtKm(stats.total)+' · '+stats.time+' @ 180'+(tempCount?' · TEMP '+tempCount:'')+'</small></div><button type="button" class="pzl-route-activate'+(active?' active':'')+'" data-route-active="'+esc(r.id)+'">'+(active?'ON':'ACT')+'</button><button type="button" data-route-preview="'+esc(r.id)+'">🔍</button><button type="button" data-route-edit="'+esc(r.id)+'">✎</button><button type="button" class="pzl-lib-del" data-route-delete="'+esc(r.id)+'">✕</button></div>';}).join(''):'<div class="pzl-lib-empty">Δεν υπάρχουν αποθηκευμένα routes.</div>';routes.querySelectorAll('[data-route-active]').forEach(b=>b.onclick=()=>toggleRoute(b.dataset.routeActive));routes.querySelectorAll('[data-route-preview]').forEach(b=>b.onclick=()=>previewRoute(b.dataset.routePreview));routes.querySelectorAll('[data-route-edit]').forEach(b=>b.onclick=()=>openRouteBuilder(b.dataset.routeEdit));routes.querySelectorAll('[data-route-delete]').forEach(b=>b.onclick=()=>deleteRoute(b.dataset.routeDelete));}
     function fillSelect(sel,items,empty){if(!sel)return;const cur=sel.value;sel.innerHTML=items.length?items.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.label)+'</option>').join(''):'<option value="">'+esc(empty)+'</option>';if(items.some(x=>x.id===cur))sel.value=cur;sel.disabled=!items.length;}
     fillSelect(savedSelect,pointLibrary.map(p=>({id:p.id,label:p.name})),'Δεν υπάρχουν σημεία');
@@ -13033,7 +13049,7 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     const fixPanel=document.getElementById('fixPanel');
     if(fixPanel && !document.getElementById('pzlPointRoutePanel')){
       const panel=document.createElement('details'); panel.id='pzlPointRoutePanel'; panel.className='collapsible-panel';
-      panel.innerHTML='<summary>💾 Αποθηκευμένα / TEMP / Routes</summary><div class="collapsible-body pzl-library-body"><div id="pzlLibraryMain"><div class="pzl-library-head"><b>Αποθηκευμένα σημεία</b><button id="createRouteBtn" type="button">Create route</button></div><div id="pzlSavedPointList"></div><div class="pzl-library-subtitle-row"><span>Προσωρινά σημεία (TEMP)</span><button id="openTempManagerBtn" type="button" class="secondary">TEMP LIST</button></div><div id="pzlTempPointList"></div><div class="pzl-library-subtitle">Fire σημεία</div><div id="pzlFirePointList"></div><div class="pzl-library-subtitle">Routes</div><div id="pzlSavedRouteList"></div><div id="pzlActiveRouteInfo" hidden></div></div><div id="pzlLibraryPreview" hidden><button id="pzlPreviewBack" type="button" class="secondary">←</button><b id="pzlPreviewTitle">Προεπισκόπηση</b></div></div>';
+      panel.innerHTML='<summary>FIRE/STOR/TEMP &amp; ROUTES</summary><div class="collapsible-body pzl-library-body"><div id="pzlLibraryMain"><div class="pzl-library-head"><b>Αποθηκευμένα σημεία</b><button id="createRouteBtn" type="button">Create route</button></div><div id="pzlSavedPointList"></div><div class="pzl-library-subtitle-row"><span>Προσωρινά σημεία (TEMP)</span><button id="openTempManagerBtn" type="button" class="secondary">TEMP LIST</button></div><div id="pzlTempPointList"></div><div class="pzl-library-subtitle">Fire σημεία</div><div id="pzlFirePointList"></div><div class="pzl-library-subtitle">Routes</div><div id="pzlSavedRouteList"></div><div id="pzlActiveRouteInfo" hidden></div></div><div id="pzlLibraryPreview" hidden><button id="pzlPreviewBack" type="button" class="secondary">←</button><b id="pzlPreviewTitle">Προεπισκόπηση</b></div></div>';
       fixPanel.insertAdjacentElement('afterend',panel);
       panel.querySelector('#createRouteBtn').addEventListener('click',()=>openRouteBuilder(null));
       panel.querySelector('#openTempManagerBtn').addEventListener('click',()=>openTempManager(null,null));
@@ -14007,5 +14023,6 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
 </script>
 <!-- PZL_D449_NO_BASEMAP_FLICKER_NO_VFR_MAGNIFIER_END -->
 
+<!-- PZL_D454_FIRE_NAMES_PIN_SAVE -->
 </body>
 </html>
