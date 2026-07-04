@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_FIRE_DELETE_MAP_CLEANUP_20260704D455";
+const PZL_BUILD = "PZL_VOICE_COMMANDS_V1_20260704D456";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";

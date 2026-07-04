@@ -1635,6 +1635,19 @@ body.pzl-screen-locked #lockMapBtn {
 }
 </style>
 
+
+<style id="pzl-d456-voice-css">
+#voiceCommandBtn{min-width:44px!important;width:44px!important;flex:0 0 44px!important;font-size:18px!important;padding:5px 4px!important;line-height:1!important;position:relative}
+#voiceCommandBtn.active{background:#b42318!important;color:#fff!important}
+#voiceCommandBtn.listening{animation:pzlVoicePulse 1.15s infinite}
+#voiceCommandBtn.unsupported{opacity:.55}
+#pzlVoiceStatus{position:fixed;left:50%;bottom:78px;transform:translateX(-50%);z-index:31000;max-width:min(92vw,620px);padding:8px 12px;border-radius:11px;background:rgba(15,23,42,.94);color:#fff;font-size:12px;font-weight:800;line-height:1.25;text-align:center;box-shadow:0 8px 22px rgba(0,0,0,.35);pointer-events:none}
+#pzlVoiceStatus[data-state="listening"]{background:rgba(21,115,71,.96)}
+#pzlVoiceStatus[data-state="error"]{background:rgba(180,35,24,.97)}
+@keyframes pzlVoicePulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.55)}50%{box-shadow:0 0 0 7px rgba(239,68,68,0)}}
+@media(max-width:700px){#voiceCommandBtn{min-width:40px!important;width:40px!important;flex-basis:40px!important;font-size:16px!important}#pzlVoiceStatus{bottom:68px;font-size:11px}}
+</style>
+
 </head>
 
 <style id="fix37d46-metar-final-css">
@@ -13168,8 +13181,258 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     setTimeout(()=>{try{window.dispatchEvent(new Event('resize'));}catch(e){}},250);
   }
 
+
+  /* D456: πρώτη έκδοση φωνητικού χειρισμού / φωνητικών αναγγελιών */
+  let pzlVoiceRecognition = null;
+  let pzlVoiceEnabled = false;
+  let pzlVoiceRecognitionRunning = false;
+  let pzlVoiceSpeaking = false;
+  let pzlVoicePending = null;
+  let pzlVoiceStatusTimer = null;
+
+  function voiceNorm(value){
+    return normalize(value).replace(/[^A-ZΑ-Ω0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+  }
+  function voiceText(id){
+    const el=document.getElementById(id);return el?String(el.textContent||'').trim():'';
+  }
+  function voiceStatus(message,state){
+    const box=document.getElementById('pzlVoiceStatus');
+    const btn=document.getElementById('voiceCommandBtn');
+    if(btn){
+      btn.classList.toggle('active',pzlVoiceEnabled);
+      btn.classList.toggle('listening',state==='listening');
+      btn.setAttribute('aria-pressed',pzlVoiceEnabled?'true':'false');
+    }
+    if(!box)return;
+    clearTimeout(pzlVoiceStatusTimer);
+    box.textContent=String(message||'');
+    box.dataset.state=state||'';
+    box.hidden=!message;
+    if(message && state!=='listening')pzlVoiceStatusTimer=setTimeout(()=>{if(!pzlVoiceEnabled||!pzlVoiceRecognitionRunning)box.hidden=true;},6500);
+  }
+  function voiceGreekVoice(){
+    try{return (speechSynthesis.getVoices()||[]).find(v=>String(v.lang||'').toLowerCase().startsWith('el'))||null;}catch(e){return null;}
+  }
+  function voiceBeginRecognition(){
+    if(!pzlVoiceEnabled||pzlVoiceSpeaking||pzlVoiceRecognitionRunning||!pzlVoiceRecognition)return;
+    try{pzlVoiceRecognition.start();}catch(e){setTimeout(()=>{if(pzlVoiceEnabled)voiceBeginRecognition();},500);}
+  }
+  function voiceSay(message,resume=true){
+    const text=String(message||'').trim();if(!text)return;
+    voiceStatus(text,'speaking');
+    if(!('speechSynthesis' in window)){if(resume&&pzlVoiceEnabled)setTimeout(voiceBeginRecognition,450);return;}
+    pzlVoiceSpeaking=true;
+    try{if(pzlVoiceRecognitionRunning)pzlVoiceRecognition.abort();}catch(e){}
+    try{speechSynthesis.cancel();}catch(e){}
+    const u=new SpeechSynthesisUtterance(text);u.lang='el-GR';u.rate=1.02;u.pitch=1;
+    const gv=voiceGreekVoice();if(gv)u.voice=gv;
+    u.onend=u.onerror=()=>{pzlVoiceSpeaking=false;if(resume&&pzlVoiceEnabled)setTimeout(voiceBeginRecognition,380);};
+    try{speechSynthesis.speak(u);}catch(e){pzlVoiceSpeaking=false;if(resume&&pzlVoiceEnabled)setTimeout(voiceBeginRecognition,380);}
+  }
+  function voiceStop(message){
+    pzlVoiceEnabled=false;pzlVoicePending=null;
+    try{if(pzlVoiceRecognition)pzlVoiceRecognition.abort();}catch(e){}
+    try{if('speechSynthesis' in window)speechSynthesis.cancel();}catch(e){}
+    pzlVoiceSpeaking=false;voiceStatus(message||'Φωνητικός χειρισμός ανενεργός.','');
+  }
+  function voiceStart(){
+    if(!pzlVoiceRecognition){
+      voiceStatus('Η αναγνώριση φωνής δεν υποστηρίζεται σε αυτόν τον browser. Χρησιμοποίησε Chrome μέσω HTTPS.','error');
+      try{alert('Η αναγνώριση φωνής δεν υποστηρίζεται σε αυτόν τον browser. Χρησιμοποίησε Chrome μέσω HTTPS.');}catch(e){}
+      return;
+    }
+    pzlVoiceEnabled=true;voiceStatus('Ακούω… Πες «βοήθεια» για τις διαθέσιμες εντολές.','listening');voiceBeginRecognition();
+  }
+  function voiceToggle(){if(pzlVoiceEnabled)voiceStop();else voiceStart();}
+
+  const VOICE_NUMBER_WORDS={
+    'ΜΗΔΕΝ':0,'ΕΝΑ':1,'ΕΝΑΣ':1,'ΜΙΑ':1,'ΠΡΩΤΟ':1,'ΠΡΩΤΗ':1,
+    'ΔΥΟ':2,'ΔΕΥΤΕΡΟ':2,'ΔΕΥΤΕΡΗ':2,'ΤΡΙΑ':3,'ΤΡΙΤΟ':3,'ΤΡΙΤΗ':3,
+    'ΤΕΣΣΕΡΑ':4,'ΤΕΣΣΕΡΙΣ':4,'ΤΕΤΑΡΤΟ':4,'ΠΕΝΤΕ':5,'ΕΞΙ':6,'ΕΦΤΑ':7,'ΕΠΤΑ':7,
+    'ΟΚΤΩ':8,'ΕΝΝΙΑ':9,'ΔΕΚΑ':10,'ΕΝΤΕΚΑ':11,'ΔΩΔΕΚΑ':12,'ΔΕΚΑΤΡΙΑ':13,
+    'ΔΕΚΑΤΕΣΣΕΡΑ':14,'ΔΕΚΑΠΕΝΤΕ':15,'ΔΕΚΑΕΞΙ':16,'ΔΕΚΑΕΦΤΑ':17,'ΔΕΚΑΟΚΤΩ':18,
+    'ΔΕΚΑΕΝΝΙΑ':19,'ΕΙΚΟΣΙ':20
+  };
+  function voiceNumber(text){
+    const n=voiceNorm(text);const m=n.match(/(?:^| )(\d{1,3})(?: |$)/);if(m)return Number(m[1]);
+    const words=n.split(' ');for(const w of words)if(Object.prototype.hasOwnProperty.call(VOICE_NUMBER_WORDS,w))return VOICE_NUMBER_WORDS[w];
+    return null;
+  }
+  function voiceBest(items,query){
+    if(!items||!items.length)return null;const q=voiceNorm(query);if(!q)return items[0];
+    const scored=items.map(item=>{const name=voiceNorm(item.name||item.label||item.listName||item.display_name||''),icao=voiceNorm(item.icao||'');let score=99;if(name===q||icao===q)score=0;else if(name.startsWith(q)||q.startsWith(name))score=1;else if(name.includes(q)||q.includes(name)||icao.includes(q))score=2;return {item,score,len:name.length};}).filter(x=>x.score<99).sort((a,b)=>a.score-b.score||a.len-b.len);
+    return scored.length?scored[0].item:null;
+  }
+  function voiceEnsureRoute(){
+    if(!Array.isArray(routeDraft)){openRouteBuilder(null);}
+    return Array.isArray(routeDraft);
+  }
+  function voiceRouteStartCurrent(){
+    if(!voiceEnsureRoute())return 'Δεν άνοιξε η δημιουργία route.';
+    let p=null;try{p=currentGps;}catch(e){}
+    if(!p||!finite(p.lat)||!finite(p.lon))return 'Δεν υπάρχει θέση GPS. Ενεργοποίησε πρώτα το GPS.';
+    addDraftPoint({name:'Αφετηρία',lat:Number(p.lat),lon:Number(p.lon),sourceType:'start',isRouteStart:true});
+    return 'Η Αφετηρία προστέθηκε. Πες πρόσθεσε και το όνομα του επόμενου σημείου.';
+  }
+  function voiceRouteStartAirport(query){
+    if(!voiceEnsureRoute())return 'Δεν άνοιξε η δημιουργία route.';
+    const p=voiceBest(airportCatalog(),query);if(!p)return 'Δεν βρέθηκε το αεροδρόμιο '+query+'.';
+    addDraftPoint({...p,name:p.icao||p.name,sourceType:'airport',isRouteStart:true});
+    return 'Πρώτο σημείο '+(p.icao||p.name)+'. Πες πρόσθεσε και το επόμενο σημείο.';
+  }
+  function voiceFindCurrentPoint(kind,number,query){
+    let items=currentFixEntries();
+    if(kind)items=items.filter(p=>p.sourcePointType===kind);
+    if(number!=null){
+      const exact=items.find(p=>{const s=voiceNorm((p.listName||'')+' '+(p.name||'')+' '+(p.sourcePointId||''));return new RegExp('(?:^| )'+number+'(?: |$)').test(s)||String(p.sourcePointId||'').endsWith('_'+number);});
+      if(exact)return exact;
+      return items[number-1]||null;
+    }
+    return voiceBest(items,query);
+  }
+  function voiceFindRoutePoint(reference){
+    const n=voiceNorm(reference),num=voiceNumber(reference);let p=null;
+    if(/(?:^| )(MFIX|M FIX|ΕΜ ΦΙΞ|Μ ΦΙΞ|ΜΦΙΞ|MANUAL FIX)(?: |$)/.test(n)){
+      p=voiceFindCurrentPoint('mfix',num,reference);if(p)return {...p,name:p.name,sourcePointType:p.sourcePointType,sourcePointId:p.sourcePointId};
+    }
+    if(/(?:^| )(CHECK|ΤΣΕΚ)(?: |$)/.test(n)){
+      p=voiceFindCurrentPoint('check',num,reference);if(p)return {...p,name:p.name,sourcePointType:p.sourcePointType,sourcePointId:p.sourcePointId};
+    }
+    if(/(?:^| )(TEMP|ΤΕΜΠ)(?: |$)/.test(n)){
+      const arr=tempLibrary.slice().sort((a,b)=>a.slot-b.slot);p=num!=null?(arr.find(x=>Number(x.slot)===num)||arr[num-1]):voiceBest(arr,reference);if(p)return {...p,name:tempRouteName(p),tempPointId:p.id,sourceType:'temp'};
+    }
+    if(/(?:^| )(FIRE|ΦΩΤΙΑ|ΦΑΙΡ)(?: |$)/.test(n)||/^F ?\d/.test(n)){
+      const arr=fireLibrary.slice().sort((a,b)=>a.slot-b.slot);p=num!=null?(arr.find(x=>Number(x.slot)===num)||arr[num-1]):voiceBest(arr,reference);if(p)return {...p,name:p.name,sourceType:'fire'};
+    }
+    if(/(?:^| )(FIX|ΦΙΞ)(?: |$)/.test(n)){
+      p=voiceFindCurrentPoint('fix',num,reference);if(p)return {...p,name:p.name,sourcePointType:p.sourcePointType,sourcePointId:p.sourcePointId};
+    }
+    if(/ΑΠΟΘΗΚΕΥΜ/.test(n)){
+      const q=n.replace(/ΑΠΟΘΗΚΕΥΜΕΝΟ|ΑΠΟΘΗΚΕΥΜΕΝΗ|ΑΠΟΘΗΚΕΥΜΕΝΟ ΣΗΜΕΙΟ/g,'').trim();p=voiceBest(pointLibrary,q||reference);if(p)return {...p,libraryPointId:p.id,sourceType:'library'};
+    }
+    p=voiceBest(pointLibrary,reference);if(p)return {...p,libraryPointId:p.id,sourceType:'library'};
+    return null;
+  }
+  function voiceAddRoutePoint(reference){
+    if(!voiceEnsureRoute())return 'Δεν άνοιξε η δημιουργία route.';
+    if(!routeHasValidStart())return 'Επίλεξε πρώτα Αφετηρία ή αεροδρόμιο.';
+    const n=voiceNorm(reference);
+    if(/^(ΑΕΡΟΔΡΟΜΙΟ|Α Δ|AIRPORT) /.test(n)){
+      const q=n.replace(/^(ΑΕΡΟΔΡΟΜΙΟ|Α Δ|AIRPORT) /,'').trim();const ap=voiceBest(airportCatalog(),q);if(!ap)return 'Δεν βρέθηκε το αεροδρόμιο '+q+'.';addDraftPoint({...ap,name:ap.icao||ap.name,sourceType:'airport'});return 'Προστέθηκε '+(ap.icao||ap.name)+'.';
+    }
+    const point=voiceFindRoutePoint(reference);if(!point)return 'Δεν βρέθηκε το σημείο '+reference+'.';
+    addDraftPoint(point);return 'Προστέθηκε '+point.name+'.';
+  }
+  function voiceDraftSummary(){
+    if(!Array.isArray(routeDraft)||!routeDraft.length)return 'Δεν υπάρχει route υπό δημιουργία.';
+    const stats=routeStats({points:routeDraft});const names=routeDraft.map(p=>p.name).join(', ');
+    return 'Το route έχει '+routeDraft.length+' σημεία: '+names+'. Συνολική απόσταση περίπου '+Math.round(stats.total)+' χιλιόμετρα.';
+  }
+  function voiceRouteNameFromCommand(raw){
+    const n=voiceNorm(raw);const pos=n.indexOf(' ΩΣ ');if(pos>=0)return n.slice(pos+4).trim();
+    return '';
+  }
+  function voiceRequestSave(raw){
+    if(!Array.isArray(routeDraft)||routeDraft.length<2)return voiceSay('Το route χρειάζεται τουλάχιστον δύο σημεία.');
+    if(!routeHasValidStart())return voiceSay('Το πρώτο σημείο πρέπει να είναι Αφετηρία ή αεροδρόμιο.');
+    const requested=voiceRouteNameFromCommand(raw);const input=document.getElementById('routeBuilderName');if(requested&&input)input.value=requested;
+    const name=String((input||{}).value||'ROUTE').trim()||'ROUTE';
+    pzlVoicePending={prompt:'Να αποθηκεύσω το route ως '+name+';',action:()=>{const savedName=name;saveRouteDraft();return 'Το route '+savedName+' αποθηκεύτηκε.';}};
+    voiceSay(pzlVoicePending.prompt+' Πες ναι ή όχι.');
+  }
+  function voiceFindRoute(query){
+    const q=voiceNorm(query);if(!q)return routeLibrary.length===1?routeLibrary[0]:null;return voiceBest(routeLibrary,q);
+  }
+  function voiceRequestActivate(raw){
+    const n=voiceNorm(raw);let q=n.replace(/^.*?(ΕΝΕΡΓΟΠΟΙΗΣΕ|ΕΝΕΡΓΟΠΟΙΗΣΗ|ACTIVATE)/,'').trim().replace(/^(ΤΟ |ΤΗ |ΤΗΝ )?(ROUTE|ΡΟΥΤ|ΡΟΥΤΕ|ΔΙΑΔΡΟΜΗ) /,'').trim();
+    const r=voiceFindRoute(q);if(!r)return voiceSay('Δεν βρέθηκε το route '+q+'.');
+    if(activeRouteId===r.id)return voiceSay('Το route '+r.name+' είναι ήδη ενεργό.');
+    pzlVoicePending={prompt:'Να ενεργοποιήσω το route '+r.name+';',action:()=>{toggleRoute(r.id);return 'Το route '+r.name+' ενεργοποιήθηκε.';}};voiceSay(pzlVoicePending.prompt+' Πες ναι ή όχι.');
+  }
+  function voiceRequestDeactivate(){
+    const r=routeLibrary.find(x=>x.id===activeRouteId);if(!r)return voiceSay('Δεν υπάρχει ενεργό route.');
+    pzlVoicePending={prompt:'Να απενεργοποιήσω το route '+r.name+';',action:()=>{toggleRoute(r.id);return 'Το route απενεργοποιήθηκε.';}};voiceSay(pzlVoicePending.prompt+' Πες ναι ή όχι.');
+  }
+  function voiceHudSummary(){
+    const parts=[];const hdg=voiceText('hudHdg'),gs=voiceText('hudGs'),alt=voiceText('hudAlt');
+    if(hdg&&hdg!=='---')parts.push('Πορεία '+hdg+' μοίρες');if(gs&&gs!=='-')parts.push('ταχύτητα '+gs);if(alt&&alt!=='-')parts.push('ύψος '+alt);
+    const fixBox=document.getElementById('hudFixReadout');if(fixBox&&!fixBox.hidden){const name=voiceText('hudFixName'),brg=voiceText('hudFixBrg'),km=voiceText('hudFixKm'),eta=voiceText('hudFixEta');parts.push(name+', διόπτευση '+brg+' μοίρες, απόσταση '+km+' χιλιόμετρα, χρόνος '+eta);}
+    const refill=voiceText('hudRefillName'),refBrg=voiceText('hudRefillBrg'),refKm=voiceText('hudRefillKm');if(refill&&refill!=='-'&&refBrg!=='---')parts.push('Refill '+refill+', '+refBrg+' μοίρες, '+refKm+' χιλιόμετρα');
+    const full=voiceText('hudFullName'),fullBrg=voiceText('hudFullBrg'),fullKm=voiceText('hudFullKm');if(full&&full!=='-'&&fullBrg!=='---')parts.push('Full stop '+full+', '+fullBrg+' μοίρες, '+fullKm+' χιλιόμετρα');
+    return parts.length?parts.join('. ')+'.':'Δεν υπάρχουν διαθέσιμα στοιχεία HUD.';
+  }
+  function voiceActiveRouteSummary(nextOnly){
+    const route=routeLibrary.find(r=>r.id===activeRouteId)||(Array.isArray(routeDraft)&&routeDraft.length?{name:'υπό δημιουργία',points:routeDraft}:null);
+    if(!route||!route.points||!route.points.length)return 'Δεν υπάρχει ενεργό route ή route υπό δημιουργία.';
+    const stats=routeStats(route);let idx=route.points.length>1?1:0;let pos=null;try{pos=currentGps;}catch(e){}
+    if(pos&&finite(pos.lat)&&finite(pos.lon)&&route.points.length){let nearest=0,nearD=Infinity;route.points.forEach((p,i)=>{const d=havKm(pos,p);if(d<nearD){nearD=d;nearest=i;}});idx=(nearD<2&&nearest<route.points.length-1)?nearest+1:Math.max(1,nearest);idx=Math.min(idx,route.points.length-1);}
+    const target=route.points[idx];let extra='';if(pos&&finite(pos.lat)&&finite(pos.lon)&&target){const d=havKm(pos,target),b=brgDeg(pos,target);extra=' Απόσταση '+Math.round(d)+' χιλιόμετρα, διόπτευση '+Math.round(b)+' μοίρες.';}
+    if(nextOnly)return 'Επόμενο σημείο '+target.name+'.'+extra;
+    return 'Route '+route.name+', '+route.points.length+' σημεία, συνολική απόσταση περίπου '+Math.round(stats.total)+' χιλιόμετρα. Επόμενο σημείο '+target.name+'.'+extra;
+  }
+  function voiceHelp(){
+    return 'Διαθέσιμες εντολές. Δημιουργία route. Αφετηρία, ή Αφετηρία Μυτιλήνη. Πρόσθεσε FIX ένα, MFIX ένα, CHECK ένα, TEMP ένα, FIRE ένα, ή αεροδρόμιο Χίος. Αποθήκευση route ως Άλφα. Ενεργοποίησε route Άλφα. Ανάγνωση HUD. Επόμενο σημείο. Κατάσταση route. Για σημαντικές ενέργειες θα ζητήσω επιβεβαίωση.';
+  }
+  async function voiceHandle(raw){
+    const n=voiceNorm(raw);if(!n)return;
+    voiceStatus('Άκουσα: '+raw,'heard');
+    if(pzlVoicePending){
+      if(/^(ΝΑΙ|ΕΠΙΒΕΒΑΙΩΣΗ|ΕΠΙΒΕΒΑΙΩΝΩ|ΟΚ|OK|ΚΑΝΤΟ|ΚΑΝΕ ΤΟ)$/.test(n)){
+        const pending=pzlVoicePending;pzlVoicePending=null;let result='Η εντολή εκτελέστηκε.';try{result=await pending.action()||result;}catch(e){console.error(e);result='Παρουσιάστηκε σφάλμα κατά την εκτέλεση.';}voiceSay(result);return;
+      }
+      if(/^(ΟΧΙ|ΑΚΥΡΩΣΗ|ΑΚΥΡΟ|ΜΗΝ)$/.test(n)){pzlVoicePending=null;voiceSay('Ακυρώθηκε.');return;}
+      voiceSay('Πες ναι για επιβεβαίωση ή όχι για ακύρωση.');return;
+    }
+    if(/^(ΣΤΑΜΑΤΑ|ΚΛΕΙΣΕ ΦΩΝΗ|VOICE OFF)$/.test(n)){voiceStop('Φωνητικός χειρισμός ανενεργός.');return;}
+    if(/ΒΟΗΘΕΙΑ|ΕΝΤΟΛΕΣ/.test(n)){voiceSay(voiceHelp());return;}
+    const routeWord=/(ROUTE|ΡΟΥΤ|ΡΟΥΤΕ|ΔΙΑΔΡΟΜΗ)/.test(n);
+    if(routeWord&&/(ΔΗΜΙΟΥΡΓ|ΝΕΟ|ΦΤΙΑΞΕ)/.test(n)){openRouteBuilder(null);voiceSay('Νέο route. Πες Αφετηρία για την τρέχουσα θέση, ή Αφετηρία και το όνομα αεροδρομίου.');return;}
+    if(/^ΑΦΕΤΗΡΙΑ(?: |$)|^ΠΡΩΤΟ ΣΗΜΕΙΟ(?: |$)/.test(n)){
+      let q=n.replace(/^ΑΦΕΤΗΡΙΑ\s*/,'').replace(/^ΠΡΩΤΟ ΣΗΜΕΙΟ\s*/,'').replace(/^(ΑΕΡΟΔΡΟΜΙΟ|Α Δ)\s*/,'').trim();
+      const msg=(!q||q==='ΕΔΩ'||q==='GPS'||q==='ΤΡΕΧΟΥΣΑ ΘΕΣΗ')?voiceRouteStartCurrent():voiceRouteStartAirport(q);voiceSay(msg);return;
+    }
+    if(/^ΠΡΟΣΘΕΣΕ |^ΒΑΛΕ /.test(n)){
+      const ref=n.replace(/^(ΠΡΟΣΘΕΣΕ|ΒΑΛΕ)\s+/,'').trim();voiceSay(voiceAddRoutePoint(ref)+' Πες άλλο σημείο ή αποθήκευση route ως όνομα.');return;
+    }
+    if(routeWord&&/ΑΠΟΘΗΚΕΥ/.test(n)){voiceRequestSave(raw);return;}
+    if(routeWord&&/ΕΝΕΡΓΟΠΟΙ/.test(n)&&!/ΑΠΕΝΕΡΓΟΠΟΙ/.test(n)){voiceRequestActivate(raw);return;}
+    if(routeWord&&/ΑΠΕΝΕΡΓΟΠΟΙ/.test(n)){voiceRequestDeactivate();return;}
+    if(routeWord&&/(ΚΑΤΑΣΤΑΣΗ|ΑΝΑΓΝΩΣΗ|ΠΕΣ ΜΟΥ)/.test(n)){voiceSay(voiceActiveRouteSummary(false));return;}
+    if(/ΕΠΟΜΕΝΟ ΣΗΜΕΙΟ/.test(n)){voiceSay(voiceActiveRouteSummary(true));return;}
+    if(/(?:ΑΝΑΓΝΩΣΗ|ΠΕΣ ΜΟΥ|ΔΙΑΒΑΣΕ).*HUD|HUD.*(?:ΑΝΑΓΝΩΣΗ|ΠΕΣ ΜΟΥ|ΔΙΑΒΑΣΕ)/.test(n)){voiceSay(voiceHudSummary());return;}
+    if(routeWord&&/ΑΚΥΡ/.test(n)){
+      if(!Array.isArray(routeDraft))return voiceSay('Δεν υπάρχει route υπό δημιουργία.');pzlVoicePending={prompt:'Να ακυρώσω τη δημιουργία του route;',action:()=>{closeRouteBuilder();return 'Η δημιουργία route ακυρώθηκε.';}};voiceSay(pzlVoicePending.prompt+' Πες ναι ή όχι.');return;
+    }
+    if(/ΔΙΑΓΡΑΨΕ ΤΟ ΤΕΛΕΥΤΑΙΟ ΣΗΜΕΙΟ|UNDO ΣΗΜΕΙΟ/.test(n)){
+      if(!Array.isArray(routeDraft)||routeDraft.length<=1)return voiceSay('Δεν υπάρχει ενδιάμεσο σημείο για διαγραφή.');pzlVoicePending={prompt:'Να διαγράψω το τελευταίο σημείο '+routeDraft[routeDraft.length-1].name+';',action:()=>{routeDraft.pop();renderRouteDraft();return 'Το τελευταίο σημείο διαγράφηκε.';}};voiceSay(pzlVoicePending.prompt+' Πες ναι ή όχι.');return;
+    }
+    if(/ΤΙ ΕΧΕΙ ΤΟ ROUTE|ΠΕΣ ΤΟ ROUTE/.test(n)){voiceSay(voiceDraftSummary());return;}
+    voiceSay('Δεν αναγνώρισα την εντολή. Πες βοήθεια για παραδείγματα.');
+  }
+  function installVoiceUi(){
+    if(document.getElementById('voiceCommandBtn'))return;
+    const bar=document.getElementById('topMapGpsBar');if(!bar)return;
+    const btn=document.createElement('button');btn.id='voiceCommandBtn';btn.type='button';btn.className='secondary';btn.textContent='🎙';btn.title='Φωνητικές εντολές';btn.setAttribute('aria-label','Φωνητικές εντολές');btn.setAttribute('aria-pressed','false');
+    const pnl=document.getElementById('toggleActionsBtn');if(pnl&&pnl.parentNode===bar)bar.insertBefore(btn,pnl.nextSibling);else bar.appendChild(btn);
+    const status=document.createElement('div');status.id='pzlVoiceStatus';status.hidden=true;status.setAttribute('role','status');status.setAttribute('aria-live','polite');document.body.appendChild(status);
+    btn.addEventListener('click',voiceToggle);
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){btn.classList.add('unsupported');btn.title='Η αναγνώριση φωνής δεν υποστηρίζεται από τον browser';return;}
+    pzlVoiceRecognition=new SR();pzlVoiceRecognition.lang='el-GR';pzlVoiceRecognition.continuous=true;pzlVoiceRecognition.interimResults=false;pzlVoiceRecognition.maxAlternatives=1;
+    pzlVoiceRecognition.onstart=()=>{pzlVoiceRecognitionRunning=true;voiceStatus('Ακούω…','listening');};
+    pzlVoiceRecognition.onresult=ev=>{let text='';for(let i=ev.resultIndex;i<ev.results.length;i++)if(ev.results[i].isFinal)text+=ev.results[i][0].transcript+' ';text=text.trim();if(text)voiceHandle(text).catch(e=>{console.error(e);voiceSay('Παρουσιάστηκε σφάλμα στη φωνητική εντολή.');});};
+    pzlVoiceRecognition.onerror=ev=>{const code=String(ev.error||'');if(code==='not-allowed'||code==='service-not-allowed'){pzlVoiceEnabled=false;voiceStatus('Δεν δόθηκε άδεια μικροφώνου. Επίτρεψέ την από τις ρυθμίσεις του browser.','error');}else if(code!=='aborted'&&code!=='no-speech'){voiceStatus('Σφάλμα φωνής: '+code,'error');}};
+    pzlVoiceRecognition.onend=()=>{pzlVoiceRecognitionRunning=false;if(pzlVoiceEnabled&&!pzlVoiceSpeaking)setTimeout(voiceBeginRecognition,450);};
+    document.addEventListener('visibilitychange',()=>{if(document.hidden&&pzlVoiceEnabled)voiceStop('Η φωνή σταμάτησε επειδή η εφαρμογή πέρασε στο παρασκήνιο.');});
+    window.PZL_VOICE={start:voiceStart,stop:voiceStop,toggle:voiceToggle,say:voiceSay,command:voiceHandle,help:voiceHelp};
+  }
+
+
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installUi);else installUi();
   setTimeout(installUi,700);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installVoiceUi);else installVoiceUi();
+  setTimeout(installVoiceUi,900);
 
   window.PZL_CHECK_DISTANCE={
     get points(){return checkPoints.filter(Boolean).map(p=>({...p}));},
@@ -14051,5 +14314,6 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
 <!-- PZL_D449_NO_BASEMAP_FLICKER_NO_VFR_MAGNIFIER_END -->
 
 <!-- PZL_D455_FIRE_DELETE_MAP_CLEANUP -->
+<!-- PZL_D456_VOICE_COMMANDS_V1 -->
 </body>
 </html>
