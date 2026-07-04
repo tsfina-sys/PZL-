@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_COMMAND_DCT_INFO_20260704D459";
+const PZL_BUILD = "PZL_POINTS_SUBPANELS_FLIGHT_REPORT_20260704D460";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";

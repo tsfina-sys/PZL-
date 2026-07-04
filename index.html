@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_D455_FIRE_DELETE_MAP_CLEANUP">
+<meta name="pzl-build" content="PZL_D460_POINTS_SUBPANELS_FLIGHT_REPORT">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -14221,6 +14221,300 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
 </script>
 <!-- PZL_D457_PANEL_REORG_REQUESTED_ORDER_END -->
 <!-- PZL_D459_COMMAND_DCT_INFO: clean command label; DCT fire/origin pair inside Info -->
+
+
+<!-- PZL_D460_POINTS_SUBPANELS_FLIGHT_REPORT_BEGIN -->
+<style id="pzl-d460-points-report-css">
+  #fixPanelList,
+  #pzlD457LibraryMoved{display:block!important;}
+  .pzl-d460-point-subpanel{
+    border:1px solid #f3c58b;
+    border-radius:12px;
+    background:#fffaf4;
+    margin:8px 0;
+    overflow:hidden;
+  }
+  .pzl-d460-point-subpanel > summary{
+    list-style:none;
+    cursor:pointer;
+    display:flex!important;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:11px 12px!important;
+    margin:0!important;
+    color:#7c2d12!important;
+    background:#fff7ed;
+    font-size:17px!important;
+    line-height:1.15!important;
+    font-weight:900!important;
+    border:0!important;
+  }
+  .pzl-d460-point-subpanel > summary::-webkit-details-marker{display:none;}
+  .pzl-d460-point-subpanel > summary::before{content:'▶';font-size:13px;margin-right:7px;}
+  .pzl-d460-point-subpanel[open] > summary::before{content:'▼';}
+  .pzl-d460-point-subpanel[open] > summary{background:#ffedd5;}
+  .pzl-d460-point-subpanel-body{padding:4px 0 6px;}
+  .pzl-d460-point-subpanel-body > .fix-row:first-child,
+  .pzl-d460-point-subpanel-body > .pzl-lib-row:first-child,
+  .pzl-d460-point-subpanel-body > .pzl-temp-row:first-child,
+  .pzl-d460-point-subpanel-body > .pzl-fire-row:first-child{border-top:0!important;}
+  #pzlD457LibraryMoved > .pzl-d457-subtitle{display:none!important;}
+
+  #pzlD457FlightReportBlock{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:9px;
+    margin-bottom:12px;
+  }
+  #pzlD457FlightReportBlock .pzl-d460-report-title{
+    font-size:21px;
+    font-weight:900;
+    color:#1f2937;
+    margin:0 0 2px;
+    padding:0 0 7px;
+    border-bottom:1px solid #dbe3ea;
+  }
+  #pzlD457FlightReportBlock .pzl-d460-report-field{
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:3px;
+    min-height:62px;
+    padding:11px 12px!important;
+    margin:0!important;
+    border:1.5px solid #38bdf8!important;
+    border-radius:13px!important;
+    background:#e0f2fe!important;
+    color:#0f172a;
+    white-space:normal!important;
+    font-size:15px!important;
+    line-height:1.3;
+  }
+  #pzlD457FlightReportBlock .pzl-d460-report-label{font-weight:900;color:#075985;}
+  #pzlD457FlightReportBlock .pzl-d460-report-value{font-weight:700;color:#111827;overflow-wrap:anywhere;}
+  #pzlD460LegacyReportFields{display:none!important;}
+  #missionLogHint{margin-top:8px;}
+  @media (min-width:700px){
+    #pzlD457FlightReportBlock{grid-template-columns:repeat(2,minmax(0,1fr));}
+    #pzlD457FlightReportBlock .pzl-d460-report-title{grid-column:1/-1;}
+    #pzlD457FlightReportBlock .pzl-d460-report-field:last-of-type{grid-column:1/-1;}
+  }
+</style>
+<script id="pzl-d460-points-report-js">
+(function(){
+  'use strict';
+  const OPEN_KEY='pzl_d460_point_subpanels_open';
+  let openPointSections=new Set();
+  try{openPointSections=new Set(JSON.parse(localStorage.getItem(OPEN_KEY)||'[]'));}catch(e){}
+
+  function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+  function rememberOpen(key,isOpen){
+    if(isOpen)openPointSections.add(key);else openPointSections.delete(key);
+    try{localStorage.setItem(OPEN_KEY,JSON.stringify(Array.from(openPointSections)));}catch(e){}
+  }
+  function subpanel(key,label,nodes){
+    const d=document.createElement('details');
+    d.className='pzl-d460-point-subpanel';
+    d.dataset.pointSection=key;
+    d.open=openPointSections.has(key);
+    const summary=document.createElement('summary');summary.textContent=label;
+    const body=document.createElement('div');body.className='pzl-d460-point-subpanel-body';
+    (nodes||[]).forEach(n=>body.appendChild(n));
+    d.append(summary,body);
+    d.addEventListener('toggle',()=>rememberOpen(key,d.open));
+    return d;
+  }
+  function fixKeyAndLabel(title){
+    const t=(title||'').replace(/\s+/g,' ').trim();
+    if(/^GPS FIX/i.test(t))return ['fix',t.replace(/^GPS FIX/i,'FIX')];
+    if(/^Manual FIX/i.test(t))return ['mfix',t.replace(/^Manual FIX/i,'MFIX')];
+    if(/^CHECK DISTANCE/i.test(t))return ['check',t.replace(/^CHECK DISTANCE/i,'CHECK')];
+    return [t.toLowerCase().replace(/\W+/g,'_')||'points',t||'Σημεία'];
+  }
+  function transformFixGroups(){
+    const list=document.getElementById('fixPanelList');
+    if(!list||list.querySelector(':scope > .pzl-d460-point-subpanel'))return;
+    const children=Array.from(list.children);
+    const groups=[];
+    let current=null;
+    children.forEach(node=>{
+      if(node.classList.contains('fix-group-title')){
+        current={title:node.textContent||'',nodes:[]};groups.push(current);node.remove();
+      }else if(current){current.nodes.push(node);}
+    });
+    if(!groups.length)return;
+    list.innerHTML='';
+    groups.forEach(g=>{const [key,label]=fixKeyAndLabel(g.title);list.appendChild(subpanel(key,label,g.nodes));});
+  }
+  function ensureLibrarySubpanels(){
+    const holder=document.getElementById('pzlD457LibraryMoved');
+    if(!holder||holder.dataset.d460Wrapped==='1')return false;
+    const specs=[
+      ['stor','STOR','pzlSavedPointList'],
+      ['temp','TEMP','pzlTempPointList'],
+      ['fire','FIRE','pzlFirePointList']
+    ];
+    specs.forEach(([key,label,id])=>{
+      const list=document.getElementById(id);if(!list)return;
+      const previous=list.previousElementSibling;
+      if(previous&&previous.classList.contains('pzl-d457-subtitle'))previous.remove();
+      holder.appendChild(subpanel(key,label,[list]));
+    });
+    holder.dataset.d460Wrapped='1';
+    return true;
+  }
+  function installPointPanels(){
+    try{
+      if(typeof renderSavedFixPanel==='function'&&!window.__pzlD460FixRenderWrapped){
+        window.__pzlD460FixRenderWrapped=true;
+        const baseRender=renderSavedFixPanel;
+        renderSavedFixPanel=function(){
+          const result=baseRender.apply(this,arguments);
+          transformFixGroups();
+          return result;
+        };
+      }
+      if(typeof renderSavedFixPanel==='function')renderSavedFixPanel();else transformFixGroups();
+    }catch(e){transformFixGroups();}
+    ensureLibrarySubpanels();
+  }
+
+  function orderedEvents(events){
+    const arr=Array.isArray(events)?events.slice():[];
+    return arr.sort((a,b)=>{
+      const ta=new Date(a.time).getTime(),tb=new Date(b.time).getTime();
+      return ta!==tb?ta-tb:Number(a.seq||0)-Number(b.seq||0);
+    });
+  }
+  function timeOf(event){
+    if(!event||!event.time)return '-';
+    try{
+      if(typeof pzlMissionLogFormatTime==='function')return pzlMissionLogFormatTime(event.time);
+      return new Date(event.time).toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+    }catch(e){return '-';}
+  }
+  function durationText(start,end){
+    if(!start||!end)return '-';
+    const ms=new Date(end.time).getTime()-new Date(start.time).getTime();
+    if(!Number.isFinite(ms)||ms<0)return '-';
+    const total=Math.floor(ms/1000),h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;
+    return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  }
+  function summaryData(events){
+    const ordered=orderedEvents(events);
+    const command=ordered.find(e=>e.type==='command')||null;
+    const takeoff=ordered.find(e=>e.type==='actual_takeoff')||null;
+    const full=ordered.slice().reverse().find(e=>e.type==='final_landing')||null;
+    const midTakeoffs=ordered.filter(e=>e.type==='intermediate_takeoff');
+    const midLandings=ordered.filter(e=>e.type==='intermediate_landing');
+    const drops=ordered.filter(e=>e.type==='drop');
+    const airborneCommand=!!(command&&/Airborne Full Tank|αέρα με φορτίο/i.test(String(command.note||'')));
+    const numbered=arr=>arr.length?arr.map((e,i)=>(i+1)+'. '+timeOf(e)).join(' · '):'-';
+    return {
+      commandLabel:airborneCommand?'Ώρα εντολής στον αέρα με φορτίο':'Ώρα Εντολής Α/Γ',
+      command:timeOf(command),
+      takeoff:timeOf(takeoff),
+      full:timeOf(full),
+      midTakeoffs:numbered(midTakeoffs),
+      midLandings:numbered(midLandings),
+      drops:numbered(drops),
+      duration:durationText(takeoff,full)
+    };
+  }
+  function field(label,value){
+    const d=document.createElement('div');d.className='position-report pzl-d460-report-field';
+    d.innerHTML='<span class="pzl-d460-report-label">'+esc(label)+':</span><span class="pzl-d460-report-value">'+esc(value||'-')+'</span>';
+    return d;
+  }
+  function ensureFlightReport(){
+    const block=document.getElementById('pzlD457FlightReportBlock');
+    if(!block)return false;
+    if(!document.getElementById('pzlD460LegacyReportFields')){
+      const legacy=document.createElement('div');legacy.id='pzlD460LegacyReportFields';
+      ['actualTakeoffClock','fullStopClock','intermediateLandingsBox','dropNowStatus','wptProgressStatus'].forEach(id=>{const el=document.getElementById(id);if(el)legacy.appendChild(el);});
+      block.innerHTML='';block.appendChild(legacy);
+    }
+    const data=summaryData(typeof pzlMissionLog!=='undefined'?pzlMissionLog:[]);
+    Array.from(block.querySelectorAll('.pzl-d460-report-title,.pzl-d460-report-field')).forEach(n=>n.remove());
+    const title=document.createElement('div');title.className='pzl-d460-report-title';title.textContent='Αναφορά Πτήσης';
+    block.insertBefore(title,block.firstChild);
+    [
+      [data.commandLabel,data.command],
+      ['Ώρα Α/Γ',data.takeoff],
+      ['Ώρα Full Stop',data.full],
+      ['Ενδιάμεσες Α/Γ',data.midTakeoffs],
+      ['Ενδιάμεσες Π/Γ',data.midLandings],
+      ['Πραγματικές ρίψεις',data.drops],
+      ['Συνολική Διάρκεια (Α/Γ → Full Stop)',data.duration]
+    ].forEach(([label,value])=>block.appendChild(field(label,value)));
+    return true;
+  }
+  function structuredReportText(events){
+    const d=summaryData(events);
+    return [
+      d.commandLabel+': '+d.command,
+      'Ώρα Α/Γ: '+d.takeoff,
+      'Ώρα Full Stop: '+d.full,
+      'Ενδιάμεσες Α/Γ: '+d.midTakeoffs,
+      'Ενδιάμεσες Π/Γ: '+d.midLandings,
+      'Πραγματικές ρίψεις: '+d.drops,
+      'Συνολική Διάρκεια (Α/Γ → Full Stop): '+d.duration
+    ].join('\n');
+  }
+  function normalizeReportWords(){
+    const hint=document.getElementById('missionLogHint');
+    if(hint)hint.innerHTML='Το Reset του panel <b>δεν</b> σβήνει την αναφορά πτήσης. Οι αποθηκευμένες αναφορές κρατιούνται ξεχωριστά.';
+    const date=document.getElementById('missionLogDate');
+    if(date&&date.textContent.includes('τρέχουσας:'))date.textContent=date.textContent.replace('Ημερομηνία τρέχουσας:','Ημερομηνία τρέχουσας αναφοράς:');
+    document.querySelectorAll('.mission-log-empty').forEach(el=>{
+      el.textContent=el.textContent.replace(/καταγραφές/gi,'αναφορές').replace(/καταγραφή/gi,'αναφορά');
+    });
+    const titleLabel=document.querySelector('label[for="missionArchiveTitle"]');if(titleLabel)titleLabel.textContent='Τίτλος αναφοράς';
+    const titleInput=document.getElementById('missionArchiveTitle');if(titleInput)titleInput.placeholder='Τίτλος αναφοράς';
+    const editorTitle=document.querySelector('#missionArchiveEditor .mission-log-archive-title');if(editorTitle)editorTitle.textContent='Επεξεργασία Αναφοράς';
+    const textArea=document.getElementById('missionArchiveText');if(textArea){const l=textArea.closest('div')&&textArea.closest('div').querySelector('label');if(l)l.textContent='Περιεχόμενο αναφοράς';}
+    const del=document.getElementById('missionArchiveDeleteBtn');if(del)del.textContent='🗑 Διαγραφή αναφοράς';
+  }
+  function installFlightReport(){
+    try{
+      if(typeof pzlMissionLogEventsToText==='function'&&!window.__pzlD460ReportTextWrapped){
+        window.__pzlD460ReportTextWrapped=true;
+        pzlMissionLogEventsToText=function(events){return structuredReportText(events);};
+      }
+      if(typeof pzlMissionLogDefaultTitle==='function'&&!window.__pzlD460ReportTitleWrapped){
+        window.__pzlD460ReportTitleWrapped=true;
+        pzlMissionLogDefaultTitle=function(){
+          const first=(typeof pzlMissionLog!=='undefined'&&pzlMissionLog.length)?pzlMissionLog[0]:null;
+          const stamp=first&&first.time?(typeof pzlMissionLogFormatDateTime==='function'?pzlMissionLogFormatDateTime(first.time):timeOf(first)):'-';
+          return 'Αναφορά Πτήσης '+stamp;
+        };
+      }
+      if(typeof pzlMissionLogRenderCurrent==='function'&&!window.__pzlD460CurrentRenderWrapped){
+        window.__pzlD460CurrentRenderWrapped=true;
+        const baseCurrent=pzlMissionLogRenderCurrent;
+        pzlMissionLogRenderCurrent=function(){const r=baseCurrent.apply(this,arguments);ensureFlightReport();normalizeReportWords();return r;};
+      }
+      if(typeof pzlMissionArchiveRender==='function'&&!window.__pzlD460ArchiveRenderWrapped){
+        window.__pzlD460ArchiveRenderWrapped=true;
+        const baseArchive=pzlMissionArchiveRender;
+        pzlMissionArchiveRender=function(){const r=baseArchive.apply(this,arguments);normalizeReportWords();return r;};
+      }
+    }catch(e){}
+    ensureFlightReport();normalizeReportWords();
+  }
+  function run(){
+    installPointPanels();installFlightReport();
+    let n=0;const timer=setInterval(()=>{
+      n++;installPointPanels();installFlightReport();
+      if(n>16)clearInterval(timer);
+    },400);
+    const sheet=document.querySelector('.bottom-sheet');
+    if(sheet){new MutationObserver(()=>{ensureLibrarySubpanels();if(document.getElementById('fixPanelList')&&!document.querySelector('#fixPanelList > .pzl-d460-point-subpanel'))transformFixGroups();}).observe(sheet,{childList:true,subtree:true});}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
+})();
+</script>
+<!-- PZL_D460_POINTS_SUBPANELS_FLIGHT_REPORT_END -->
 
 </body>
 </html>
