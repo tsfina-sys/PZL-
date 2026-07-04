@@ -1018,7 +1018,7 @@ body.pzl-screen-locked #lockMapBtn {
 #metarWindBtn.metar-hidden{background:#6b7280!important}
 </style>
 
-<meta name="pzl-build" content="PZL_D455_FIRE_DELETE_MAP_CLEANUP">
+<meta name="pzl-build" content="PZL_D456_PANEL_REORG_STEP1">
 
 <style id="fire-required-search-style">
 #searchBox:disabled,
@@ -1635,6 +1635,20 @@ body.pzl-screen-locked #lockMapBtn {
 }
 </style>
 
+
+<style id="pzl-d456-panel-reorg-css">
+  /* D456: σταδιακή αναδιοργάνωση κάτω panel σύμφωνα με το νέο πλάνο */
+  .pzl-d456-top-report{margin:8px 0 10px 0;border:1px solid #f59e0b;background:#fff7ed;color:#7c2d12;border-radius:12px;padding:8px 10px;font-weight:800;}
+  .pzl-d456-time-label{font-size:12px;font-weight:900;color:#334155;margin:6px 0 3px 0;}
+  #mapLockStatus,.pzl-d456-hide{display:none!important;}
+  .pzl-point-menu{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0;}
+  .pzl-point-chip{border:1px solid #cbd5e1;background:#f8fafc;border-radius:10px;padding:7px 4px;text-align:center;font-size:12px;font-weight:900;color:#334155;}
+  .pzl-point-chip.ready{background:#eef2ff;border-color:#a5b4fc;color:#312e81;}
+  .pzl-d456-subdetails{border:1px solid #dbeafe;background:#f8fbff;border-radius:12px;margin:8px 0;padding:0 8px 8px;}
+  .pzl-d456-subdetails>summary{cursor:pointer;font-weight:900;padding:9px 0;color:#1e3a8a;}
+  .pzl-d456-note{font-size:12px;color:#475569;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:8px;margin:7px 0;}
+  @media(max-width:700px){.pzl-point-menu{grid-template-columns:repeat(3,1fr);gap:4px}.pzl-point-chip{font-size:10px;padding:6px 2px}.pzl-d456-top-report{font-size:12px;padding:7px 8px}}
+</style>
 </head>
 
 <style id="fix37d46-metar-final-css">
@@ -1840,8 +1854,9 @@ body.pzl-screen-locked #lockMapBtn {
     <span class="pzlSplitGrip" aria-hidden="true"></span>
   </div>
   <div class="bottom-sheet">
+    <div id="positionReportResult" class="position-report pzl-d456-top-report">Αναφορά θέσης: -</div>
     <details class="collapsible-panel">
-      <summary>Σύνοψη / χρόνοι</summary>
+      <summary>Στοιχεία Επιχείρησης</summary>
       <div class="collapsible-body">
     <div class="dashboard">
       <div class="dash-card good" style="display:none"><div class="label">Κλιμάκιο</div><div id="dashBase" class="value">-</div></div>
@@ -1858,55 +1873,57 @@ body.pzl-screen-locked #lockMapBtn {
       <div class="dash-card"><div class="label">Περιορισμός</div><div id="dashLimit" class="value smallv">-</div></div>
     </div>
     <div class="primary-grid"></div>
-    <div class="row"><input id="manualTime" type="text" inputmode="tel" maxlength="5" placeholder="HH:MM ή 1000" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" /></div>
+    <div class="pzl-d456-time-label" id="pzlManualTimeLabel">Ώρα Εντολής Α/Γ: ΗΗ:ΜΜ ή 1000</div>
+    <div class="row"><input id="manualTime" type="text" inputmode="tel" maxlength="5" placeholder="ΗΗ:ΜΜ ή 1000" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" /></div>
     <div class="row"></div>
     <div id="mapLockStatus" class="small">Χάρτης: ξεκλείδωτος</div>
-    <div class="section-title">Live GPS</div>
-    <div id="gpsResult" class="result">GPS ανενεργό.</div>
+    <div class="section-title pzl-d456-hide">Live GPS</div>
+    <div id="gpsResult" class="result pzl-d456-hide">GPS ανενεργό.</div>
       </div>
     </details>
-    <details id="fixPanel">
-      <summary class="fix-title"><span>FIX σημεία</span><button id="clearFixBtn" type="button">CLR FIX</button></summary>
+    <details id="fixPanel" class="collapsible-panel">
+      <summary class="fix-title"><span>Σημεία</span><button id="clearFixBtn" type="button">CLR FIX</button></summary>
+      <div class="pzl-point-menu" aria-label="Κατηγορίες σημείων">
+        <div class="pzl-point-chip ready">FIX</div>
+        <div class="pzl-point-chip ready">MFIX</div>
+        <div class="pzl-point-chip">CHECK</div>
+        <div class="pzl-point-chip">TEMP</div>
+        <div class="pzl-point-chip">FIRE</div>
+        <div class="pzl-point-chip ready">STOR</div>
+      </div>
+      <div class="pzl-d456-note">D456: εδώ μαζεύτηκαν τα αποθηκευμένα FIX/MFIX. CHECK, TEMP, FIRE και πλήρες STOR μένουν για επόμενη φάση.</div>
       <div id="fixPanelList">FIX 1 -<br>FIX 2 -<br>FIX 3 -<br>FIX 4 -<br>FIX 5 -</div>
     </details>
     <details class="collapsible-panel">
-      <summary>Αναφορές / ενδιάμεσα</summary>
+      <summary>Αναφορά Πτήσης</summary>
       <div class="collapsible-body">
     <div class="row"></div>
-    <div id="positionReportResult" class="position-report">Αναφορά θέσης: -</div>
     <div id="actualTakeoffClock" class="position-report">Ώρα Α/Γ: -</div>
     <div id="fullStopClock" class="position-report">Ώρα Full Stop: -</div>
     <div id="intermediateLandingsBox" class="position-report">Ενδιάμεσες Π/Γ: -</div>
     <div id="dropNowStatus" class="position-report">Πραγματικές ρίψεις: -</div>
     <div id="wptProgressStatus" class="position-report">Ενεργό σκέλος: προς φωτιά</div>
+    <div id="refillBaseStatus" class="small pzl-d456-hide">Επαναπλήρωση: ίδιο με κλιμάκιο απογείωσης.</div>
+    <div id="newFireWithWaterStatus" class="small pzl-d456-hide">Νέα φωτιά με νερό: ανενεργό.</div>
+    <div id="returnWpStatus" class="small pzl-d456-hide">Ενδιάμεσα επιστροφής: 0 σημεία</div>
 
     
 <div class="row" style="margin-top:8px">
   
 </div>
 
-<div class="grid2" style="margin-top:8px">
-  <div>
-    <label>Α/Δ επαναπλήρωσης</label>
-    
-  </div>
-</div>
-<div id="refillBaseStatus" class="small">Επαναπλήρωση: ίδιο με κλιμάκιο απογείωσης.</div>
-
-<div id="newFireWithWaterStatus" class="small">Νέα φωτιά με νερό: ανενεργό.</div>
-
-<div class="row" style="margin-top:8px">
-  
-</div>
-<div id="returnWpStatus" class="small">Ενδιάμεσα επιστροφής: 0 σημεία</div>
-<div class="row" style="margin-top:6px"></div>
+      </div>
+    </details>
+    <details id="routesPanel" class="collapsible-panel">
+      <summary>Routes</summary>
+      <div class="collapsible-body">
+        <div class="pzl-d456-note"><b>Create Route:</b> σε αυτή την έκδοση παραμένει λειτουργικά μέσα στο NAV/WPT όπως ήταν, για να μη σπάσει η D455. Στην επόμενη φάση θα μεταφερθούν εδώ τα κουμπιά δημιουργίας/καθαρισμού διαδρομών.</div>
+        <div id="routesPanelStatus" class="position-report">Routes: χρησιμοποιεί τα υπάρχοντα WPT / WPT RTB / NAV.</div>
       </div>
     </details>
 
-
-
     <details id="navPanel" class="collapsible-panel nav-panel">
-      <summary>🧭 Ναυτιλία / προσγείωση</summary>
+      <summary>Ναυτιλία</summary>
       <div class="collapsible-body">
         <div class="nav-grid">
           <div class="nav-dest-row">
@@ -2000,34 +2017,34 @@ body.pzl-screen-locked #lockMapBtn {
     </details>
 
     <details id="missionLogPanel" class="collapsible-panel mission-log-panel">
-      <summary>Ημερολόγιο αποστολής <span id="missionLogCount">(0)</span></summary>
+      <summary>Ημερολόγιο Πτήσεων / Αποθηκευμένες Αναφορές <span id="missionLogCount">(0)</span></summary>
       <div class="collapsible-body">
         <div id="missionLogHint" class="small">
           Το Reset του panel <b>δεν</b> σβήνει το ημερολόγιο. Το ημερολόγιο κρατιέται ξεχωριστά.
         </div>
 
         <div class="mission-log-actions">
-          <button id="missionLogSaveBtn" type="button" class="secondary">💾 Αποθήκευση καταγραφής</button>
-          <button id="missionLogClearBtn" type="button" class="secondary">🧹 Καθαρισμός τρέχουσας</button>
+          <button id="missionLogSaveBtn" type="button" class="secondary">💾 Αποθήκευση αναφοράς</button>
+          <button id="missionLogClearBtn" type="button" class="secondary">🧹 Καθαρισμός τρέχουσας αναφοράς</button>
         </div>
 
         <div id="missionLogDate" class="small">Ημερομηνία τρέχουσας: -</div>
 
         <div id="missionLogList" class="mission-log-list">
-          <div class="mission-log-empty">Δεν υπάρχουν ακόμη καταγραφές.</div>
+          <div class="mission-log-empty">Δεν υπάρχουν ακόμη στοιχεία αναφοράς.</div>
         </div>
 
-        <div class="mission-log-archive-title">Αποθηκευμένες καταγραφές</div>
+        <div class="mission-log-archive-title">Αποθηκευμένες Αναφορές</div>
         <div id="missionArchiveList" class="mission-archive-list">
-          <div class="mission-log-empty">Δεν υπάρχουν αποθηκευμένες καταγραφές.</div>
+          <div class="mission-log-empty">Δεν υπάρχουν αποθηκευμένες αναφορές.</div>
         </div>
 
         <div id="missionArchiveEditor" class="mission-archive-editor" hidden>
-          <div class="mission-log-archive-title">Επεξεργασία καταγραφής</div>
+          <div class="mission-log-archive-title">Επεξεργασία αναφοράς</div>
           <div class="grid2">
             <div>
-              <label>Τίτλος καταγραφής</label>
-              <input id="missionArchiveTitle" type="text" placeholder="Τίτλος καταγραφής" />
+              <label>Τίτλος αναφοράς</label>
+              <input id="missionArchiveTitle" type="text" placeholder="Τίτλος αναφοράς" />
             </div>
             <div>
               <label>Ημερομηνία</label>
@@ -2046,7 +2063,7 @@ body.pzl-screen-locked #lockMapBtn {
       </div>
     </details>
 
-<details><summary>Αποστολή / Ρίψεις</summary>
+<details><summary>Στοιχεία Ρίψεων / Info</summary>
 <div class="timing-fields">
   <b>Χρόνοι απογείωσης</b>
   <div class="grid2">
@@ -2083,7 +2100,7 @@ body.pzl-screen-locked #lockMapBtn {
       <div class="small">+14 L μη ενδεικνυόμενα. Συνολικό πλήρες καύσιμο: 726 L.</div>
     </details>
 
-    <details><summary>Άνεμος / Διάδρομος</summary>
+    <details><summary>Καθετότητα Ανέμου</summary>
       <div class="grid2">
         <div><label>Διάδρομος heading °</label><input id="runwayHeading" type="number" value="010" min="0" max="360" /></div>
         <div><label>Άνεμος από °</label><input id="windDir" type="number" value="000" min="0" max="360" /></div>
@@ -2702,7 +2719,7 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
       if (!list) return;
 
       if (!pzlMissionLog.length) {
-        list.innerHTML = '<div class="mission-log-empty">Δεν υπάρχουν ακόμη καταγραφές.</div>';
+        list.innerHTML = '<div class="mission-log-empty">Δεν υπάρχουν ακόμη στοιχεία αναφοράς.</div>';
         return;
       }
 
@@ -2747,7 +2764,7 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
       if (!list) return;
 
       if (!pzlMissionLogArchive.length) {
-        list.innerHTML = '<div class="mission-log-empty">Δεν υπάρχουν αποθηκευμένες καταγραφές.</div>';
+        list.innerHTML = '<div class="mission-log-empty">Δεν υπάρχουν αποθηκευμένες αναφορές.</div>';
         return;
       }
 
@@ -14050,6 +14067,53 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
 </script>
 <!-- PZL_D449_NO_BASEMAP_FLICKER_NO_VFR_MAGNIFIER_END -->
 
-<!-- PZL_D455_FIRE_DELETE_MAP_CLEANUP -->
+<!-- PZL_D456_PANEL_REORG_STEP1 -->
+
+<script id="pzl-d456-panel-reorg-js">
+(function(){
+  function setManualTimeLabel(){
+    var lab=document.getElementById('pzlManualTimeLabel');
+    if(!lab) return;
+    var airborne=false;
+    try{ airborne=!!window.newFireWithWaterMode; }catch(e){}
+    var btn=document.getElementById('newFireWithWaterBtn');
+    if(btn && btn.classList && btn.classList.contains('active')) airborne=true;
+    lab.textContent = airborne ? 'Εντολή στον Αέρα με φορτίο: ΗΗ:ΜΜ ή 1000' : 'Ώρα Εντολής Α/Γ: ΗΗ:ΜΜ ή 1000';
+  }
+  function syncGpsButtonAccuracy(){
+    var btn=document.getElementById('gpsBtn');
+    if(!btn) return;
+    var acc=null;
+    try{ if(window.currentGps && isFinite(Number(window.currentGps.accuracy))) acc=Number(window.currentGps.accuracy); }catch(e){}
+    if(acc===null){
+      var gr=document.getElementById('gpsResult');
+      var m=gr && gr.textContent ? gr.textContent.match(/Ακρίβεια:\s*±\s*(\d+)/) : null;
+      if(m) acc=Number(m[1]);
+    }
+    if(acc!==null){
+      btn.textContent='GPS (±'+Math.round(acc)+'m)';
+      btn.classList.add('active');
+    }
+  }
+  function pulseFixButton(id,cls,ms){
+    var b=document.getElementById(id);
+    if(!b || b.__pzlD456PulseInstalled) return;
+    b.__pzlD456PulseInstalled=true;
+    b.addEventListener('click',function(){
+      b.classList.add(cls);
+      setTimeout(function(){b.classList.remove(cls);},ms||700);
+    },true);
+  }
+  function ensureStyles(){
+    if(document.getElementById('pzl-d456-pulse-css')) return;
+    var st=document.createElement('style'); st.id='pzl-d456-pulse-css';
+    st.textContent='#fixBtn.pzl-d456-fix-pulse{background:#f97316!important;color:white!important;border-color:#ea580c!important}#manualFixBtn.pzl-d456-mfix-pulse{background:#111827!important;color:white!important;border-color:#000!important}';
+    document.head.appendChild(st);
+  }
+  function tick(){ ensureStyles(); setManualTimeLabel(); syncGpsButtonAccuracy(); pulseFixButton('fixBtn','pzl-d456-fix-pulse',650); pulseFixButton('manualFixBtn','pzl-d456-mfix-pulse',1200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',tick); else tick();
+  setInterval(tick,1000);
+})();
+</script>
 </body>
 </html>
