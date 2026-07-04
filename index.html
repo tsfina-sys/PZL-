@@ -2064,7 +2064,9 @@ body.pzl-screen-locked #lockMapBtn {
 <div id="result" class="result">Αναμονή δεδομένων...</div>
 
 <div id="returnToGpsDistanceBox" class="result" style="background:#f0f9ff;border:1px solid #38bdf8;margin-top:6px">
-<b>Η απόσταση DCT προς παρούσα θέση (δεν υπολογίζεται):</b> -
+<div class="pzl-dct-info-row"><b>DCT Φωτιά → Αφετηρία:</b> -</div>
+<div class="pzl-dct-info-row"><b>DCT Αφετηρία → Φωτιά:</b> -</div>
+<div class="pzl-dct-info-note">Πληροφοριακές αποστάσεις — δεν συμμετέχουν στους υπολογισμούς.</div>
 </div>
 <div id="drops" class="drop-list"></div></details>
 
@@ -2553,6 +2555,7 @@ let baseMarker = null, fireMarker = null, gpsMarker = null, routeLine = null, ro
     let gpsWatchId = null;
     let currentGps = null;
     let useGpsAsStart = false;
+    let pzlInfoGpsStartPoint = null; // σταθερή Αφετηρία για τις πληροφοριακές DCT αποστάσεις
     let mapLocked = false;
     let lastGpsPointForSpeed = null;
 
@@ -5114,6 +5117,11 @@ function setFireMarker() {
         return;
       }
       useGpsAsStart = !useGpsAsStart;
+      if (useGpsAsStart && currentGps) {
+        pzlInfoGpsStartPoint = {lat:Number(currentGps.lat), lon:Number(currentGps.lon)};
+      } else if (!useGpsAsStart) {
+        pzlInfoGpsStartPoint = null;
+      }
       document.getElementById("useGpsAsStartBtn").textContent =
         useGpsAsStart ? "Αφετηρία: GPS" : "Χρήση GPS ως αφετηρία";
       document.getElementById("useGpsAsStartBtn").className =
@@ -5667,34 +5675,42 @@ function setFireMarker() {
     }
 
 
+    function pzlGetDctInfoOriginPoint() {
+      try {
+        if (typeof newFireWithWaterMode !== "undefined" && newFireWithWaterMode && newFireStartPoint) {
+          return {lat:Number(newFireStartPoint.lat), lon:Number(newFireStartPoint.lon)};
+        }
+        if (pzlInfoGpsStartPoint && Number.isFinite(pzlInfoGpsStartPoint.lat) && Number.isFinite(pzlInfoGpsStartPoint.lon)) {
+          return {lat:pzlInfoGpsStartPoint.lat, lon:pzlInfoGpsStartPoint.lon};
+        }
+        if (useGpsAsStart && currentGps && Number.isFinite(Number(currentGps.lat)) && Number.isFinite(Number(currentGps.lon))) {
+          return {lat:Number(currentGps.lat), lon:Number(currentGps.lon)};
+        }
+        const base = (typeof bases !== "undefined" && selectedBaseName) ? bases[selectedBaseName] : null;
+        if (base) return {lat:Number(base.lat), lon:Number(base.lon)};
+      } catch(e) {}
+      return null;
+    }
+
     function updateReturnToGpsDistanceBox() {
       try {
         const box = document.getElementById("returnToGpsDistanceBox");
         if (!box) return;
 
-        const label =
-          "<b>Η απόσταση DCT προς παρούσα θέση (δεν υπολογίζεται):</b> ";
-
-        if (typeof firePoint === "undefined" || !firePoint) {
-          box.innerHTML = label + "-";
-          return;
+        const origin = pzlGetDctInfoOriginPoint();
+        let value = "-";
+        if (firePoint && origin) {
+          const km = haversineKm(
+            {lat:Number(firePoint.lat), lon:Number(firePoint.lon)},
+            origin
+          );
+          if (Number.isFinite(km)) value = km.toFixed(1) + " km";
         }
-
-        const gps = pzlGetCurrentGpsPoint();
-        if (!gps) {
-          box.innerHTML = label + "-";
-          return;
-        }
-
-        // Μόνο η DCT απόσταση φωτιά → παρούσα θέση.
-        // Είναι πληροφοριακή και δεν συμμετέχει στους επιχειρησιακούς υπολογισμούς.
-        const km = haversineKm(
-          {lat:Number(firePoint.lat), lon:Number(firePoint.lon)},
-          {lat:Number(gps.lat), lon:Number(gps.lon)}
-        );
 
         box.innerHTML =
-          label + (Number.isFinite(km) ? km.toFixed(1) + " km" : "-");
+          '<div class="pzl-dct-info-row"><b>DCT Φωτιά → Αφετηρία:</b> ' + value + '</div>' +
+          '<div class="pzl-dct-info-row"><b>DCT Αφετηρία → Φωτιά:</b> ' + value + '</div>' +
+          '<div class="pzl-dct-info-note">Πληροφοριακές αποστάσεις — δεν συμμετέχουν στους υπολογισμούς.</div>';
       } catch(e) {}
     }
 
@@ -14072,6 +14088,9 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
   .pzl-d457-info-details summary{font-size:18px!important;font-weight:800!important;color:#075985;list-style:none;cursor:pointer;}
   .pzl-d457-info-details summary::-webkit-details-marker{display:none;}
   .pzl-d457-info-details:not([open]) #pzlD457DropInfoBody{display:none!important;}
+  #pzlD457DropInfoBody #returnToGpsDistanceBox{margin:7px 0 9px!important;background:#fff!important;border:1px solid #7dd3fc!important;padding:9px 10px!important;}
+  .pzl-dct-info-row{font-size:15px;line-height:1.35;margin:2px 0;}
+  .pzl-dct-info-note{font-size:12px;line-height:1.3;color:#475569;margin-top:5px;}
   #pzlD457PointButtons{display:none!important;}
   #openTempManagerBtn{display:none!important;}
 </style>
@@ -14106,20 +14125,21 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
       Array.from(b.querySelectorAll('.section-title')).forEach(x=>{if(txt(x).includes('Live GPS'))x.classList.add('pzl-d457-hidden')});
       const manual=document.getElementById('manualTime');
       if(manual&&!document.getElementById('pzlD457ManualLabel')){
-        const lab=document.createElement('label');lab.id='pzlD457ManualLabel';lab.style.fontWeight='800';lab.style.display='block';lab.style.margin='10px 0 4px';lab.textContent='Ώρα Εντολής Α/Γ: ΗΗ:ΜΜ ή 1000';manual.parentElement.insertBefore(lab,manual);
+        const lab=document.createElement('label');lab.id='pzlD457ManualLabel';lab.style.fontWeight='800';lab.style.display='block';lab.style.margin='10px 0 4px';lab.textContent='Ώρα Εντολής Α/Γ:';manual.parentElement.insertBefore(lab,manual);
       }
       const assign=firstDetailsBySummary('Αποστολή');
       const res=document.getElementById('result'), dct=document.getElementById('returnToGpsDistanceBox'), drops=document.getElementById('drops');
-      if(res||dct||drops){
+      if(drops){
         let wrap=document.getElementById('pzlD457DropsInside');
         if(!wrap){wrap=document.createElement('div');wrap.id='pzlD457DropsInside';wrap.innerHTML='<div class="pzl-d457-subtitle">Στοιχεία Ρίψεων</div>'; b.appendChild(wrap);}
-        safeAppend(wrap,dct); safeAppend(wrap,drops);
+        safeAppend(wrap,drops);
       }
       if(assign){
         const timing=assign.querySelector('.timing-fields');
         let info=document.getElementById('pzlD457DropInfo');
         if(!info){info=document.createElement('details');info.id='pzlD457DropInfo';info.className='pzl-d457-info-details';info.innerHTML='<summary>Info</summary><div id="pzlD457DropInfoBody"></div>'; b.appendChild(info);}
         const infoBody=document.getElementById('pzlD457DropInfoBody');
+        if(dct) safeAppend(infoBody,dct);
         if(res) safeAppend(infoBody,res);
         if(timing) safeAppend(infoBody,timing);
         assign.classList.add('pzl-d457-hidden');
@@ -14200,7 +14220,7 @@ body.pzl-d448-topo-active #pzlMapModeBtn{background:#157347!important}
 })();
 </script>
 <!-- PZL_D457_PANEL_REORG_REQUESTED_ORDER_END -->
-<!-- PZL_D458_PANEL_CLEANUP: single native arrows, Info toggle, no internal point-mode buttons -->
+<!-- PZL_D459_COMMAND_DCT_INFO: clean command label; DCT fire/origin pair inside Info -->
 
 </body>
 </html>

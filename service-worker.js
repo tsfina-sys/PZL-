@@ -1,4 +1,4 @@
-const PZL_BUILD = "PZL_PANEL_CLEANUP_20260704D458";
+const PZL_BUILD = "PZL_COMMAND_DCT_INFO_20260704D459";
 const APP_CACHE = "pzl-app-" + PZL_BUILD;
 const TILE_CACHE = "pzl-map-tiles-v2";
 const CACHE_PREFIX = "pzl-app-";
