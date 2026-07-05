@@ -13334,8 +13334,8 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
 (function(){
   'use strict';
   const BUILD='PZL_MAP_MENU_VFR_ROUTES_D424';
-  const CORRIDOR_RADIUS_M=25000;
-  const GPS_RELOAD_DISTANCE_KM=10;
+  const CORRIDOR_RADIUS_M=60000;
+  const GPS_RELOAD_DISTANCE_KM=10; // legacy, not used in D467
   const OPT_KEY='pzlD422OverlayOptions';
   const API_LIST=[
     'https://overpass-api.de/api/interpreter',
@@ -13413,17 +13413,25 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
     try{if(typeof currentGps!=='undefined'&&validPoint(currentGps))return clonePoint(currentGps);}catch(e){}
     return null;
   }
-  function searchGeometry(){return {routes:selectedRouteLines(),aircraft:aircraftPoint()};}
+  function selectedAirportPoints(){
+    const names=[];
+    try{const b=document.getElementById('baseSelect'); if(b&&b.value) names.push(b.value);}catch(e){}
+    try{const r=document.getElementById('refillBaseSelect'); if(r&&r.value) names.push(r.value);}catch(e){}
+    try{const f=document.getElementById('fullStopBaseSelect'); if(f&&f.value) names.push(f.value);}catch(e){}
+    const out=[]; const seen=new Set();
+    names.forEach(name=>{ const p=airportPoint(name); if(!p) return; const k=p.lat.toFixed(5)+','+p.lon.toFixed(5); if(seen.has(k)) return; seen.add(k); out.push(p); });
+    return out;
+  }
+  function searchGeometry(){return {airports:selectedAirportPoints()};}
   function routeSignature(routes){return (routes||[]).map(routeKey).join('|');}
   function geometrySignature(g){
-    const a=g&&g.aircraft?g.aircraft.lat.toFixed(4)+','+g.aircraft.lon.toFixed(4):'NO_GPS';
-    return routeSignature(g&&g.routes||[])+'|'+a;
+    return (g&&g.airports||[]).map(p=>p.name+'@'+p.lat.toFixed(4)+','+p.lon.toFixed(4)).join('|');
   }
   function geometryText(g){
-    const parts=[];
-    if(g.routes.length)parts.push((g.routes.length>1?g.routes.length+' διαδρομές':'διαδρομή')+' ±25 km');
-    if(g.aircraft)parts.push('αεροσκάφος ±25 km');
-    return parts.join(' · ');
+    const airports=(g&&g.airports)||[];
+    if(!airports.length) return '';
+    if(airports.length===1) return `Α/Δ ${airports[0].name} ±60 km`;
+    return `${airports.length} Α/Δ · ακτίνα 60 km`;
   }
   function gpsMovedEnough(a,b){
     if(!a||!b)return a!==b;
@@ -13487,11 +13495,9 @@ body.pzl-route-tap-map #map{cursor:crosshair!important;}
   }
   function areaFilters(g){
     const out=[];
-    (g.routes||[]).forEach(line=>{
-      const coords=cleanRoute(line).map(p=>p.lat.toFixed(6)+','+p.lon.toFixed(6)).join(',');
-      if(coords)out.push('around:'+CORRIDOR_RADIUS_M+','+coords);
+    (g.airports||[]).forEach(p=>{
+      out.push('around:'+CORRIDOR_RADIUS_M+','+p.lat.toFixed(6)+','+p.lon.toFixed(6));
     });
-    if(g.aircraft)out.push('around:'+CORRIDOR_RADIUS_M+','+g.aircraft.lat.toFixed(6)+','+g.aircraft.lon.toFixed(6));
     return out;
   }
   function buildQuery(cat,g){
@@ -13565,12 +13571,12 @@ ${geometryText(geometry)}`,true,true);
     if(!anyEnabled()){
       ++requestSeq;clearAll();setStatus('Standard χάρτης — κανένα πρόσθετο layer επιλεγμένο.',false,false);return;
     }
-    if(!geometry.routes.length&&!geometry.aircraft){
-      ++requestSeq;clearAll();setStatus('Ενεργοποίησε GPS ή βάλε διαδρομή στον χάρτη. Η φόρτωση γίνεται ±25 km.',false,true);return;
+    if(!geometry.airports.length){
+      ++requestSeq;clearAll();setStatus('Επίλεξε τουλάχιστον ένα α/δ. Η φόρτωση γίνεται σε ακτίνα 60 km γύρω από τα επιλεγμένα α/δ.',false,true);return;
     }
     const signature=geometrySignature(geometry),seq=++requestSeq,results=[];let errors=0;
-    lastRouteSignature=routeSignature(geometry.routes);
-    lastGpsLoadPoint=geometry.aircraft?clonePoint(geometry.aircraft):null;
+    lastRouteSignature=geometrySignature(geometry);
+    lastGpsLoadPoint=null;
     setStatus(`Σύνδεση με βάση χαρτογραφικών στοιχείων…
 ${geometryText(geometry)}`,true,true);
     let catIndex=0;
@@ -13600,7 +13606,7 @@ ${geometryText(geometry)}${extra}`,false,errors>0);
     document.getElementById('mapWrap').appendChild(btn);btn.onclick=openPanel;
     badge=document.createElement('div');badge.id='pzlTopoStatusBadge';document.getElementById('mapWrap').appendChild(badge);
     panel=document.createElement('div');panel.id='pzlTerrainPanel';panel.hidden=true;
-    panel.innerHTML=`<div id="pzlTerrainCard"><div class="pzl-map-title"><b>PZL MAP — ΠΡΟΣΘΕΤΑ ΣΤΟΙΧΕΙΑ</b><button id="pzlTerrainClose" type="button">✕</button></div><div class="pzl-standard-note">Στο PZL MAP τα επιλεγμένα στοιχεία φορτώνονται σε διάδρομο ±25 km από τη διαδρομή και σε ακτίνα 25 km από το αεροσκάφος.</div><div class="pzl-map-layer-list"><label class="pzl-map-layer-item"><span>▲ Κορυφές + ύψος ft MSL</span><input id="pzlOpt_peaks" type="checkbox"></label><label class="pzl-map-layer-item"><span>⚡ Γραμμές μέσης / υψηλής τάσης</span><input id="pzlOpt_power" type="checkbox"></label><label class="pzl-map-layer-item"><span>📡 Κεραίες / ιστοί</span><input id="pzlOpt_antennas" type="checkbox"></label></div><div class="pzl-map-actions"><button id="pzlMapReload" type="button">ΑΝΑΝΕΩΣΗ ±25 km</button><button id="pzlMapClear" type="button" class="secondary">← MAP</button></div><div id="pzlMapStatus" class="pzl-map-status"></div><div class="pzl-map-warning">Τα στοιχεία προέρχονται από δημόσια δεδομένα OpenStreetMap/Overpass, μπορεί να είναι ελλιπή ή παλαιά και δεν αντικαθιστούν επίσημο αεροναυτικό χάρτη ή πιστοποιημένη βάση εμποδίων.</div></div>`;
+    panel.innerHTML=`<div id="pzlTerrainCard"><div class="pzl-map-title"><b>PZL MAP — ΠΡΟΣΘΕΤΑ ΣΤΟΙΧΕΙΑ</b><button id="pzlTerrainClose" type="button">✕</button></div><div class="pzl-standard-note">Στο PZL MAP τα επιλεγμένα στοιχεία φορτώνονται σε ακτίνα 60 km γύρω από τα επιλεγμένα α/δ (Αρχική Α/Γ, Επαναπλ., Full Stop).</div><div class="pzl-map-layer-list"><label class="pzl-map-layer-item"><span>▲ Κορυφές + ύψος ft MSL</span><input id="pzlOpt_peaks" type="checkbox"></label><label class="pzl-map-layer-item"><span>⚡ Γραμμές μέσης / υψηλής τάσης</span><input id="pzlOpt_power" type="checkbox"></label><label class="pzl-map-layer-item"><span>📡 Κεραίες / ιστοί</span><input id="pzlOpt_antennas" type="checkbox"></label></div><div class="pzl-map-actions"><button id="pzlMapReload" type="button">ΑΝΑΝΕΩΣΗ 60 km</button><button id="pzlMapClear" type="button" class="secondary">← MAP</button></div><div id="pzlMapStatus" class="pzl-map-status"></div><div class="pzl-map-warning">Τα στοιχεία προέρχονται από δημόσια δεδομένα OpenStreetMap/Overpass, μπορεί να είναι ελλιπή ή παλαιά και δεν αντικαθιστούν επίσημο αεροναυτικό χάρτη ή πιστοποιημένη βάση εμποδίων.</div></div>`;
     document.body.appendChild(panel);statusBox=document.getElementById('pzlMapStatus');
     document.getElementById('pzlTerrainClose').onclick=closePanel;panel.onclick=e=>{if(e.target===panel)closePanel();};
     document.getElementById('pzlMapReload').onclick=()=>scheduleRefresh(true);
@@ -13620,15 +13626,15 @@ ${geometryText(geometry)}${extra}`,false,errors>0);
     ['gpsBtn','navModeBtn','clearNavBtn','fireModeBtn','viaModeBtn','clearViaBtn','returnWpBtn','clearReturnWpBtn'].forEach(id=>{
       const el=document.getElementById(id);if(el)el.addEventListener('click',()=>setTimeout(()=>scheduleRefresh(true),250));
     });
+    ['baseSelect','refillBaseSelect','fullStopBaseSelect'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('change',()=>setTimeout(()=>scheduleRefresh(true),150)); });
     setInterval(()=>{
       if(!anyEnabled())return;
-      const g=searchGeometry(),rs=routeSignature(g.routes);
-      const routeChanged=rs!==lastRouteSignature;
-      const gpsChanged=gpsMovedEnough(g.aircraft,lastGpsLoadPoint);
-      if(routeChanged||gpsChanged)scheduleRefresh(true);
+      const key=geometrySignature(searchGeometry());
+      const airportChanged=key!==lastRouteSignature;
+      if(airportChanged)scheduleRefresh(true);
     },4000);
     window.addEventListener('online',()=>{if(anyEnabled())scheduleRefresh(true);});
-    lastRouteSignature=routeSignature(selectedRouteLines());lastGpsLoadPoint=aircraftPoint();updatePanel();
+    lastRouteSignature=geometrySignature(searchGeometry());lastGpsLoadPoint=null;updatePanel();
     setStatus(anyEnabled()?'Έτοιμο για φόρτωση επιλεγμένων layers.':'Standard χάρτης — επίλεξε μόνο ό,τι χρειάζεσαι.',false,false);
     if(anyEnabled())scheduleRefresh(false);
   }
